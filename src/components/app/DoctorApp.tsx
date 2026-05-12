@@ -535,7 +535,54 @@ const TherapistPickerDialog = ({
   );
 };
 
-const DoctorChatHub = ({
+const DischargePlanDialog = ({
+  open,
+  onClose,
+  onConfirm,
+  date,
+  onChangeDate,
+  patientName,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (d: Date) => void;
+  date?: Date;
+  onChangeDate: (d?: Date) => void;
+  patientName?: string;
+}) => (
+  <AlertDialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <AlertDialogContent className="max-w-sm">
+      <AlertDialogHeader>
+        <AlertDialogTitle>计划出院时间</AlertDialogTitle>
+        <AlertDialogDescription>
+          为「{patientName ?? "患者"}」选择计划出院日期，系统将同步给治疗师与护理团队。
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <div className="flex justify-center">
+        <CalendarUI
+          mode="single"
+          selected={date}
+          onSelect={onChangeDate}
+          disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+          className="rounded-md border"
+        />
+      </div>
+      {date && (
+        <div className="text-center text-[12px] text-foreground">
+          已选择：<span className="font-semibold">{date.toLocaleDateString("zh-CN")}</span>
+        </div>
+      )}
+      <AlertDialogFooter>
+        <AlertDialogCancel onClick={onClose}>取消</AlertDialogCancel>
+        <AlertDialogAction onClick={() => date && onConfirm(date)} disabled={!date}>
+          确认计划出院
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+);
+
+
   subTab,
   onChange,
   onOpenPatient,
