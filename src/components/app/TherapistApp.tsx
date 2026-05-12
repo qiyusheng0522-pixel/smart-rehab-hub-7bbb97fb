@@ -429,7 +429,6 @@ const TherapistHome = ({
         <PendingTodoGrid
           items={[
             { label: "待首次评估", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-            { label: "待确认目标", count: QUEUES.goal.length, icon: Target, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("goal") },
             { label: "待确认医嘱", count: QUEUES.rx.length, icon: FileText, iconClass: "bg-secondary text-white", onClick: onGoRx },
             { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
           ]}
@@ -701,11 +700,6 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const update = (si: number, ii: number, v: string) => {
     setData(prev => prev.map((s, i) => i !== si ? s : { ...s, items: s.items.map((it, j) => j !== ii ? it : { ...it, value: v }) }));
   };
-  const aiText: Record<TherapistType, string> = {
-    PT: `综合 FMA-LE 18 / Berg 32 / FAC 2 / MAS 踝 2，提示下肢中度运动障碍 + 跌倒高风险。建议：1) 先行踝跖屈肌牵伸 + 抗痉挛；2) 渐进负重 + 平行杠内步态训练；3) 平衡板 + 双任务训练 2 周后复评 BBS。`,
-    OT: `FMA-UE 24 / MBI 45 / ARAT 23 / MoCA 21，上肢重度障碍伴 ADL 中度依赖、轻度认知下降。建议：1) 镜像 / Bobath 上肢易化；2) 任务导向 ADL（穿衣 / 进食）；3) 认知-运动双任务训练，2 周后复评 MBI 与 ARAT。`,
-    ST: `WAB-AQ 59 / 洼田 3 级 / SSA 28 / Frenchay 中度，提示中度运动性失语 + 可疑误吸 + 构音障碍。建议：1) 申请 VFSS 明确分期；2) 姿势代偿 + 增稠饮食过渡；3) Schuell 刺激法 + 旋律语调治疗 (MIT)，2 周后复测 WAB。`,
-  };
   return (
     <div className="p-4 space-y-3">
       {/* 患者信息 */}
@@ -735,11 +729,6 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
           })}
         </div>
       </div>
-
-      {/* AI 推荐 */}
-      <AICard title={`AI 已基于患者档案预填 ${type} 量表`}>
-        系统结合医师首评与既往史，自动调用与该患者相关的 {type} 评估量表 ({data.length} 项)，治疗师可逐项核对 / 修改后由 AI 生成评估建议。
-      </AICard>
 
       {/* 量表列表（按名称展示，AI 预填可点击查看修改） */}
       <SectionTitle title={`${type} 评估量表 · ${data.length} 项`} extra={<button onClick={() => toast("已添加自定义量表")} className="text-[11px] text-secondary font-semibold flex items-center gap-1"><Plus className="w-3 h-3" />补充量表</button>} />
@@ -779,11 +768,6 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
           );
         })}
       </div>
-
-      {/* AI 评估建议 */}
-      <AICard title="AI 首次评估建议（基于上述量表）" action={<button onClick={() => toast.success("已重新生成评估建议")} className="text-[11px] px-3 py-1 rounded-full bg-ai text-ai-foreground font-semibold">重新生成</button>}>
-        <div className="leading-relaxed">{aiText[type]}</div>
-      </AICard>
 
       {/* 康复目标设定评估（合并自原康复目标页面） */}
       <SectionTitle title="康复目标设定评估" extra={<span className="text-[10px] text-muted-foreground">ICF · AI 生成 · 支持编辑/删除</span>} />
