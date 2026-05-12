@@ -583,7 +583,8 @@ const DischargePlanDialog = ({
 );
 
 
-  const DoctorChatHub = ({
+const DoctorChatHub = ({
+  subTab,
   onChange,
   onOpenPatient,
   meetings,
