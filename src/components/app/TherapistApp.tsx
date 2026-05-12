@@ -24,6 +24,7 @@ import {
   DEFAULT_MEETINGS,
   DEFAULT_MEETING_MSGS,
   TeamMeeting,
+  getPatientStage,
 } from "@/components/app/PatientsModule";
 import { RehabPlanModule, PlanStage } from "@/components/app/RehabPlanModule";
 import { MeStats } from "@/components/app/MeStats";
@@ -51,6 +52,8 @@ import {
   Stethoscope,
   Target,
   FileText,
+  LogOut,
+  Home as HomeIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
