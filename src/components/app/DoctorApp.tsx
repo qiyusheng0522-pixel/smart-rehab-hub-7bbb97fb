@@ -1149,6 +1149,10 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
         </div>
       )}
 
+      {/* 康复目标（AI 生成 · 可编辑删除） */}
+      <SectionTitle title="康复目标" extra={<span className="text-[10px] text-muted-foreground">AI 基于 ICF 自动生成 · 支持编辑/删除</span>} />
+      <InlineGoals />
+
       {/* AI 结论 */}
       <AICard
         title="AI 首次评估辅助结论"
