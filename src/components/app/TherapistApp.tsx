@@ -769,11 +769,6 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         })}
       </div>
 
-      {/* AI 评估建议 */}
-      <AICard title="AI 首次评估建议（基于上述量表）" action={<button onClick={() => toast.success("已重新生成评估建议")} className="text-[11px] px-3 py-1 rounded-full bg-ai text-ai-foreground font-semibold">重新生成</button>}>
-        <div className="leading-relaxed">{aiText[type]}</div>
-      </AICard>
-
       {/* 康复目标设定评估（合并自原康复目标页面） */}
       <SectionTitle title="康复目标设定评估" extra={<span className="text-[10px] text-muted-foreground">ICF · AI 生成 · 支持编辑/删除</span>} />
       <InlineGoals accent="therapist" />
