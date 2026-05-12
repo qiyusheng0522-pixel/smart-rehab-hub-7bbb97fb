@@ -727,37 +727,53 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         系统结合医师首评与既往史，自动调用与该患者相关的 {type} 评估量表 ({data.length} 项)，治疗师可逐项核对 / 修改后由 AI 生成评估建议。
       </AICard>
 
-      {/* 量表列表 */}
+      {/* 量表列表（按名称展示，AI 预填可点击查看修改） */}
       <SectionTitle title={`${type} 评估量表 · ${data.length} 项`} extra={<button onClick={() => toast("已添加自定义量表")} className="text-[11px] text-secondary font-semibold flex items-center gap-1"><Plus className="w-3 h-3" />补充量表</button>} />
-      <div className="space-y-2">
-        {data.map((s, si) => (
-          <div key={s.name} className="bg-card rounded-2xl shadow-card p-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[13px] font-semibold">{s.name}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">{s.desc}</div>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-ai/10 text-ai font-semibold">AI 预填</span>
-            </div>
-            <div className="mt-2 divide-y divide-border/60">
-              {s.items.map((it, ii) => (
-                <div key={ii} className="flex items-center justify-between py-2">
-                  <div>
-                    <div className="text-[12px] text-foreground">{it.label}</div>
-                    {it.hint && <div className="text-[10px] text-muted-foreground mt-0.5">{it.hint}</div>}
-                  </div>
-                  <input value={it.value} onChange={(e) => update(si, ii, e.target.value)} className="w-28 text-right bg-muted rounded px-2 py-1 text-xs" />
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {data.map((s, si) => {
+          const open = expanded === si;
+          return (
+            <div key={s.name} className="px-3 py-2.5">
+              <button onClick={() => setExpanded(open ? null : si)} className="w-full flex items-center gap-2 text-left">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] font-semibold truncate">{s.name}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.desc}</div>
                 </div>
-              ))}
+                <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5">
+                  <Sparkles className="w-2.5 h-2.5" />AI 预填
+                </span>
+                <span className="text-[11px] text-secondary font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setData(data.filter((_, i) => i !== si)); toast.success(`已删除「${s.name}」`); }}
+                  className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30"
+                >删除</button>
+              </button>
+              {open && (
+                <div className="mt-2 divide-y divide-border/60 bg-muted/30 rounded-xl">
+                  {s.items.map((it, ii) => (
+                    <div key={ii} className="flex items-center justify-between px-3 py-2">
+                      <div>
+                        <div className="text-[12px] text-foreground">{it.label}</div>
+                        {it.hint && <div className="text-[10px] text-muted-foreground mt-0.5">{it.hint}</div>}
+                      </div>
+                      <input value={it.value} onChange={(e) => update(si, ii, e.target.value)} className="w-28 text-right bg-card rounded px-2 py-1 text-xs" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* AI 评估建议 */}
       <AICard title="AI 首次评估建议（基于上述量表）" action={<button onClick={() => toast.success("已重新生成评估建议")} className="text-[11px] px-3 py-1 rounded-full bg-ai text-ai-foreground font-semibold">重新生成</button>}>
         <div className="leading-relaxed">{aiText[type]}</div>
       </AICard>
+
+      {/* 康复目标设定评估（合并自原康复目标页面） */}
+      <SectionTitle title="康复目标设定评估" extra={<span className="text-[10px] text-muted-foreground">ICF · AI 生成 · 支持编辑/删除</span>} />
+      <InlineGoals accent="therapist" />
 
       <SectionTitle title="治疗师补充备注" />
       <div className="bg-card rounded-2xl shadow-card p-3">
