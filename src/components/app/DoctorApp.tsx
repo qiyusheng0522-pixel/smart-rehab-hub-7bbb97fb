@@ -362,6 +362,7 @@ export const DoctorApp = () => {
                     { key: "assess", label: "查看评估", icon: ClipboardCheck, onClick: () => setSheet("assess") },
                     { key: "plan", label: "查看方案", icon: FileText, onClick: () => setSheet("plan") },
                     { key: "rx", label: "查看医嘱", icon: Sparkles, onClick: () => setSheet("rx") },
+                    { key: "discharge-plan", label: "计划出院", icon: LogOut, onClick: () => setDischargePlanOpen(true) },
                   ];
                 }
                 acts.push(noteAct);
