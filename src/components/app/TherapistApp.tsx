@@ -4,6 +4,7 @@ import { AICard, SectionTitle, StatChip } from "@/components/app/UI";
 import { PhoneSheet, FormRow, PrimaryBtn } from "@/components/app/Sheet";
 import { TodoQueueList, WorkbenchTile, PendingStatRow, PendingTodoGrid, TodoItem } from "@/components/app/TodoQueue";
 import { RxDetail } from "@/components/app/RxDetail";
+import { InlineGoals } from "@/components/app/DoctorApp";
 import {
   PatientsPage,
   PatientDetailSheet,
@@ -679,6 +680,7 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const scales = SCALE_LIB[type];
   const [data, setData] = useState(scales);
   const [note, setNote] = useState("");
+  const [expanded, setExpanded] = useState<number | null>(null);
   // 重置数据当类型变化
   const switchType = (t: TherapistType) => {
     onChangeType(t);
