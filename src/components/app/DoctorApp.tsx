@@ -624,7 +624,7 @@ const DoctorHome = ({
               { label: "待设定目标", count: 3, icon: Target, iconClass: "bg-primary text-white", onClick: () => onGoPlan("goal") },
               { label: "待确认方案", count: 3, icon: FileText, iconClass: "bg-secondary text-white", onClick: () => onGoPlan("plan") },
               { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
-              { label: "待出院", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
+              { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
             ]}
           />
         </div>
@@ -1048,8 +1048,8 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
           <span className="text-[10px] px-2 py-1 rounded-full bg-primary-soft text-primary font-semibold">首次评估</span>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">发病时间</div><div className="text-[11px] font-semibold mt-0.5">05-06 19:20</div></div>
-          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">评估日期</div><div className="text-[11px] font-semibold mt-0.5">05-08 第2天</div></div>
+          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">看诊时间</div><div className="text-[11px] font-semibold mt-0.5">05-08 09:00</div></div>
+          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">入院日期</div><div className="text-[11px] font-semibold mt-0.5">05-07</div></div>
           <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">入院诊断</div><div className="text-[11px] font-semibold mt-0.5">急性缺血卒中</div></div>
         </div>
         <div className="mt-2 text-[11px] text-foreground/75 leading-relaxed bg-muted/60 rounded-xl px-3 py-2">
@@ -1057,15 +1057,11 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
         </div>
       </div>
 
-      <AICard title="AI 推荐量表（基于患者档案）">
-        系统已根据「急性缺血性卒中 · 中度 · 右侧偏瘫」自动调取并预填 8 项医师常用量表，可逐项查看修改；如需补充功能层评估，可从下方量表库添加 PT / OT / ST 量表。
-      </AICard>
-
       {/* 医师量表 */}
       <SectionTitle title={`医师评估量表 · ${docScales.length}`} extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount}</span>} />
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
         {docScales.map((s) => (
-          <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} />
+          <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => setDocScales(docScales.filter((x) => x.key !== s.key))} />
         ))}
       </div>
 
