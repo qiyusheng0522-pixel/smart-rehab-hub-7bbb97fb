@@ -730,11 +730,6 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         </div>
       </div>
 
-      {/* AI 推荐 */}
-      <AICard title={`AI 已基于患者档案预填 ${type} 量表`}>
-        系统结合医师首评与既往史，自动调用与该患者相关的 {type} 评估量表 ({data.length} 项)，治疗师可逐项核对 / 修改后由 AI 生成评估建议。
-      </AICard>
-
       {/* 量表列表（按名称展示，AI 预填可点击查看修改） */}
       <SectionTitle title={`${type} 评估量表 · ${data.length} 项`} extra={<button onClick={() => toast("已添加自定义量表")} className="text-[11px] text-secondary font-semibold flex items-center gap-1"><Plus className="w-3 h-3" />补充量表</button>} />
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
