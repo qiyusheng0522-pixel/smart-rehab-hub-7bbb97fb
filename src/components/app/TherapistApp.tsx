@@ -700,11 +700,6 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const update = (si: number, ii: number, v: string) => {
     setData(prev => prev.map((s, i) => i !== si ? s : { ...s, items: s.items.map((it, j) => j !== ii ? it : { ...it, value: v }) }));
   };
-  const aiText: Record<TherapistType, string> = {
-    PT: `综合 FMA-LE 18 / Berg 32 / FAC 2 / MAS 踝 2，提示下肢中度运动障碍 + 跌倒高风险。建议：1) 先行踝跖屈肌牵伸 + 抗痉挛；2) 渐进负重 + 平行杠内步态训练；3) 平衡板 + 双任务训练 2 周后复评 BBS。`,
-    OT: `FMA-UE 24 / MBI 45 / ARAT 23 / MoCA 21，上肢重度障碍伴 ADL 中度依赖、轻度认知下降。建议：1) 镜像 / Bobath 上肢易化；2) 任务导向 ADL（穿衣 / 进食）；3) 认知-运动双任务训练，2 周后复评 MBI 与 ARAT。`,
-    ST: `WAB-AQ 59 / 洼田 3 级 / SSA 28 / Frenchay 中度，提示中度运动性失语 + 可疑误吸 + 构音障碍。建议：1) 申请 VFSS 明确分期；2) 姿势代偿 + 增稠饮食过渡；3) Schuell 刺激法 + 旋律语调治疗 (MIT)，2 周后复测 WAB。`,
-  };
   return (
     <div className="p-4 space-y-3">
       {/* 患者信息 */}
