@@ -289,10 +289,18 @@ export const TherapistApp = () => {
           pickedPatient ? (
             <PatientActionsBar
               accent="therapist"
-              actions={[
-                { key: "summary", label: "每日小结", icon: ClipboardList, onClick: () => { setActivePatient(pickedPatient ? `${pickedPatient.name} · 床${pickedPatient.bed}` : ""); setSheet("summary"); } },
-                { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
-              ]}
+              actions={
+                getPatientStage(pickedPatient) === "待出院"
+                  ? [
+                      { key: "discharge", label: "确认出院", icon: LogOut, onClick: () => { toast.success(`已确认「${pickedPatient.name}」出院`); close(); } },
+                      { key: "transfer", label: "转社区", icon: HomeIcon, onClick: () => { toast.success(`已将「${pickedPatient.name}」转至社区康复`); close(); } },
+                      { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
+                    ]
+                  : [
+                      { key: "summary", label: "每日小结", icon: ClipboardList, onClick: () => { setActivePatient(pickedPatient ? `${pickedPatient.name} · 床${pickedPatient.bed}` : ""); setSheet("summary"); } },
+                      { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
+                    ]
+              }
             />
           ) : undefined
         }
