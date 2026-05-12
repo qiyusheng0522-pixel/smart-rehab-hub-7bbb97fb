@@ -4,6 +4,7 @@ import { AICard, SectionTitle, StatChip } from "@/components/app/UI";
 import { PhoneSheet, FormRow, PrimaryBtn } from "@/components/app/Sheet";
 import { TodoQueueList, WorkbenchTile, PendingStatRow, PendingTodoGrid, TodoItem } from "@/components/app/TodoQueue";
 import { RxDetail } from "@/components/app/RxDetail";
+import { InlineGoals } from "@/components/app/DoctorApp";
 import {
   PatientsPage,
   PatientDetailSheet,
@@ -23,6 +24,7 @@ import {
   DEFAULT_MEETINGS,
   DEFAULT_MEETING_MSGS,
   TeamMeeting,
+  getPatientStage,
 } from "@/components/app/PatientsModule";
 import { RehabPlanModule, PlanStage } from "@/components/app/RehabPlanModule";
 import { MeStats } from "@/components/app/MeStats";
@@ -50,6 +52,8 @@ import {
   Stethoscope,
   Target,
   FileText,
+  LogOut,
+  Home as HomeIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -285,10 +289,18 @@ export const TherapistApp = () => {
           pickedPatient ? (
             <PatientActionsBar
               accent="therapist"
-              actions={[
-                { key: "summary", label: "每日小结", icon: ClipboardList, onClick: () => { setActivePatient(pickedPatient ? `${pickedPatient.name} · 床${pickedPatient.bed}` : ""); setSheet("summary"); } },
-                { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
-              ]}
+              actions={
+                getPatientStage(pickedPatient) === "待出院"
+                  ? [
+                      { key: "discharge", label: "确认出院", icon: LogOut, onClick: () => { toast.success(`已确认「${pickedPatient.name}」出院`); close(); } },
+                      { key: "transfer", label: "转社区", icon: HomeIcon, onClick: () => { toast.success(`已将「${pickedPatient.name}」转至社区康复`); close(); } },
+                      { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
+                    ]
+                  : [
+                      { key: "summary", label: "每日小结", icon: ClipboardList, onClick: () => { setActivePatient(pickedPatient ? `${pickedPatient.name} · 床${pickedPatient.bed}` : ""); setSheet("summary"); } },
+                      { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
+                    ]
+              }
             />
           ) : undefined
         }
@@ -419,6 +431,7 @@ const TherapistHome = ({
             { label: "待首次评估", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
             { label: "待确认目标", count: QUEUES.goal.length, icon: Target, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("goal") },
             { label: "待确认医嘱", count: QUEUES.rx.length, icon: FileText, iconClass: "bg-secondary text-white", onClick: onGoRx },
+            { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
           ]}
         />
       </div>
@@ -679,6 +692,7 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const scales = SCALE_LIB[type];
   const [data, setData] = useState(scales);
   const [note, setNote] = useState("");
+  const [expanded, setExpanded] = useState<number | null>(null);
   // 重置数据当类型变化
   const switchType = (t: TherapistType) => {
     onChangeType(t);
@@ -727,37 +741,53 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         系统结合医师首评与既往史，自动调用与该患者相关的 {type} 评估量表 ({data.length} 项)，治疗师可逐项核对 / 修改后由 AI 生成评估建议。
       </AICard>
 
-      {/* 量表列表 */}
+      {/* 量表列表（按名称展示，AI 预填可点击查看修改） */}
       <SectionTitle title={`${type} 评估量表 · ${data.length} 项`} extra={<button onClick={() => toast("已添加自定义量表")} className="text-[11px] text-secondary font-semibold flex items-center gap-1"><Plus className="w-3 h-3" />补充量表</button>} />
-      <div className="space-y-2">
-        {data.map((s, si) => (
-          <div key={s.name} className="bg-card rounded-2xl shadow-card p-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[13px] font-semibold">{s.name}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">{s.desc}</div>
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-ai/10 text-ai font-semibold">AI 预填</span>
-            </div>
-            <div className="mt-2 divide-y divide-border/60">
-              {s.items.map((it, ii) => (
-                <div key={ii} className="flex items-center justify-between py-2">
-                  <div>
-                    <div className="text-[12px] text-foreground">{it.label}</div>
-                    {it.hint && <div className="text-[10px] text-muted-foreground mt-0.5">{it.hint}</div>}
-                  </div>
-                  <input value={it.value} onChange={(e) => update(si, ii, e.target.value)} className="w-28 text-right bg-muted rounded px-2 py-1 text-xs" />
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {data.map((s, si) => {
+          const open = expanded === si;
+          return (
+            <div key={s.name} className="px-3 py-2.5">
+              <button onClick={() => setExpanded(open ? null : si)} className="w-full flex items-center gap-2 text-left">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] font-semibold truncate">{s.name}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.desc}</div>
                 </div>
-              ))}
+                <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5">
+                  <Sparkles className="w-2.5 h-2.5" />AI 预填
+                </span>
+                <span className="text-[11px] text-secondary font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setData(data.filter((_, i) => i !== si)); toast.success(`已删除「${s.name}」`); }}
+                  className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30"
+                >删除</button>
+              </button>
+              {open && (
+                <div className="mt-2 divide-y divide-border/60 bg-muted/30 rounded-xl">
+                  {s.items.map((it, ii) => (
+                    <div key={ii} className="flex items-center justify-between px-3 py-2">
+                      <div>
+                        <div className="text-[12px] text-foreground">{it.label}</div>
+                        {it.hint && <div className="text-[10px] text-muted-foreground mt-0.5">{it.hint}</div>}
+                      </div>
+                      <input value={it.value} onChange={(e) => update(si, ii, e.target.value)} className="w-28 text-right bg-card rounded px-2 py-1 text-xs" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* AI 评估建议 */}
       <AICard title="AI 首次评估建议（基于上述量表）" action={<button onClick={() => toast.success("已重新生成评估建议")} className="text-[11px] px-3 py-1 rounded-full bg-ai text-ai-foreground font-semibold">重新生成</button>}>
         <div className="leading-relaxed">{aiText[type]}</div>
       </AICard>
+
+      {/* 康复目标设定评估（合并自原康复目标页面） */}
+      <SectionTitle title="康复目标设定评估" extra={<span className="text-[10px] text-muted-foreground">ICF · AI 生成 · 支持编辑/删除</span>} />
+      <InlineGoals accent="therapist" />
 
       <SectionTitle title="治疗师补充备注" />
       <div className="bg-card rounded-2xl shadow-card p-3">

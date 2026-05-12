@@ -42,6 +42,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
 import {
   Bell,
   ChevronRight,
@@ -111,6 +112,8 @@ export const DoctorApp = () => {
   const [therapistPickerOpen, setTherapistPickerOpen] = useState(false);
   const [videoPatient, setVideoPatient] = useState<Patient | null>(null);
   const [chatSubTab, setChatSubTab] = useState<"patient" | "team">("patient");
+  const [dischargePlanOpen, setDischargePlanOpen] = useState(false);
+  const [dischargeDate, setDischargeDate] = useState<Date | undefined>(undefined);
 
   const open = (k: SheetKey) => setSheet(k);
   const close = () => setSheet(null);
@@ -362,6 +365,7 @@ export const DoctorApp = () => {
                     { key: "assess", label: "查看评估", icon: ClipboardCheck, onClick: () => setSheet("assess") },
                     { key: "plan", label: "查看方案", icon: FileText, onClick: () => setSheet("plan") },
                     { key: "rx", label: "查看医嘱", icon: Sparkles, onClick: () => setSheet("rx") },
+                    { key: "discharge-plan", label: "计划出院", icon: LogOut, onClick: () => setDischargePlanOpen(true) },
                   ];
                 }
                 acts.push(noteAct);
@@ -404,6 +408,18 @@ export const DoctorApp = () => {
           setTherapistPickerOpen(false);
           toast.success(`已指定 ${types.join("/")} 治疗师 · ${name}`);
           close();
+        }}
+      />
+
+      <DischargePlanDialog
+        open={dischargePlanOpen}
+        date={dischargeDate}
+        onChangeDate={setDischargeDate}
+        patientName={pickedPatient?.name}
+        onClose={() => setDischargePlanOpen(false)}
+        onConfirm={(d) => {
+          setDischargePlanOpen(false);
+          toast.success(`已生成「${pickedPatient?.name ?? "患者"}」计划出院时间：${d.toLocaleDateString("zh-CN")}`);
         }}
       />
     </ScreenShell>
@@ -520,6 +536,54 @@ const TherapistPickerDialog = ({
   );
 };
 
+const DischargePlanDialog = ({
+  open,
+  onClose,
+  onConfirm,
+  date,
+  onChangeDate,
+  patientName,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (d: Date) => void;
+  date?: Date;
+  onChangeDate: (d?: Date) => void;
+  patientName?: string;
+}) => (
+  <AlertDialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <AlertDialogContent className="max-w-sm">
+      <AlertDialogHeader>
+        <AlertDialogTitle>计划出院时间</AlertDialogTitle>
+        <AlertDialogDescription>
+          为「{patientName ?? "患者"}」选择计划出院日期，系统将同步给治疗师与护理团队。
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <div className="flex justify-center">
+        <CalendarUI
+          mode="single"
+          selected={date}
+          onSelect={onChangeDate}
+          disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+          className="rounded-md border"
+        />
+      </div>
+      {date && (
+        <div className="text-center text-[12px] text-foreground">
+          已选择：<span className="font-semibold">{date.toLocaleDateString("zh-CN")}</span>
+        </div>
+      )}
+      <AlertDialogFooter>
+        <AlertDialogCancel onClick={onClose}>取消</AlertDialogCancel>
+        <AlertDialogAction onClick={() => date && onConfirm(date)} disabled={!date}>
+          确认计划出院
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+);
+
+
 const DoctorChatHub = ({
   subTab,
   onChange,
@@ -624,7 +688,7 @@ const DoctorHome = ({
               { label: "待设定目标", count: 3, icon: Target, iconClass: "bg-primary text-white", onClick: () => onGoPlan("goal") },
               { label: "待确认方案", count: 3, icon: FileText, iconClass: "bg-secondary text-white", onClick: () => onGoPlan("plan") },
               { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
-              { label: "待出院", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
+              { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
             ]}
           />
         </div>
@@ -1003,6 +1067,101 @@ const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) 
   );
 };
 
+/* ===== 内嵌康复目标（首次评估页内可编辑/删除） ===== */
+type InlineGoal = { id: string; dim: "function" | "activity" | "participation"; period: string; source: "AI" | "医师"; text: string };
+const INLINE_DEFAULT_GOALS: InlineGoal[] = [
+  { id: "ig1", dim: "function", period: "4 周", source: "AI", text: "右上下肢肌力由 2 级提升至 3+ 级，痉挛 MAS ≤ 1+" },
+  { id: "ig2", dim: "function", period: "4 周", source: "AI", text: "MoCA 由 18 提升至 ≥ 24，左侧空间忽略明显改善" },
+  { id: "ig3", dim: "activity", period: "2 周", source: "AI", text: "床椅转移独立完成，助行器辅助步行 30m" },
+  { id: "ig4", dim: "activity", period: "4 周", source: "AI", text: "独立步行 ≥ 50m（FAC ≥ 3），Barthel ≥ 75" },
+  { id: "ig5", dim: "participation", period: "8 周", source: "AI", text: "回归家庭：独立完成进食、如厕、穿衣，参与家庭对话" },
+];
+const INLINE_DIM: Record<InlineGoal["dim"], { label: string; cls: string }> = {
+  function: { label: "身体功能与结构", cls: "bg-primary-soft text-primary" },
+  activity: { label: "活动", cls: "bg-secondary-soft text-secondary" },
+  participation: { label: "参与", cls: "bg-warning-soft text-warning" },
+};
+export const InlineGoals = ({ accent = "doctor" }: { accent?: "doctor" | "therapist" }) => {
+  const [goals, setGoals] = useState<InlineGoal[]>(INLINE_DEFAULT_GOALS);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [adding, setAdding] = useState<InlineGoal["dim"] | null>(null);
+  const [newDraft, setNewDraft] = useState("");
+  const grad = accent === "therapist" ? "gradient-therapist" : "gradient-doctor";
+  const accentText = accent === "therapist" ? "text-secondary" : "text-primary";
+
+  const startEdit = (g: InlineGoal) => { setEditingId(g.id); setDraft(g.text); };
+  const saveEdit = () => {
+    if (!editingId) return;
+    setGoals(goals.map(g => g.id === editingId ? { ...g, text: draft.trim() || g.text } : g));
+    setEditingId(null);
+    toast.success("目标已更新");
+  };
+  const remove = (id: string) => { setGoals(goals.filter(g => g.id !== id)); toast.success("目标已删除"); };
+  const addGoal = (dim: InlineGoal["dim"]) => {
+    if (!newDraft.trim()) return;
+    setGoals([...goals, { id: `ig${Date.now()}`, dim, period: "4 周", source: "医师", text: newDraft.trim() }]);
+    setNewDraft(""); setAdding(null);
+    toast.success("已新增目标");
+  };
+
+  return (
+    <div className="space-y-2">
+      {(Object.keys(INLINE_DIM) as InlineGoal["dim"][]).map(dim => {
+        const list = goals.filter(g => g.dim === dim);
+        const meta = INLINE_DIM[dim];
+        return (
+          <div key={dim} className="bg-card rounded-2xl shadow-card overflow-hidden">
+            <div className="px-3 py-2 flex items-center justify-between border-b border-border/60">
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${meta.cls}`}>{meta.label}</span>
+                <span className="text-[10px] text-muted-foreground">{list.length} 项</span>
+              </div>
+              <button onClick={() => { setAdding(dim); setNewDraft(""); }} className={`text-[11px] ${accentText} font-semibold flex items-center gap-0.5`}><Plus className="w-3 h-3" />添加</button>
+            </div>
+            <div className="divide-y divide-border/60">
+              {list.map(g => (
+                <div key={g.id} className="px-3 py-2.5">
+                  {editingId === g.id ? (
+                    <div className="space-y-2">
+                      <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                      <div className="flex gap-2">
+                        <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+                        <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${g.source === "AI" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"}`}>{g.source}</span>
+                      </div>
+                      <div className="text-[12px] text-foreground/90 mt-1 leading-relaxed">{g.text}</div>
+                      <div className="mt-1.5 flex gap-2">
+                        <button onClick={() => startEdit(g)} className={`text-[11px] ${accentText} font-semibold flex items-center gap-0.5`}><Edit2 className="w-3 h-3" />编辑</button>
+                        <button onClick={() => remove(g.id)} className="text-[11px] text-destructive font-semibold flex items-center gap-0.5"><X className="w-3 h-3" />删除</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+              {adding === dim && (
+                <div className="px-3 py-2.5 bg-muted/40 space-y-2">
+                  <textarea value={newDraft} onChange={(e) => setNewDraft(e.target.value)} placeholder={`新增「${meta.label}」目标`} className="w-full text-[11px] bg-background border border-border rounded-lg p-2 min-h-[60px]" autoFocus />
+                  <div className="flex gap-2">
+                    <button onClick={() => setAdding(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+                    <button onClick={() => addGoal(dim)} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchMeeting: () => void }) => {
   const name = patient ? patient.split(" ")[0] : "张建国";
   const [conclusion, setConclusion] = useState(AI_DEFAULT_CONCLUSION);
@@ -1048,8 +1207,8 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
           <span className="text-[10px] px-2 py-1 rounded-full bg-primary-soft text-primary font-semibold">首次评估</span>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">发病时间</div><div className="text-[11px] font-semibold mt-0.5">05-06 19:20</div></div>
-          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">评估日期</div><div className="text-[11px] font-semibold mt-0.5">05-08 第2天</div></div>
+          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">看诊时间</div><div className="text-[11px] font-semibold mt-0.5">05-08 09:00</div></div>
+          <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">入院日期</div><div className="text-[11px] font-semibold mt-0.5">05-07</div></div>
           <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">入院诊断</div><div className="text-[11px] font-semibold mt-0.5">急性缺血卒中</div></div>
         </div>
         <div className="mt-2 text-[11px] text-foreground/75 leading-relaxed bg-muted/60 rounded-xl px-3 py-2">
@@ -1057,15 +1216,11 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
         </div>
       </div>
 
-      <AICard title="AI 推荐量表（基于患者档案）">
-        系统已根据「急性缺血性卒中 · 中度 · 右侧偏瘫」自动调取并预填 8 项医师常用量表，可逐项查看修改；如需补充功能层评估，可从下方量表库添加 PT / OT / ST 量表。
-      </AICard>
-
       {/* 医师量表 */}
       <SectionTitle title={`医师评估量表 · ${docScales.length}`} extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount}</span>} />
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
         {docScales.map((s) => (
-          <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} />
+          <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => setDocScales(docScales.filter((x) => x.key !== s.key))} />
         ))}
       </div>
 
@@ -1152,6 +1307,10 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
           </div>
         </div>
       )}
+
+      {/* 康复目标（AI 生成 · 可编辑删除） */}
+      <SectionTitle title="康复目标" extra={<span className="text-[10px] text-muted-foreground">AI 基于 ICF 自动生成 · 支持编辑/删除</span>} />
+      <InlineGoals />
 
       {/* AI 结论 */}
       <AICard
