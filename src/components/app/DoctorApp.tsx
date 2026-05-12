@@ -111,6 +111,8 @@ export const DoctorApp = () => {
   const [therapistPickerOpen, setTherapistPickerOpen] = useState(false);
   const [videoPatient, setVideoPatient] = useState<Patient | null>(null);
   const [chatSubTab, setChatSubTab] = useState<"patient" | "team">("patient");
+  const [dischargePlanOpen, setDischargePlanOpen] = useState(false);
+  const [dischargeDate, setDischargeDate] = useState<Date | undefined>(undefined);
 
   const open = (k: SheetKey) => setSheet(k);
   const close = () => setSheet(null);
@@ -405,6 +407,18 @@ export const DoctorApp = () => {
           setTherapistPickerOpen(false);
           toast.success(`已指定 ${types.join("/")} 治疗师 · ${name}`);
           close();
+        }}
+      />
+
+      <DischargePlanDialog
+        open={dischargePlanOpen}
+        date={dischargeDate}
+        onChangeDate={setDischargeDate}
+        patientName={pickedPatient?.name}
+        onClose={() => setDischargePlanOpen(false)}
+        onConfirm={(d) => {
+          setDischargePlanOpen(false);
+          toast.success(`已生成「${pickedPatient?.name ?? "患者"}」计划出院时间：${d.toLocaleDateString("zh-CN")}`);
         }}
       />
     </ScreenShell>
