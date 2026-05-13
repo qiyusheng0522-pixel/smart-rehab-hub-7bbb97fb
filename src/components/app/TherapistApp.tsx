@@ -296,6 +296,11 @@ export const TherapistApp = () => {
                       { key: "transfer", label: "转社区", icon: HomeIcon, onClick: () => { toast.success(`已将「${pickedPatient.name}」转至社区康复`); close(); } },
                       { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
                     ]
+                  : pickedPatient.needFirstAssess
+                  ? [
+                      { key: "assess", label: "开始评估", icon: ClipboardList, onClick: () => setSheet("firstAssess") },
+                      { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
+                    ]
                   : [
                       { key: "summary", label: "每日小结", icon: ClipboardList, onClick: () => { setActivePatient(pickedPatient ? `${pickedPatient.name} · 床${pickedPatient.bed}` : ""); setSheet("summary"); } },
                       { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },

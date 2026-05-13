@@ -304,7 +304,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
     "院后": "bg-muted text-muted-foreground",
   };
   const pending: { key: PatientPendingKey; label: string; show: boolean }[] = [
-    { key: "assess", label: "待首评", show: !!p.needFirstAssess },
+    { key: "assess", label: "开始评估", show: !!p.needFirstAssess },
     { key: "plan", label: "待确认方案", show: !p.needFirstAssess && !!p.needPlanConfirm },
     { key: "rx", label: "待确认医嘱", show: !p.needFirstAssess && !p.needPlanConfirm && !!p.needRxConfirm },
   ];
@@ -338,8 +338,9 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
               key={b.key}
               onClick={(e) => { e.stopPropagation(); onAction?.(b.key); }}
               disabled={!onAction}
-              className={`text-[11px] px-2.5 py-1 rounded-full font-semibold border ${accentText[accent]} border-current/30 bg-background hover:bg-muted disabled:opacity-60`}
+              className={`text-[12px] px-3.5 py-1.5 rounded-full font-bold ${accentBg[accent]} text-white shadow-card flex items-center gap-1 active:scale-95 disabled:opacity-60 ring-2 ring-current/20`}
             >
+              <ChevronRight className="w-3.5 h-3.5" />
               {b.label}
             </button>
           ))}
