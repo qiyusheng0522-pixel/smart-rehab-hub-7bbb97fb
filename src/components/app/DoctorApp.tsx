@@ -1104,9 +1104,18 @@ export const InlineGoals = ({ accent = "doctor" }: { accent?: "doctor" | "therap
     setNewDraft(""); setAdding(null);
     toast.success("已新增目标");
   };
+  const refreshGoals = () => {
+    toast.success("已根据最新方案及患者档案更新目标");
+  };
 
   return (
     <div className="space-y-2">
+      <button
+        onClick={refreshGoals}
+        className={`w-full ${grad} text-white rounded-2xl py-2.5 text-[13px] font-bold flex items-center justify-center gap-1.5 shadow-card active:scale-[0.98]`}
+      >
+        <Sparkles className="w-4 h-4" />更新目标
+      </button>
       {(Object.keys(INLINE_DIM) as InlineGoal["dim"][]).map(dim => {
         const list = goals.filter(g => g.dim === dim);
         const meta = INLINE_DIM[dim];
