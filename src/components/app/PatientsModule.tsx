@@ -304,7 +304,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
     "院后": "bg-muted text-muted-foreground",
   };
   const pending: { key: PatientPendingKey; label: string; show: boolean }[] = [
-    { key: "assess", label: "待首评", show: !!p.needFirstAssess },
+    { key: "assess", label: "开始评估", show: !!p.needFirstAssess },
     { key: "plan", label: "待确认方案", show: !p.needFirstAssess && !!p.needPlanConfirm },
     { key: "rx", label: "待确认医嘱", show: !p.needFirstAssess && !p.needPlanConfirm && !!p.needRxConfirm },
   ];
