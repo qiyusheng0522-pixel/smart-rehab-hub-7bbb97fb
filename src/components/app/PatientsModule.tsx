@@ -338,8 +338,9 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
               key={b.key}
               onClick={(e) => { e.stopPropagation(); onAction?.(b.key); }}
               disabled={!onAction}
-              className={`text-[11px] px-2.5 py-1 rounded-full font-semibold border ${accentText[accent]} border-current/30 bg-background hover:bg-muted disabled:opacity-60`}
+              className={`text-[12px] px-3.5 py-1.5 rounded-full font-bold ${accentBg[accent]} text-white shadow-card flex items-center gap-1 active:scale-95 disabled:opacity-60 ring-2 ring-current/20`}
             >
+              <ChevronRight className="w-3.5 h-3.5" />
               {b.label}
             </button>
           ))}
