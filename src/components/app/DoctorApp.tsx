@@ -354,7 +354,8 @@ export const DoctorApp = () => {
                 const noteAct = { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") };
                 let acts: any[] = [];
                 if (stage === "院前") {
-                  if (!pickedPatient.needFirstAssess) acts.push({ key: "assess", label: "查看评估", icon: ClipboardCheck, onClick: () => setSheet("assess") });
+                  if (pickedPatient.needFirstAssess) acts.push({ key: "assess", label: "开始评估", icon: ClipboardCheck, onClick: () => setSheet("assess") });
+                  else acts.push({ key: "assess", label: "查看评估", icon: ClipboardCheck, onClick: () => setSheet("assess") });
                   if (!pickedPatient.needPlanConfirm) acts.push({ key: "plan", label: "查看方案", icon: FileText, onClick: () => setSheet("plan") });
                   if (!pickedPatient.needRxConfirm) acts.push({ key: "rx", label: "查看医嘱", icon: Sparkles, onClick: () => setSheet("rx") });
                 } else if (stage === "待出院") {
