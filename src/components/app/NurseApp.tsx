@@ -141,6 +141,7 @@ export const NurseApp = () => {
   const [meetings, setMeetings] = useState<TeamMeeting[]>(DEFAULT_MEETINGS);
   const [activeMeeting, setActiveMeeting] = useState<TeamMeeting | null>(null);
   const [activeFollowUp, setActiveFollowUp] = useState<FollowUpPatient | null>(null);
+  const [patientsFilter, setPatientsFilter] = useState<import("@/components/app/PatientsModule").PatientFilter>("all");
   const goPatients = (filter: import("@/components/app/PatientsModule").PatientFilter = "all") => {
     setPatientsFilter(filter);
     setTab("patients");
