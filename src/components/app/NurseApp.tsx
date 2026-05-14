@@ -353,12 +353,16 @@ const NurseHome = ({
   onOpenDailyNote,
   onOpenEdu,
   onOpenChat,
+  onOpenFollowUpList,
+  onOpenFollowUp,
 }: {
   onOpenQueue: (k: QueueKey) => void;
   onGoPatients: (filter?: import("@/components/app/PatientsModule").PatientFilter) => void;
   onOpenDailyNote: () => void;
   onOpenEdu: () => void;
   onOpenChat: () => void;
+  onOpenFollowUpList: () => void;
+  onOpenFollowUp: (p: FollowUpPatient) => void;
 }) => {
   const totalTodo = QUEUES.med.length + QUEUES.vitals.length + QUEUES.inject.length + QUEUES.obs.length + QUEUES.execTask.length;
   const allTodos: { patient: string; meta: string; time?: string; urgency: "high" | "medium" | "low"; k: QueueKey }[] = [
