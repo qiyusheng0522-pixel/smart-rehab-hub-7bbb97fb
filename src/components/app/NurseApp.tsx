@@ -318,6 +318,30 @@ export const NurseApp = () => {
       <PhoneSheet open={sheet === "patientChat"} onClose={close} title="患者沟通" accent="nurse" flush hideHeader>
         <PatientChatSheet accent="nurse" patient={chatPatient} onClose={close} />
       </PhoneSheet>
+
+      <PhoneSheet open={sheet === "followUpList"} onClose={close} title="待随访患者" accent="nurse">
+        <div className="p-4 space-y-2">
+          <AICard title="AI 随访建议">基于出院天数与诊断，AI 已自动排序优先随访的患者。点击进入即可发起随访对话。</AICard>
+          {FOLLOW_UPS.map((p, i) => (
+            <button
+              key={p.id}
+              onClick={() => { setActiveFollowUp(p); setSheet("followUp"); }}
+              className="w-full text-left bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99] transition-transform flex items-center gap-3"
+            >
+              <div className="w-9 h-9 rounded-xl gradient-nurse text-white flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-semibold truncate">{p.name} · {p.diagnosis}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">{p.meta}</div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      </PhoneSheet>
+
+      <PhoneSheet open={sheet === "followUp"} onClose={() => setSheet("followUpList")} title={`电话随访${activeFollowUp ? " · " + activeFollowUp.name : ""}`} accent="nurse">
+        <FollowUpSheet patient={activeFollowUp} onDone={() => { toast.success("随访记录已保存到患者档案"); setSheet("followUpList"); }} />
+      </PhoneSheet>
     </ScreenShell>
   );
 };
