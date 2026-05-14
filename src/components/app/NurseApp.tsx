@@ -72,6 +72,7 @@ type SheetKey =
   | "newMeeting"
   | "meeting"
   | "followUp"
+  | "followUpManual"
   | "followUpList";
 
 type QueueKey = "med" | "vitals" | "inject" | "obs" | "execTask" | "confirmAssess";
