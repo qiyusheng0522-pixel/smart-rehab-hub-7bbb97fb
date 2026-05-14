@@ -115,6 +115,20 @@ const QUEUES: Record<QueueKey, TodoItem[]> = {
   ],
 };
 
+interface FollowUpPatient {
+  id: string;
+  name: string;
+  meta: string;
+  dischargeDays: number;
+  diagnosis: string;
+}
+const FOLLOW_UPS: FollowUpPatient[] = [
+  { id: "f1", name: "刘建国", meta: "出院 14 天 · 男 67", dischargeDays: 14, diagnosis: "脑卒中后偏瘫" },
+  { id: "f2", name: "陈丽华", meta: "出院 21 天 · 女 72", dischargeDays: 21, diagnosis: "认知障碍" },
+  { id: "f3", name: "王秀英", meta: "出院 30 天 · 女 68", dischargeDays: 30, diagnosis: "髋关节置换术后" },
+  { id: "f4", name: "李 强", meta: "出院 45 天 · 男 54", dischargeDays: 45, diagnosis: "脊髓损伤恢复期" },
+];
+
 export const NurseApp = () => {
   const [tab, setTab] = useState("home");
   const [sheet, setSheet] = useState<SheetKey>(null);
