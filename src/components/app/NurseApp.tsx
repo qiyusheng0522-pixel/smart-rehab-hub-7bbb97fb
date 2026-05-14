@@ -180,6 +180,8 @@ export const NurseApp = () => {
           onOpenDailyNote={() => open("dailyNote")}
           onOpenEdu={() => setTab("edu")}
           onOpenChat={() => setTab("chat")}
+          onOpenFollowUpList={() => open("followUpList")}
+          onOpenFollowUp={(p) => { setActiveFollowUp(p); open("followUp"); }}
         />
       )}
       {tab === "patients" && <PatientsPage accent="nurse" onPick={pickPatient} initialFilter={patientsFilter} />}
