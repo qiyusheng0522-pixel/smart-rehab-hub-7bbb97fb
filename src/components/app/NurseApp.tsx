@@ -116,18 +116,26 @@ const QUEUES: Record<QueueKey, TodoItem[]> = {
   ],
 };
 
+type FollowUpStatus = "pending" | "done" | "needRevisit";
 interface FollowUpPatient {
   id: string;
   name: string;
+  age: number;
+  sex: "男" | "女";
   meta: string;
-  dischargeDays: number;
+  postOpDays: number;
   diagnosis: string;
+  status: FollowUpStatus;
+  conclusion?: string;
+  phone?: string;
 }
 const FOLLOW_UPS: FollowUpPatient[] = [
-  { id: "f1", name: "刘建国", meta: "出院 14 天 · 男 67", dischargeDays: 14, diagnosis: "脑卒中后偏瘫" },
-  { id: "f2", name: "陈丽华", meta: "出院 21 天 · 女 72", dischargeDays: 21, diagnosis: "认知障碍" },
-  { id: "f3", name: "王秀英", meta: "出院 30 天 · 女 68", dischargeDays: 30, diagnosis: "髋关节置换术后" },
-  { id: "f4", name: "李 强", meta: "出院 45 天 · 男 54", dischargeDays: 45, diagnosis: "脊髓损伤恢复期" },
+  { id: "f0", name: "韩启航", age: 24, sex: "男", meta: "术后第 3 天", postOpDays: 3, diagnosis: "髌骨关节疼痛综合征", status: "done", conclusion: "居家维护现状，按现有方案训练" },
+  { id: "f1", name: "王晓彤", age: 30, sex: "女", meta: "术后第 4 天", postOpDays: 4, diagnosis: "右肩冲击综合征", status: "pending", phone: "138****4421" },
+  { id: "f2", name: "杨成轩", age: 31, sex: "男", meta: "术后第 5 天", postOpDays: 5, diagnosis: "左跟腱缝合术", status: "pending", phone: "138****4421" },
+  { id: "f3", name: "胡国玉", age: 25, sex: "女", meta: "术后第 6 天", postOpDays: 6, diagnosis: "右膝 PCL 重建", status: "done", conclusion: "恢复良好，居家维护现状" },
+  { id: "f4", name: "何宗兰", age: 34, sex: "女", meta: "术后第 11 天 · 肩外展 90°，恢复良好", postOpDays: 11, diagnosis: "左肩关节镜肩袖修补", status: "done", conclusion: "肩外展 90°，恢复良好，居家训练" },
+  { id: "f5", name: "范芳进", age: 22, sex: "女", meta: "术后第 12 天 · 屈膝受限，需加强康复", postOpDays: 12, diagnosis: "右髌骨内侧支持带修补", status: "needRevisit", conclusion: "屈膝受限，建议到省人民康复科复诊" },
 ];
 
 export const NurseApp = () => {
