@@ -396,10 +396,38 @@ const NurseHome = ({
           items={[
             { label: "待护理", count: QUEUES.execTask.length, icon: HeartPulse, iconClass: "bg-success text-white", onClick: () => onOpenQueue("execTask") },
             { label: "待记录", count: QUEUES.vitals.length, icon: Activity, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("vitals") },
+            { label: "待随访", count: FOLLOW_UPS.length, icon: Stethoscope, iconClass: "bg-role-nurse text-white", onClick: onOpenFollowUpList },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },
             { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-secondary text-white", onClick: onOpenChat },
           ]}
         />
+      </div>
+
+      {/* 随访模块 */}
+      <div className="px-4 mt-4">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-[13px] font-bold text-foreground">随访</span>
+          <button onClick={onOpenFollowUpList} className="text-[11px] text-role-nurse font-semibold">查看全部 ({FOLLOW_UPS.length})</button>
+        </div>
+        <div className="bg-card rounded-2xl shadow-card border border-border/40 p-3 space-y-2">
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <Sparkles className="w-3.5 h-3.5 text-ai" /> AI 智能随访 · 多轮问答后自动生成随访建议
+          </div>
+          {FOLLOW_UPS.slice(0, 3).map((p) => (
+            <button
+              key={p.id}
+              onClick={() => onOpenFollowUp(p)}
+              className="w-full flex items-center gap-3 px-2 py-2 rounded-xl active:bg-muted/40"
+            >
+              <div className="w-8 h-8 rounded-lg gradient-nurse text-white flex items-center justify-center text-xs font-bold">{p.name[0]}</div>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="text-[12px] font-semibold truncate">{p.name} · {p.diagnosis}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{p.meta}</div>
+              </div>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-rose-50 text-role-nurse font-semibold shrink-0">发起随访</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="px-4 mt-4">
