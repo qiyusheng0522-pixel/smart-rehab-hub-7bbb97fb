@@ -70,7 +70,9 @@ type SheetKey =
   | "confirmAssess"
   | "meetingList"
   | "newMeeting"
-  | "meeting";
+  | "meeting"
+  | "followUp"
+  | "followUpList";
 
 type QueueKey = "med" | "vitals" | "inject" | "obs" | "execTask" | "confirmAssess";
 
@@ -113,6 +115,20 @@ const QUEUES: Record<QueueKey, TodoItem[]> = {
   ],
 };
 
+interface FollowUpPatient {
+  id: string;
+  name: string;
+  meta: string;
+  dischargeDays: number;
+  diagnosis: string;
+}
+const FOLLOW_UPS: FollowUpPatient[] = [
+  { id: "f1", name: "刘建国", meta: "出院 14 天 · 男 67", dischargeDays: 14, diagnosis: "脑卒中后偏瘫" },
+  { id: "f2", name: "陈丽华", meta: "出院 21 天 · 女 72", dischargeDays: 21, diagnosis: "认知障碍" },
+  { id: "f3", name: "王秀英", meta: "出院 30 天 · 女 68", dischargeDays: 30, diagnosis: "髋关节置换术后" },
+  { id: "f4", name: "李 强", meta: "出院 45 天 · 男 54", dischargeDays: 45, diagnosis: "脊髓损伤恢复期" },
+];
+
 export const NurseApp = () => {
   const [tab, setTab] = useState("home");
   const [sheet, setSheet] = useState<SheetKey>(null);
@@ -124,6 +140,7 @@ export const NurseApp = () => {
   const [chatSubTab, setChatSubTab] = useState<"patient" | "team">("patient");
   const [meetings, setMeetings] = useState<TeamMeeting[]>(DEFAULT_MEETINGS);
   const [activeMeeting, setActiveMeeting] = useState<TeamMeeting | null>(null);
+  const [activeFollowUp, setActiveFollowUp] = useState<FollowUpPatient | null>(null);
   const [patientsFilter, setPatientsFilter] = useState<import("@/components/app/PatientsModule").PatientFilter>("all");
   const goPatients = (filter: import("@/components/app/PatientsModule").PatientFilter = "all") => {
     setPatientsFilter(filter);
@@ -163,6 +180,8 @@ export const NurseApp = () => {
           onOpenDailyNote={() => open("dailyNote")}
           onOpenEdu={() => setTab("edu")}
           onOpenChat={() => setTab("chat")}
+          onOpenFollowUpList={() => open("followUpList")}
+          onOpenFollowUp={(p) => { setActiveFollowUp(p); open("followUp"); }}
         />
       )}
       {tab === "patients" && <PatientsPage accent="nurse" onPick={pickPatient} initialFilter={patientsFilter} />}
@@ -299,6 +318,30 @@ export const NurseApp = () => {
       <PhoneSheet open={sheet === "patientChat"} onClose={close} title="患者沟通" accent="nurse" flush hideHeader>
         <PatientChatSheet accent="nurse" patient={chatPatient} onClose={close} />
       </PhoneSheet>
+
+      <PhoneSheet open={sheet === "followUpList"} onClose={close} title="待随访患者" accent="nurse">
+        <div className="p-4 space-y-2">
+          <AICard title="AI 随访建议">基于出院天数与诊断，AI 已自动排序优先随访的患者。点击进入即可发起随访对话。</AICard>
+          {FOLLOW_UPS.map((p, i) => (
+            <button
+              key={p.id}
+              onClick={() => { setActiveFollowUp(p); setSheet("followUp"); }}
+              className="w-full text-left bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99] transition-transform flex items-center gap-3"
+            >
+              <div className="w-9 h-9 rounded-xl gradient-nurse text-white flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-semibold truncate">{p.name} · {p.diagnosis}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">{p.meta}</div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      </PhoneSheet>
+
+      <PhoneSheet open={sheet === "followUp"} onClose={() => setSheet("followUpList")} title={`电话随访${activeFollowUp ? " · " + activeFollowUp.name : ""}`} accent="nurse">
+        <FollowUpSheet patient={activeFollowUp} onDone={() => { toast.success("随访记录已保存到患者档案"); setSheet("followUpList"); }} />
+      </PhoneSheet>
     </ScreenShell>
   );
 };
@@ -310,12 +353,16 @@ const NurseHome = ({
   onOpenDailyNote,
   onOpenEdu,
   onOpenChat,
+  onOpenFollowUpList,
+  onOpenFollowUp,
 }: {
   onOpenQueue: (k: QueueKey) => void;
   onGoPatients: (filter?: import("@/components/app/PatientsModule").PatientFilter) => void;
   onOpenDailyNote: () => void;
   onOpenEdu: () => void;
   onOpenChat: () => void;
+  onOpenFollowUpList: () => void;
+  onOpenFollowUp: (p: FollowUpPatient) => void;
 }) => {
   const totalTodo = QUEUES.med.length + QUEUES.vitals.length + QUEUES.inject.length + QUEUES.obs.length + QUEUES.execTask.length;
   const allTodos: { patient: string; meta: string; time?: string; urgency: "high" | "medium" | "low"; k: QueueKey }[] = [
@@ -349,10 +396,38 @@ const NurseHome = ({
           items={[
             { label: "待护理", count: QUEUES.execTask.length, icon: HeartPulse, iconClass: "bg-success text-white", onClick: () => onOpenQueue("execTask") },
             { label: "待记录", count: QUEUES.vitals.length, icon: Activity, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("vitals") },
+            { label: "待随访", count: FOLLOW_UPS.length, icon: Stethoscope, iconClass: "bg-role-nurse text-white", onClick: onOpenFollowUpList },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },
             { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-secondary text-white", onClick: onOpenChat },
           ]}
         />
+      </div>
+
+      {/* 随访模块 */}
+      <div className="px-4 mt-4">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-[13px] font-bold text-foreground">随访</span>
+          <button onClick={onOpenFollowUpList} className="text-[11px] text-role-nurse font-semibold">查看全部 ({FOLLOW_UPS.length})</button>
+        </div>
+        <div className="bg-card rounded-2xl shadow-card border border-border/40 p-3 space-y-2">
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <Sparkles className="w-3.5 h-3.5 text-ai" /> AI 智能随访 · 多轮问答后自动生成随访建议
+          </div>
+          {FOLLOW_UPS.slice(0, 3).map((p) => (
+            <button
+              key={p.id}
+              onClick={() => onOpenFollowUp(p)}
+              className="w-full flex items-center gap-3 px-2 py-2 rounded-xl active:bg-muted/40"
+            >
+              <div className="w-8 h-8 rounded-lg gradient-nurse text-white flex items-center justify-center text-xs font-bold">{p.name[0]}</div>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="text-[12px] font-semibold truncate">{p.name} · {p.diagnosis}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{p.meta}</div>
+              </div>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-rose-50 text-role-nurse font-semibold shrink-0">发起随访</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="px-4 mt-4">
@@ -728,6 +803,162 @@ const NurseConfirmAssessSheet = ({ patient }: { patient?: string }) => {
         <FormRow label="跌倒预防" value="床栏 + 呼叫器 ✓" />
         <FormRow label="伤口情况" value="干洁 ✓" />
       </div>
+    </div>
+  );
+};
+
+/* ============== AI 随访对话 Sheet ============== */
+interface FollowUpTurn { role: "nurse" | "patient"; text: string }
+
+const FOLLOW_UP_SCRIPT: { q: string; a: string }[] = [
+  { q: "您好，我是省人民医院康复科赵护士，做一次出院后随访。请问您目前整体感觉怎么样？有没有不舒服？", a: "整体还行，就是患侧腿走路还有点没力气，偶尔有点酸胀。" },
+  { q: "了解。请问每天还在按康复计划做训练吗？比如下肢力量训练、平衡练习每天大约多长时间？", a: "基本每天做两次，每次半小时左右。但平衡训练有时候会偷懒。" },
+  { q: "用药方面呢？阿司匹林、降压药这些是否按时服用？最近有没有出现头晕、出血、皮肤瘀斑等情况？", a: "都按时吃，没有出血，血压自测大多在 130/80 左右。" },
+  { q: "最后一个问题：日常生活自理情况怎么样？上下楼、洗澡、如厕能不能独立完成？家属有没有特别担心的地方？", a: "上下楼需要扶扶手，洗澡有家属陪同，其他基本能独立。家里担心再次跌倒。" },
+];
+
+type FollowUpAdvice = "revisit" | "outpatient" | "home";
+const ADVICE_OPTIONS: { key: FollowUpAdvice; label: string; desc: string; tone: string }[] = [
+  { key: "revisit", label: "建议到省人民康复科复诊", desc: "症状或指标提示需进一步评估，安排门诊复诊。", tone: "bg-destructive/10 text-destructive" },
+  { key: "outpatient", label: "建议到省人民康复科看诊", desc: "可在 1-2 周内门诊就诊，调整康复处方。", tone: "bg-warning/15 text-warning" },
+  { key: "home", label: "居家维护现状", desc: "恢复良好，按现有方案继续居家训练。", tone: "bg-success/10 text-success" },
+];
+
+const FollowUpSheet = ({ patient, onDone }: { patient: FollowUpPatient | null; onDone: () => void }) => {
+  const [turns, setTurns] = useState<FollowUpTurn[]>([{ role: "nurse", text: FOLLOW_UP_SCRIPT[0].q }]);
+  const [step, setStep] = useState(0);
+  const [generated, setGenerated] = useState(false);
+  const [advice, setAdvice] = useState<FollowUpAdvice>("outpatient");
+  const [customAnswer, setCustomAnswer] = useState("");
+
+  const sendAnswer = (text: string) => {
+    if (!text.trim()) return;
+    const next: FollowUpTurn[] = [...turns, { role: "patient", text }];
+    const nextStep = step + 1;
+    if (nextStep < FOLLOW_UP_SCRIPT.length) {
+      next.push({ role: "nurse", text: FOLLOW_UP_SCRIPT[nextStep].q });
+    }
+    setTurns(next);
+    setStep(nextStep);
+    setCustomAnswer("");
+  };
+
+  const generate = () => {
+    const text = turns.filter(t => t.role === "patient").map(t => t.text).join(" ");
+    let pick: FollowUpAdvice = "home";
+    if (/出血|头晕|跌倒|加重|胸闷|不能/.test(text)) pick = "revisit";
+    else if (/没力气|酸胀|偷懒|担心|不稳/.test(text)) pick = "outpatient";
+    setAdvice(pick);
+    setGenerated(true);
+  };
+
+  const canGenerate = step >= FOLLOW_UP_SCRIPT.length;
+  const currentSuggested = step < FOLLOW_UP_SCRIPT.length ? FOLLOW_UP_SCRIPT[step].a : "";
+
+  return (
+    <div className="p-4 space-y-3">
+      <div className="bg-card rounded-2xl shadow-card p-4 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl gradient-nurse text-white flex items-center justify-center font-bold text-lg">
+          {patient?.name[0] ?? "刘"}
+        </div>
+        <div className="flex-1">
+          <div className="text-sm font-bold">{patient?.name ?? "刘建国"} · {patient?.diagnosis ?? "脑卒中后偏瘫"}</div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">{patient?.meta ?? "出院 14 天"} · 电话随访</div>
+        </div>
+        <span className="text-[10px] px-2 py-1 rounded-full bg-rose-50 text-role-nurse font-semibold">第 {Math.min(step + 1, FOLLOW_UP_SCRIPT.length)}/{FOLLOW_UP_SCRIPT.length} 轮</span>
+      </div>
+
+      <AICard title="AI 随访助手">
+        AI 已根据出院诊断与方案准备 {FOLLOW_UP_SCRIPT.length} 轮标准随访问题，可直接采用 AI 示例回答或手动输入患者真实回答。
+      </AICard>
+
+      <div className="bg-card rounded-2xl shadow-card p-3 space-y-2 max-h-[280px] overflow-y-auto">
+        {turns.map((t, i) => (
+          <div key={i} className={`flex ${t.role === "nurse" ? "justify-start" : "justify-end"}`}>
+            <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-[12px] leading-relaxed ${
+              t.role === "nurse" ? "bg-muted text-foreground" : "gradient-nurse text-white"
+            }`}>
+              <div className="text-[9px] opacity-70 mb-0.5">{t.role === "nurse" ? "护士 / AI 提问" : "患者回答"}</div>
+              {t.text}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!canGenerate && (
+        <div className="space-y-2">
+          <div className="bg-ai-soft border border-ai/20 rounded-2xl p-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-ai" />
+              <span className="text-[11px] font-semibold text-ai">AI 示例回答</span>
+            </div>
+            <div className="text-[12px] text-foreground/85">{currentSuggested}</div>
+            <button
+              onClick={() => sendAnswer(currentSuggested)}
+              className="mt-2 w-full gradient-nurse text-white rounded-xl py-2 text-[12px] font-semibold"
+            >
+              采用此回答
+            </button>
+          </div>
+          <div className="bg-card rounded-2xl shadow-card p-2 flex gap-2 items-end">
+            <textarea
+              value={customAnswer}
+              onChange={(e) => setCustomAnswer(e.target.value)}
+              placeholder="或手动输入患者回答…"
+              className="flex-1 bg-muted rounded-xl p-2 text-xs h-16 outline-none resize-none"
+            />
+            <button
+              onClick={() => sendAnswer(customAnswer)}
+              className="w-10 h-10 rounded-xl gradient-nurse text-white flex items-center justify-center"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {canGenerate && !generated && (
+        <button
+          onClick={generate}
+          className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-2 shadow-card"
+        >
+          <Sparkles className="w-4 h-4" /> AI 生成随访建议
+        </button>
+      )}
+
+      {generated && (
+        <>
+          <SectionTitle title="AI 随访建议" extra={<span className="text-[10px] text-ai">基于 {FOLLOW_UP_SCRIPT.length} 轮问答</span>} />
+          <div className="bg-card rounded-2xl shadow-card p-3 space-y-2">
+            {ADVICE_OPTIONS.map(opt => {
+              const active = advice === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setAdvice(opt.key)}
+                  className={`w-full text-left rounded-xl p-3 border transition-all ${
+                    active ? "border-role-nurse bg-rose-50/60" : "border-border/60 bg-muted/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${opt.tone}`}>
+                      {active ? "AI 推荐" : "可选"}
+                    </span>
+                    <span className="text-[13px] font-semibold">{opt.label}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{opt.desc}</div>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            onClick={onDone}
+            className="w-full gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold shadow-card"
+          >
+            确认建议并归档
+          </button>
+        </>
+      )}
     </div>
   );
 };
