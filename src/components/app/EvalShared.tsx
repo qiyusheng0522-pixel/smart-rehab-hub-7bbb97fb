@@ -17,8 +17,65 @@ import {
   Users,
   Calendar,
   ChevronLeft,
+  Mic,
+  ClipboardList,
+  Pill,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+
+/* ==============================================================
+ * 语音输入小组件 · 全端复用
+ * ============================================================== */
+export const VoiceMic = ({
+  onTranscript,
+  className = "",
+  sample = "患者目前情况稳定，建议继续按方案执行。",
+}: {
+  onTranscript: (text: string) => void;
+  className?: string;
+  sample?: string;
+}) => {
+  const [recording, setRecording] = useState(false);
+  const click = () => {
+    if (recording) return;
+    setRecording(true);
+    toast("🎙 录音中…");
+    setTimeout(() => {
+      setRecording(false);
+      onTranscript(sample);
+      toast.success("语音已转写");
+    }, 900);
+  };
+  return (
+    <button
+      type="button"
+      onClick={click}
+      className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border ${
+        recording ? "bg-destructive/10 text-destructive border-destructive/30 animate-pulse" : "bg-muted text-foreground/70 border-border"
+      } ${className}`}
+      title="语音输入"
+    >
+      <Mic className="w-3.5 h-3.5" />
+    </button>
+  );
+};
+
+/* ==============================================================
+ * 全端共享 · 三角色评估意见（保证三端互见）
+ * ============================================================== */
+export const ALL_CLINICAL_CONCLUSIONS = [
+  { role: "康复医师 · 李志远", time: "今日 09:30", text: "急性缺血性脑卒中恢复期，BP 仍偏高，房颤未规范抗凝；建议加强血压及抗凝管理。", tone: "doctor" as const },
+  { role: "治疗师 · 王雅琴 (PT)", time: "今日 10:15", text: "心率与血氧可耐受 30 分钟训练，建议训练时持续监测。", tone: "therapist" as const },
+  { role: "护士 · 赵静怡", time: "今日 10:40", text: "夜间血压波动较大；皮肤完整、骶尾部发红需 q2h 翻身；跌倒/压疮高风险。", tone: "nurse" as const },
+];
+
+export const ALL_REHAB_CONCLUSIONS = [
+  { role: "康复医师 · 李志远", time: "今日 09:35", text: "神经方向为主：右侧偏瘫 + 轻度认知损害，建议 PT/OT/ST 全套介入。", tone: "doctor" as const },
+  { role: "治疗师 · 王雅琴 (PT)", time: "今日 10:20", text: "Berg 32 跌倒高危，先 1 周等长收缩与坐位平衡，第 2 周渐进站立位训练。", tone: "therapist" as const },
+  { role: "治疗师 · 陈思雨 (ST)", time: "今日 10:25", text: "EAT-10：4 分，构音清晰度 78%，建议 ST 30 min × 3/周。", tone: "therapist" as const },
+  { role: "护士 · 赵静怡", time: "今日 10:45", text: "ADL Barthel 35 分重度依赖，自理训练前先做安全评估与床旁辅助。", tone: "nurse" as const },
+];
 
 /* ==============================================================
  * 三段式 Tabs：临床评估 / 康复评估 / 康复目标
