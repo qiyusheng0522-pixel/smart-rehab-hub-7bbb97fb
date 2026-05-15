@@ -305,16 +305,21 @@ const DIRECTION_META: Record<RehabDirection, { label: string; icon: any; cls: st
 };
 
 export const RehabPanel = ({
-  defaultOpen = "neuro",
+  defaultOpenAll = true,
   scaleSlot,
   conclusions,
 }: {
-  defaultOpen?: RehabDirection;
+  defaultOpenAll?: boolean;
   /** 评估量表区域，由调用方传入（沿用各端原有量表样式） */
   scaleSlot?: ReactNode;
   conclusions?: { role: string; time: string; text: string; tone?: "doctor" | "therapist" | "nurse" | "ai" }[];
 }) => {
-  const [open, setOpen] = useState<RehabDirection | null>(defaultOpen);
+  const [openMap, setOpenMap] = useState<Record<RehabDirection, boolean>>({
+    cardiopulmonary: defaultOpenAll,
+    neuro: defaultOpenAll,
+    ortho: defaultOpenAll,
+  });
+  const toggle = (d: RehabDirection) => setOpenMap({ ...openMap, [d]: !openMap[d] });
   return (
     <div className="space-y-2">
       <AICard title="AI 已按主诊断推荐评估方向">
