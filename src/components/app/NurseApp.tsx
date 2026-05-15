@@ -341,6 +341,7 @@ export const NurseApp = () => {
         title={`AI 随访${activeFollowUp ? " · " + activeFollowUp.name : ""}`}
         accent="nurse"
         flush
+        hideHeader
       >
         <FollowUpSheet
           patient={activeFollowUp}
@@ -925,18 +926,45 @@ const FollowUpSheet = ({
   const [noReply, setNoReply] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [advice, setAdvice] = useState<FollowUpAdvice>("home");
+  const [draft, setDraft] = useState("");
 
   const total = FOLLOW_UP_SCRIPT.length;
   const canGenerate = step >= total;
 
-  const simulate = () => {
-    if (canGenerate) return;
-    const a = FOLLOW_UP_SCRIPT[step].a;
-    const next: FollowUpTurn[] = [...turns, { role: "patient", text: a, time: "12:1" + (2 + step) }];
+  const ts = (i: number) => `12:${String(11 + i).padStart(2, "0")}`;
+
+  const pushPatient = (text: string) => {
+    if (!text.trim()) return;
+    const idx = turns.length;
+    const next: FollowUpTurn[] = [...turns, { role: "patient", text: text.trim(), time: ts(idx) }];
     const ns = step + 1;
-    if (ns < total) next.push({ role: "nurse", text: FOLLOW_UP_SCRIPT[ns].q, time: "12:1" + (3 + step) });
+    if (ns < total) {
+      next.push({ role: "nurse", text: FOLLOW_UP_SCRIPT[ns].q, time: ts(idx + 1) });
+    } else if (step >= total) {
+      // 自由轮：AI 追问
+      next.push({
+        role: "nurse",
+        text: "收到，我已记录。是否还有其他不适需要补充？没有的话我将为您生成本次随访结论。",
+        time: ts(idx + 1),
+      });
+    }
     setTurns(next);
     setStep(ns);
+    setNoReply(false);
+  };
+
+  const simulate = () => {
+    if (canGenerate) {
+      pushPatient("没有其他不适，伤口恢复中，谢谢。");
+      return;
+    }
+    pushPatient(FOLLOW_UP_SCRIPT[step].a);
+  };
+
+  const sendDraft = () => {
+    if (!draft.trim()) return;
+    pushPatient(draft);
+    setDraft("");
   };
 
   const markNoReply = () => {
@@ -960,7 +988,7 @@ const FollowUpSheet = ({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="px-4 pt-3 pb-3 border-b border-border/60 bg-card">
+      <div className="px-4 pt-3 pb-3 border-b border-border/60 bg-card shrink-0">
         <div className="flex items-center gap-2">
           <button onClick={onDone} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
             <ChevronRight className="w-4 h-4 rotate-180 text-foreground" />
@@ -973,20 +1001,16 @@ const FollowUpSheet = ({
             <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{patient?.diagnosis}</div>
           </div>
         </div>
-      </div>
-
-      {/* Progress chip */}
-      <div className="px-4 pt-3">
-        <div className="rounded-xl bg-primary/8 border border-primary/15 px-3 py-2 flex items-center gap-2">
+        <div className="mt-2 rounded-xl bg-primary/8 border border-primary/15 px-3 py-1.5 flex items-center gap-2">
           <Sparkles className="w-3.5 h-3.5 text-primary" />
           <span className="text-[11px] text-primary font-semibold">
-            AI 多轮随访{canGenerate ? "已完成" : "进行中"} · 已问 {Math.min(step + 1, total)} / {total}
+            AI 多轮随访{canGenerate ? "已完成预设问答" : "进行中"} · 已问 {Math.min(step + 1, total)} / {total}
           </span>
         </div>
       </div>
 
-      {/* Chat */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
+      {/* Chat (滚动区) */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3 scrollbar-hide">
         {turns.map((t, i) => {
           if (t.role === "system") {
             return (
@@ -1017,7 +1041,7 @@ const FollowUpSheet = ({
 
         {generated && (
           <div className="space-y-2 pt-2">
-            <SectionTitle title="AI 随访建议" extra={<span className="text-[10px] text-ai">基于 {total} 轮问答</span>} />
+            <SectionTitle title="AI 随访建议" extra={<span className="text-[10px] text-ai">基于 {turns.filter(t => t.role === "patient").length} 轮回答</span>} />
             <div className="bg-card rounded-2xl shadow-card p-3 space-y-2 border border-border/40">
               {ADVICE_OPTIONS.map(opt => {
                 const active = advice === opt.key;
@@ -1044,56 +1068,76 @@ const FollowUpSheet = ({
         )}
       </div>
 
-      {/* Sticky bottom bar */}
-      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5 space-y-2">
-        {noReply && !generated ? (
-          <>
-            <div className="rounded-xl bg-warning/10 border border-warning/20 px-3 py-2 text-[11px] text-warning flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5" /> 患者未回复，建议人工外呼介入
-            </div>
-            <button
-              onClick={onManualCall}
-              className="w-full gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold shadow-card flex items-center justify-center gap-2"
-            >
-              <Stethoscope className="w-4 h-4" /> 人工外呼并录入
-            </button>
-          </>
-        ) : generated ? (
+      {/* 底部吸附输入区 */}
+      <div className="shrink-0 border-t border-border/60 bg-card/95 backdrop-blur-xl px-3 pt-2 pb-[max(env(safe-area-inset-bottom),12px)] space-y-2">
+        {/* 快捷操作行 */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
           <button
-            onClick={onDone}
-            className="w-full gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold shadow-card"
+            onClick={simulate}
+            className="shrink-0 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium flex items-center gap-1 active:scale-[0.98]"
           >
-            确认结论并归档
+            <MessageCircle className="w-3 h-3" /> 模拟患者回复
           </button>
-        ) : canGenerate ? (
           <button
-            onClick={generate}
-            className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-2 shadow-card"
+            onClick={markNoReply}
+            className="shrink-0 rounded-full border border-warning/40 bg-warning/5 text-warning px-2.5 py-1 text-[11px] font-medium flex items-center gap-1 active:scale-[0.98]"
           >
-            <Sparkles className="w-4 h-4" /> AI 生成随访结论
+            <AlertTriangle className="w-3 h-3" /> 未回复
           </button>
-        ) : (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={simulate}
-              className="flex-1 rounded-xl border border-border bg-card py-2.5 text-[12px] font-semibold flex items-center justify-center gap-1 active:scale-[0.98]"
-            >
-              <MessageCircle className="w-3.5 h-3.5" /> 模拟患者回复
-            </button>
-            <button
-              onClick={markNoReply}
-              className="flex-1 rounded-xl border border-warning/40 bg-warning/5 text-warning py-2.5 text-[12px] font-semibold flex items-center justify-center gap-1 active:scale-[0.98]"
-            >
-              <AlertTriangle className="w-3.5 h-3.5" /> 标记未回复
-            </button>
+          <button
+            onClick={onManualCall}
+            className="shrink-0 rounded-full border border-role-nurse/40 text-role-nurse px-2.5 py-1 text-[11px] font-medium flex items-center gap-1 active:scale-[0.98]"
+          >
+            <Stethoscope className="w-3 h-3" /> 人工外呼
+          </button>
+          {!canGenerate && (
             <button
               onClick={() => setStep(total)}
-              className="flex-1 rounded-xl gradient-nurse text-white py-2.5 text-[12px] font-semibold flex items-center justify-center gap-1 active:scale-[0.98]"
+              className="shrink-0 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium flex items-center gap-1 active:scale-[0.98]"
             >
-              <CheckCircle2 className="w-3.5 h-3.5" /> 提前结束
+              <CheckCircle2 className="w-3 h-3" /> 提前结束
             </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={generate}
+            disabled={turns.filter(t => t.role === "patient").length === 0}
+            className="shrink-0 rounded-full gradient-ai text-white px-2.5 py-1 text-[11px] font-semibold flex items-center gap-1 active:scale-[0.98] disabled:opacity-50"
+          >
+            <Sparkles className="w-3 h-3" /> 生成结论
+          </button>
+          {generated && (
+            <button
+              onClick={onDone}
+              className="shrink-0 rounded-full gradient-nurse text-white px-3 py-1 text-[11px] font-semibold active:scale-[0.98]"
+            >
+              归档
+            </button>
+          )}
+        </div>
+
+        {/* 输入框 */}
+        <div className="flex items-end gap-2">
+          <textarea
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendDraft();
+              }
+            }}
+            rows={1}
+            placeholder={canGenerate ? "继续追问或补充…" : "代患者输入回复…"}
+            className="flex-1 resize-none rounded-2xl border border-border bg-muted/40 px-3 py-2 text-[12.5px] leading-relaxed focus:outline-none focus:border-primary/50 max-h-24"
+          />
+          <button
+            onClick={sendDraft}
+            disabled={!draft.trim()}
+            className="shrink-0 w-10 h-10 rounded-full gradient-nurse text-white flex items-center justify-center shadow-card disabled:opacity-40"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
