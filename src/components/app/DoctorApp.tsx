@@ -236,9 +236,9 @@ export const DoctorApp = () => {
         <AssessSheet patient={activePatient} onLaunchMeeting={() => { setActiveMeeting(null); setSheet("meeting"); }} />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "goal"} onClose={close} title={`AI 康复目标${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="ai"
+      <PhoneSheet open={sheet === "goal"} onClose={close} title={`AI 治疗目标${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="ai"
         footer={
-          <button onClick={() => { toast.success("康复目标已同步治疗师"); close(); }} className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold">同步治疗师</button>
+          <button onClick={() => { toast.success("治疗目标已同步治疗师"); close(); }} className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold">同步治疗师</button>
         }>
         <GoalSheet patient={activePatient} />
       </PhoneSheet>
