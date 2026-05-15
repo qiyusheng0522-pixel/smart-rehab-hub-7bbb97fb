@@ -28,6 +28,7 @@ import {
 } from "@/components/app/PatientsModule";
 import { RehabPlanModule, PlanStage } from "@/components/app/RehabPlanModule";
 import { MeStats } from "@/components/app/MeStats";
+import { EvalTabs, EvalTabKey, ClinicalPanel, RehabPanel, NumberedGoals } from "@/components/app/EvalShared";
 import {
   UsersRound,
   FileHeart,
