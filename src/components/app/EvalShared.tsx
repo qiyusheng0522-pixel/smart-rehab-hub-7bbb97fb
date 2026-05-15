@@ -529,7 +529,10 @@ export const NumberedGoals = ({
               </div>
               {isEditing ? (
                 <div className="mt-2 space-y-2">
-                  <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                  <div className="flex gap-2 items-start">
+                    <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="flex-1 text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                    <VoiceMic onTranscript={(t) => setDraft((v) => (v ? v + " " : "") + t)} sample="将训练时间调整为每日 30 分钟。" />
+                  </div>
                   <div className="flex gap-2">
                     <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
                     <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
