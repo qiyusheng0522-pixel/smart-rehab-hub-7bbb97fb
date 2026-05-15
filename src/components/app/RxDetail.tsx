@@ -1,8 +1,78 @@
 import { useState } from "react";
 import { SectionTitle, AICard, StatChip } from "@/components/app/UI";
 import { FormRow } from "@/components/app/Sheet";
-import { Edit3, FileText, Activity, Wrench, Pill, Home as HomeIcon, CalendarClock, ClipboardList, Plus, Sparkles, Trash2, RefreshCw } from "lucide-react";
+import { Edit3, FileText, Activity, Wrench, Pill, Home as HomeIcon, CalendarClock, ClipboardList, Plus, Sparkles, Trash2, RefreshCw, UserCog, X, CheckCircle2, Calendar } from "lucide-react";
 import { toast } from "sonner";
+
+/* 治疗师 + 设备 排班池：含具体时间，供医师手动调整 */
+type ScheduleSlot = { therapist: string; device: string; time: string; busy?: boolean };
+const SCHEDULE_POOL: Record<string, ScheduleSlot[]> = {
+  PT: [
+    { therapist: "王雅琴", device: "下肢机器人 A-301", time: "明日 09:00-09:45" },
+    { therapist: "王雅琴", device: "下肢机器人 A-301", time: "明日 10:00-10:45", busy: true },
+    { therapist: "李建华", device: "平衡训练台 A-303", time: "明日 14:00-14:45" },
+    { therapist: "李建华", device: "平衡训练台 A-303", time: "明日 15:00-15:45" },
+    { therapist: "王雅琴", device: "步态训练 GAITRite", time: "后天 09:00-09:45" },
+  ],
+  OT: [
+    { therapist: "陈治疗师", device: "OT 厨房 B-201", time: "明日 09:00-09:45" },
+    { therapist: "陈治疗师", device: "OT 厨房 B-201", time: "明日 11:00-11:45" },
+    { therapist: "周治疗师", device: "OT 工作室 B-205", time: "明日 14:00-14:45", busy: true },
+    { therapist: "周治疗师", device: "OT 工作室 B-205", time: "明日 16:00-16:45" },
+  ],
+  ST: [
+    { therapist: "陈思雨", device: "ST 室 C-101", time: "明日 10:00-10:30" },
+    { therapist: "陈思雨", device: "ST 室 C-101", time: "明日 15:00-15:30" },
+    { therapist: "孙治疗师", device: "ST 室 C-102", time: "明日 16:30-17:00" },
+  ],
+  物理因子: [
+    { therapist: "周护理师", device: "低频电刺激仪 D-1", time: "明日 11:00-11:20" },
+    { therapist: "周护理师", device: "低频电刺激仪 D-1", time: "明日 16:00-16:20" },
+  ],
+};
+
+const SchedulePicker = ({ type, current, onPick, onClose }: {
+  type: string;
+  current: string;
+  onPick: (s: ScheduleSlot) => void;
+  onClose: () => void;
+}) => {
+  const list = SCHEDULE_POOL[type] ?? [];
+  return (
+    <div className="fixed inset-0 z-[80] bg-black/50 flex items-end" onClick={onClose}>
+      <div className="bg-background w-full rounded-t-3xl p-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[14px] font-bold flex items-center gap-1.5"><Calendar className="w-4 h-4 text-primary" />调整治疗师 / 设备 / 时间</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">{type} · 当前：{current}</div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="bg-ai/5 border border-ai/20 rounded-2xl p-3 text-[11px] text-foreground/80 flex items-center gap-2 mb-3">
+          <Sparkles className="w-4 h-4 text-ai shrink-0" />
+          已综合 治疗师空闲 + 设备空闲 + 患者档期 列出可用时段，灰色为已占用。
+        </div>
+        <div className="space-y-2">
+          {list.map((s, i) => (
+            <button
+              key={i}
+              disabled={s.busy}
+              onClick={() => { onPick(s); onClose(); toast.success(`已切换到 ${s.therapist} · ${s.time}`); }}
+              className={`w-full text-left rounded-2xl border p-3 flex items-center gap-3 ${s.busy ? "border-border bg-muted/40 opacity-60" : "border-primary/30 bg-card hover:bg-primary-soft/40 active:scale-[0.99]"}`}
+            >
+              <div className="w-9 h-9 rounded-lg gradient-doctor text-white flex items-center justify-center text-[11px] font-bold">{s.therapist[0]}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-semibold">{s.therapist}<span className="text-muted-foreground font-normal"> · {s.device}</span></div>
+                <div className="text-[11px] text-primary mt-0.5 font-semibold flex items-center gap-1"><CalendarClock className="w-3 h-3" />{s.time}</div>
+              </div>
+              {s.busy ? <span className="text-[10px] text-muted-foreground">已占用</span> : <CheckCircle2 className="w-4 h-4 text-success" />}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export type RxAccent = "doctor" | "therapist";
 
@@ -74,27 +144,8 @@ export const RxDetail = ({
       </div>
 
       {/* 3. 康复治疗项目 */}
-      <SectionTitle title="③ 康复治疗项目" extra={<span className="text-[10px] text-muted-foreground">院内执行</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        {[
-          { type: "PT", name: "下肢力量训练", set: "3 组 × 10 次", freq: "每日" },
-          { type: "PT", name: "平衡板训练", set: "15 分钟", freq: "每日" },
-          { type: "PT", name: "步态训练", set: "30 分钟", freq: "5 次/周" },
-          { type: "OT", name: "穿衣 ADL", set: "20 分钟", freq: "每日" },
-          { type: "OT", name: "厨房活动", set: "25 分钟", freq: "3 次/周" },
-          { type: "ST", name: "构音训练", set: "30 分钟", freq: "3 次/周" },
-          { type: "物理因子", name: "低频电刺激", set: "20 分钟", freq: "5 次/周" },
-        ].map((r) => (
-          <div key={r.name} className="flex items-center gap-3 py-2.5 px-3">
-            <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${accentSoft}`}>{r.type}</span>
-            <div className="flex-1">
-              <div className="text-[12px] font-semibold">{r.name}</div>
-              <div className="text-[10px] text-muted-foreground">{r.set} · {r.freq}</div>
-            </div>
-            <button className={accentText}><Edit3 className="w-3.5 h-3.5" /></button>
-          </div>
-        ))}
-      </div>
+      <SectionTitle title="③ 康复治疗项目" extra={<span className="text-[10px] text-muted-foreground">康复医师可手动调整治疗师 / 时段</span>} />
+      <TreatmentItemsEditor accentSoft={accentSoft} accentText={accentText} canAdjust={accent === "doctor"} />
 
       {/* 4. 康复辅具/设备处方 */}
       <SectionTitle title="④ 康复辅具 / 设备处方" extra={<span className="text-[10px] text-muted-foreground">配备清单</span>} />
@@ -228,6 +279,60 @@ const MedsEditor = ({ accent }: { accent: RxAccent }) => {
         <button onClick={() => setAdding(true)} className={`w-full flex items-center justify-center gap-1 text-xs ${accentText} font-semibold py-2`}>
           <Plus className="w-3.5 h-3.5" /> 手动新增药品
         </button>
+      )}
+    </>
+  );
+};
+
+/* ===== 治疗项目 + 治疗师 + 排班调整 ===== */
+type TItem = { type: keyof typeof SCHEDULE_POOL; name: string; set: string; freq: string; therapist: string; device: string; time: string };
+const DEFAULT_TITEMS: TItem[] = [
+  { type: "PT", name: "下肢力量训练", set: "3 组 × 10 次", freq: "每日", therapist: "王雅琴", device: "下肢机器人 A-301", time: "明日 09:00-09:45" },
+  { type: "PT", name: "平衡板训练", set: "15 分钟", freq: "每日", therapist: "李建华", device: "平衡训练台 A-303", time: "明日 14:00-14:45" },
+  { type: "PT", name: "步态训练", set: "30 分钟", freq: "5 次/周", therapist: "王雅琴", device: "步态训练 GAITRite", time: "后天 09:00-09:45" },
+  { type: "OT", name: "穿衣 ADL", set: "20 分钟", freq: "每日", therapist: "陈治疗师", device: "OT 厨房 B-201", time: "明日 09:00-09:45" },
+  { type: "OT", name: "厨房活动", set: "25 分钟", freq: "3 次/周", therapist: "周治疗师", device: "OT 工作室 B-205", time: "明日 16:00-16:45" },
+  { type: "ST", name: "构音训练", set: "30 分钟", freq: "3 次/周", therapist: "陈思雨", device: "ST 室 C-101", time: "明日 10:00-10:30" },
+  { type: "物理因子", name: "低频电刺激", set: "20 分钟", freq: "5 次/周", therapist: "周护理师", device: "低频电刺激仪 D-1", time: "明日 11:00-11:20" },
+];
+
+const TreatmentItemsEditor = ({ accentSoft, accentText, canAdjust }: { accentSoft: string; accentText: string; canAdjust: boolean }) => {
+  const [items, setItems] = useState<TItem[]>(DEFAULT_TITEMS);
+  const [pickerIdx, setPickerIdx] = useState<number | null>(null);
+  const cur = pickerIdx !== null ? items[pickerIdx] : null;
+  return (
+    <>
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {items.map((r, i) => (
+          <div key={i} className="px-3 py-2.5 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${accentSoft}`}>{r.type}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-semibold truncate">{r.name}</div>
+                <div className="text-[10px] text-muted-foreground">{r.set} · {r.freq}</div>
+              </div>
+            </div>
+            <div className="bg-muted/40 rounded-lg px-2.5 py-1.5 flex items-center gap-2 text-[11px]">
+              <UserCog className="w-3 h-3 text-primary shrink-0" />
+              <span className="font-semibold text-foreground">{r.therapist}</span>
+              <span className="text-muted-foreground truncate">· {r.device}</span>
+              <span className="ml-auto text-primary font-semibold flex items-center gap-0.5"><CalendarClock className="w-3 h-3" />{r.time}</span>
+            </div>
+            {canAdjust && (
+              <button onClick={() => setPickerIdx(i)} className={`text-[11px] ${accentText} font-semibold flex items-center gap-1`}>
+                <Edit3 className="w-3 h-3" />调整治疗师 / 时段
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      {pickerIdx !== null && cur && (
+        <SchedulePicker
+          type={cur.type}
+          current={`${cur.therapist} · ${cur.time}`}
+          onClose={() => setPickerIdx(null)}
+          onPick={(s) => setItems(items.map((x, idx) => idx === pickerIdx ? { ...x, therapist: s.therapist, device: s.device, time: s.time } : x))}
+        />
       )}
     </>
   );

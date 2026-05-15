@@ -707,7 +707,7 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const [data, setData] = useState(scales);
   const [note, setNote] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
-  const [tab, setTab] = useState<EvalTabKey>("clinical");
+  const [tab, setTab] = useState<EvalTabKey>("rehab");
   const switchType = (t: TherapistType) => { onChangeType(t); setData(SCALE_LIB[t]); };
   const update = (si: number, ii: number, v: string) => {
     setData(prev => prev.map((s, i) => i !== si ? s : { ...s, items: s.items.map((it, j) => j !== ii ? it : { ...it, value: v }) }));
@@ -784,9 +784,8 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         </div>
       </div>
 
-      <EvalTabs active={tab} onChange={setTab} accent="therapist" />
+      <EvalTabs active={tab} onChange={setTab} accent="therapist" hideClinical />
 
-      {tab === "clinical" && <ClinicalPanel conclusions={TH_CLINICAL_CONCLUSIONS} />}
       {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={TH_REHAB_CONCLUSIONS} />}
       {tab === "goal" && <NumberedGoals accent="therapist" />}
     </div>

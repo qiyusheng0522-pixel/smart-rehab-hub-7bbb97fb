@@ -17,8 +17,65 @@ import {
   Users,
   Calendar,
   ChevronLeft,
+  Mic,
+  ClipboardList,
+  Pill,
+  ShieldAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+
+/* ==============================================================
+ * 语音输入小组件 · 全端复用
+ * ============================================================== */
+export const VoiceMic = ({
+  onTranscript,
+  className = "",
+  sample = "患者目前情况稳定，建议继续按方案执行。",
+}: {
+  onTranscript: (text: string) => void;
+  className?: string;
+  sample?: string;
+}) => {
+  const [recording, setRecording] = useState(false);
+  const click = () => {
+    if (recording) return;
+    setRecording(true);
+    toast("🎙 录音中…");
+    setTimeout(() => {
+      setRecording(false);
+      onTranscript(sample);
+      toast.success("语音已转写");
+    }, 900);
+  };
+  return (
+    <button
+      type="button"
+      onClick={click}
+      className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center border ${
+        recording ? "bg-destructive/10 text-destructive border-destructive/30 animate-pulse" : "bg-muted text-foreground/70 border-border"
+      } ${className}`}
+      title="语音输入"
+    >
+      <Mic className="w-3.5 h-3.5" />
+    </button>
+  );
+};
+
+/* ==============================================================
+ * 全端共享 · 三角色评估意见（保证三端互见）
+ * ============================================================== */
+export const ALL_CLINICAL_CONCLUSIONS = [
+  { role: "康复医师 · 李志远", time: "今日 09:30", text: "急性缺血性脑卒中恢复期，BP 仍偏高，房颤未规范抗凝；建议加强血压及抗凝管理。", tone: "doctor" as const },
+  { role: "治疗师 · 王雅琴 (PT)", time: "今日 10:15", text: "心率与血氧可耐受 30 分钟训练，建议训练时持续监测。", tone: "therapist" as const },
+  { role: "护士 · 赵静怡", time: "今日 10:40", text: "夜间血压波动较大；皮肤完整、骶尾部发红需 q2h 翻身；跌倒/压疮高风险。", tone: "nurse" as const },
+];
+
+export const ALL_REHAB_CONCLUSIONS = [
+  { role: "康复医师 · 李志远", time: "今日 09:35", text: "神经方向为主：右侧偏瘫 + 轻度认知损害，建议 PT/OT/ST 全套介入。", tone: "doctor" as const },
+  { role: "治疗师 · 王雅琴 (PT)", time: "今日 10:20", text: "Berg 32 跌倒高危，先 1 周等长收缩与坐位平衡，第 2 周渐进站立位训练。", tone: "therapist" as const },
+  { role: "治疗师 · 陈思雨 (ST)", time: "今日 10:25", text: "EAT-10：4 分，构音清晰度 78%，建议 ST 30 min × 3/周。", tone: "therapist" as const },
+  { role: "护士 · 赵静怡", time: "今日 10:45", text: "ADL Barthel 35 分重度依赖，自理训练前先做安全评估与床旁辅助。", tone: "nurse" as const },
+];
 
 /* ==============================================================
  * 三段式 Tabs：临床评估 / 康复评估 / 康复目标
@@ -29,16 +86,18 @@ export const EvalTabs = ({
   active,
   onChange,
   accent = "doctor",
+  hideClinical = false,
 }: {
   active: EvalTabKey;
   onChange: (k: EvalTabKey) => void;
   accent?: "doctor" | "therapist" | "nurse";
+  hideClinical?: boolean;
 }) => {
   const grad = accent === "therapist" ? "gradient-therapist" : accent === "nurse" ? "gradient-nurse" : "gradient-doctor";
   const items: { k: EvalTabKey; label: string }[] = [
-    { k: "clinical", label: "临床评估" },
+    ...(hideClinical ? [] : [{ k: "clinical" as EvalTabKey, label: "临床评估" }]),
     { k: "rehab", label: "康复评估" },
-    { k: "goal", label: "康复目标" },
+    { k: "goal", label: "治疗目标" },
   ];
   return (
     <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2 bg-background/95 backdrop-blur">
@@ -109,8 +168,42 @@ export const H2 = ({ children, extra }: { children: ReactNode; extra?: ReactNode
 );
 
 /* ==============================================================
- * 临床评估面板（医师 / 护士共用）
+ * 临床评估面板（卡片折叠 · 默认全部展开 · 与康复方向卡片一致）
  * ============================================================== */
+type ClinicalSectionKey = "vitals" | "lab" | "history" | "nursing";
+const CLINICAL_META: Record<ClinicalSectionKey, { label: string; icon: any; cls: string }> = {
+  vitals: { label: "生命体征", icon: HeartPulse, cls: "bg-rose-50 text-role-nurse" },
+  lab: { label: "生化与影像结果", icon: Activity, cls: "bg-primary-soft text-primary" },
+  history: { label: "既往史与用药史", icon: Pill, cls: "bg-secondary-soft text-secondary" },
+  nursing: { label: "护理首评要点", icon: ShieldAlert, cls: "bg-warning-soft text-warning" },
+};
+
+const ClinicalCard = ({
+  k,
+  defaultOpen = true,
+  children,
+}: {
+  k: ClinicalSectionKey;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) => {
+  const meta = CLINICAL_META[k];
+  const [open, setOpen] = useState(defaultOpen);
+  const Icon = meta.icon;
+  return (
+    <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+      <button onClick={() => setOpen(!open)} className="w-full px-3.5 py-2.5 flex items-center gap-2">
+        <div className={`w-8 h-8 rounded-lg ${meta.cls} flex items-center justify-center`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <span className="text-[13px] font-semibold text-foreground flex-1 text-left">{meta.label}</span>
+        {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+      </button>
+      {open && <div className="px-3 pb-3 space-y-2">{children}</div>}
+    </div>
+  );
+};
+
 export const ClinicalPanel = ({
   showNursing = false,
   conclusions,
@@ -118,62 +211,74 @@ export const ClinicalPanel = ({
   showNursing?: boolean;
   conclusions?: { role: string; time: string; text: string; tone?: "doctor" | "therapist" | "nurse" | "ai" }[];
 }) => (
-  <div className="space-y-1">
-    <H1 icon={HeartPulse}>一、生命体征</H1>
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+  <div className="space-y-2">
+    <ClinicalCard k="vitals">
       <H2>(1) 当前生命体征</H2>
-      <FormRow label="血压 BP" value="142 / 88 mmHg" hint="入院偏高" />
-      <FormRow label="心率 HR" value="78 bpm · 律齐" />
-      <FormRow label="呼吸 RR" value="18 /min" />
-      <FormRow label="血氧 SpO₂" value="97 %" />
-      <FormRow label="体温 T" value="36.7 ℃" />
-    </div>
+      <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+        <FormRow label="血压 BP" value="142 / 88 mmHg" hint="入院偏高" />
+        <FormRow label="心率 HR" value="78 bpm · 律齐" />
+        <FormRow label="呼吸 RR" value="18 /min" />
+        <FormRow label="血氧 SpO₂" value="97 %" />
+        <FormRow label="体温 T" value="36.7 ℃" />
+      </div>
+    </ClinicalCard>
 
-    <H1 icon={Activity}>二、生化与影像结果</H1>
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+    <ClinicalCard k="lab">
       <H2>(1) 血液生化</H2>
-      <FormRow label="血常规" value="WBC 7.2 · Hb 132" />
-      <FormRow label="肝肾功能" value="ALT 28 · Cr 86 μmol/L" />
-      <FormRow label="电解质" value="K 4.1 · Na 138" />
-      <FormRow label="血脂 / 血糖" value="LDL 3.6 · 空腹 6.2" hint="LDL 偏高" />
-      <FormRow label="凝血功能" value="INR 1.0 · D-D 1.8" hint="D-二聚体偏高" />
+      <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+        <FormRow label="血常规" value="WBC 7.2 · Hb 132" />
+        <FormRow label="肝肾功能" value="ALT 28 · Cr 86 μmol/L" />
+        <FormRow label="电解质" value="K 4.1 · Na 138" />
+        <FormRow label="血脂 / 血糖" value="LDL 3.6 · 空腹 6.2" hint="LDL 偏高" />
+        <FormRow label="凝血功能" value="INR 1.0 · D-D 1.8" hint="D-二聚体偏高" />
+      </div>
       <H2>(2) 影像学</H2>
-      <FormRow label="头颅 MRI" value="左基底节区急性梗死" hint="2026-05-07" />
-      <FormRow label="颈动脉超声" value="右颈内动脉 50% 狭窄" />
-    </div>
+      <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+        <FormRow label="头颅 MRI" value="左基底节区急性梗死" hint="2026-05-07" />
+        <FormRow label="颈动脉超声" value="右颈内动脉 50% 狭窄" />
+      </div>
+    </ClinicalCard>
 
-    <H1 icon={Brain}>三、既往史与用药史</H1>
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+    <ClinicalCard k="history">
       <H2>(1) 既往疾病</H2>
-      <FormRow label="高血压" value="10 年" hint="氨氯地平 5mg qd" />
-      <FormRow label="糖尿病" value="无" />
-      <FormRow label="房颤" value="3 年" hint="未规范抗凝" />
-      <FormRow label="过敏史" value="无" />
+      <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+        <FormRow label="高血压" value="10 年" hint="氨氯地平 5mg qd" />
+        <FormRow label="糖尿病" value="无" />
+        <FormRow label="房颤" value="3 年" hint="未规范抗凝" />
+        <FormRow label="过敏史" value="无" />
+      </div>
       <H2>(2) 既往用药</H2>
-      <FormRow label="降压" value="氨氯地平 5mg qd" />
-      <FormRow label="抗血小板" value="阿司匹林 100mg qd" />
-    </div>
+      <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+        <FormRow label="降压" value="氨氯地平 5mg qd" />
+        <FormRow label="抗血小板" value="阿司匹林 100mg qd" />
+      </div>
+    </ClinicalCard>
 
     {showNursing && (
-      <>
-        <H1 icon={Stethoscope}>四、护理首评要点</H1>
-        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-          <H2>(1) 一般情况</H2>
+      <ClinicalCard k="nursing">
+        <H2>(1) 一般情况</H2>
+        <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
           <FormRow label="意识 GCS" value="13 分 · 嗜睡" />
           <FormRow label="皮肤情况" value="完整 · 骶尾部发红" />
-          <H2>(2) 风险评估</H2>
+        </div>
+        <H2>(2) 风险评估</H2>
+        <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
           <FormRow label="跌倒 Morse" value="55 · 高危" />
           <FormRow label="压疮 Braden" value="14 · 高危" />
           <FormRow label="VTE Caprini" value="5 · 高危" />
-          <H2>(3) 管路 / 自理</H2>
+        </div>
+        <H2>(3) 管路 / 自理</H2>
+        <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
           <FormRow label="管路" value="导尿管 · PICC" />
           <FormRow label="ADL Barthel" value="35 · 重度依赖" />
-          <H2>(4) 心理 / 营养</H2>
+        </div>
+        <H2>(4) 心理 / 营养</H2>
+        <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
           <FormRow label="疼痛 NRS" value="3 · 轻度" />
           <FormRow label="HAMD 简版" value="9 · 轻度抑郁倾向" />
           <FormRow label="营养 NRS-2002" value="3 · 有风险" />
         </div>
-      </>
+      </ClinicalCard>
     )}
 
     {conclusions && conclusions.length > 0 && (
@@ -200,16 +305,21 @@ const DIRECTION_META: Record<RehabDirection, { label: string; icon: any; cls: st
 };
 
 export const RehabPanel = ({
-  defaultOpen = "neuro",
+  defaultOpenAll = true,
   scaleSlot,
   conclusions,
 }: {
-  defaultOpen?: RehabDirection;
+  defaultOpenAll?: boolean;
   /** 评估量表区域，由调用方传入（沿用各端原有量表样式） */
   scaleSlot?: ReactNode;
   conclusions?: { role: string; time: string; text: string; tone?: "doctor" | "therapist" | "nurse" | "ai" }[];
 }) => {
-  const [open, setOpen] = useState<RehabDirection | null>(defaultOpen);
+  const [openMap, setOpenMap] = useState<Record<RehabDirection, boolean>>({
+    cardiopulmonary: defaultOpenAll,
+    neuro: defaultOpenAll,
+    ortho: defaultOpenAll,
+  });
+  const toggle = (d: RehabDirection) => setOpenMap({ ...openMap, [d]: !openMap[d] });
   return (
     <div className="space-y-2">
       <AICard title="AI 已按主诊断推荐评估方向">
@@ -219,11 +329,11 @@ export const RehabPanel = ({
       {(Object.keys(DIRECTION_META) as RehabDirection[]).map((d) => {
         const meta = DIRECTION_META[d];
         const Icon = meta.icon;
-        const isOpen = open === d;
+        const isOpen = openMap[d];
         return (
           <div key={d} className="bg-card rounded-2xl shadow-card overflow-hidden">
             <button
-              onClick={() => setOpen(isOpen ? null : d)}
+              onClick={() => toggle(d)}
               className="w-full px-3.5 py-2.5 flex items-center gap-2"
             >
               <div className={`w-8 h-8 rounded-lg ${meta.cls} flex items-center justify-center`}>
@@ -386,13 +496,16 @@ export const NumberedGoals = ({
 
       {adding && (
         <div className="bg-card rounded-2xl shadow-card p-3 space-y-2">
-          <textarea
-            value={newDraft}
-            onChange={(e) => setNewDraft(e.target.value)}
-            placeholder="新增康复目标"
-            className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]"
-            autoFocus
-          />
+          <div className="flex gap-2 items-start">
+            <textarea
+              value={newDraft}
+              onChange={(e) => setNewDraft(e.target.value)}
+              placeholder="新增治疗目标（可语音输入）"
+              className="flex-1 text-[12px] bg-muted rounded-lg p-2 min-h-[60px]"
+              autoFocus
+            />
+            <VoiceMic onTranscript={(t) => setNewDraft((v) => (v ? v + " " : "") + t)} sample="改善左下肢平衡能力，2 周内 Berg ≥ 40。" />
+          </div>
           <div className="flex gap-2">
             <button onClick={() => { setAdding(false); setNewDraft(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
             <button onClick={addGoal} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
@@ -416,7 +529,10 @@ export const NumberedGoals = ({
               </div>
               {isEditing ? (
                 <div className="mt-2 space-y-2">
-                  <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                  <div className="flex gap-2 items-start">
+                    <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="flex-1 text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                    <VoiceMic onTranscript={(t) => setDraft((v) => (v ? v + " " : "") + t)} sample="将训练时间调整为每日 30 分钟。" />
+                  </div>
                   <div className="flex gap-2">
                     <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
                     <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>

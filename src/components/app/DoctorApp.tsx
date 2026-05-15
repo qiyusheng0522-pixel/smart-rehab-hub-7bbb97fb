@@ -236,9 +236,9 @@ export const DoctorApp = () => {
         <AssessSheet patient={activePatient} onLaunchMeeting={() => { setActiveMeeting(null); setSheet("meeting"); }} />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "goal"} onClose={close} title={`AI 康复目标${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="ai"
+      <PhoneSheet open={sheet === "goal"} onClose={close} title={`AI 治疗目标${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="ai"
         footer={
-          <button onClick={() => { toast.success("康复目标已同步治疗师"); close(); }} className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold">同步治疗师</button>
+          <button onClick={() => { toast.success("治疗目标已同步治疗师"); close(); }} className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold">同步治疗师</button>
         }>
         <GoalSheet patient={activePatient} />
       </PhoneSheet>
@@ -291,8 +291,6 @@ export const DoctorApp = () => {
       <PhoneSheet open={sheet === "rx"} onClose={close} title={`确认康复医嘱${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="doctor"
         footer={
           <div className="flex gap-2">
-            <button onClick={() => setTherapistPickerOpen(true)} className="flex-1 border border-primary/30 text-primary rounded-2xl py-3 text-sm font-semibold">调整治疗师</button>
-            <button onClick={() => toast("已驳回，待 AI 重新生成")} className="flex-1 border border-border rounded-2xl py-3 text-sm font-semibold">驳回</button>
             <button onClick={() => { toast.success("处方已确认 · 推送治疗师"); close(); }} className="flex-1 gradient-doctor text-white rounded-2xl py-3 text-sm font-semibold">确认 · 推送</button>
           </div>
         }>
