@@ -181,7 +181,6 @@ export const PatientsPage = ({
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "待首次评估") return !!p.needFirstAssess;
-    if (statusFilter === "退回重评") return !!p.returnedReassess;
     return getPatientStage(p) === statusFilter;
   };
   const matchAdmit = (p: Patient) => {
