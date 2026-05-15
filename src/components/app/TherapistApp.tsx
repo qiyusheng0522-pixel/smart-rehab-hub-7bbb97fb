@@ -28,6 +28,7 @@ import {
 } from "@/components/app/PatientsModule";
 import { RehabPlanModule, PlanStage } from "@/components/app/RehabPlanModule";
 import { MeStats } from "@/components/app/MeStats";
+import { EvalTabs, EvalTabKey, ClinicalPanel, RehabPanel, NumberedGoals } from "@/components/app/EvalShared";
 import {
   UsersRound,
   FileHeart,
@@ -691,35 +692,29 @@ const SCALE_LIB: Record<TherapistType, { name: string; desc: string; items: Scal
   ],
 };
 
+const TH_CLINICAL_CONCLUSIONS = [
+  { role: "医师 · 李志远", time: "今日 09:30", text: "急性缺血性脑卒中，BP 偏高 / LDL 偏高 / 阵发性房颤，需启动二级预防 + 抗凝评估。", tone: "doctor" as const },
+  { role: "护士 · 赵静怡", time: "今日 10:15", text: "意识嗜睡、骶尾发红，跌倒 / 压疮 / VTE 均高危，已启动三大风险护理预案。", tone: "nurse" as const },
+];
+const TH_REHAB_CONCLUSIONS = [
+  { role: "医师 · 李志远", time: "今日 09:35", text: "神经方向为主、心肺方向为辅；NIHSS 14 / mRS 4，建议床边 + Bobath 起步。", tone: "doctor" as const },
+  { role: "PT 治疗师 · 王雅琴", time: "今日 10:40", text: "Berg 32、FAC 2 级、6MWT 120m；先 1 周等长收缩，再渐进负重转移。", tone: "therapist" as const },
+];
+
 const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; type: TherapistType; onChangeType: (t: TherapistType) => void }) => {
   const name = patient ? patient.split(" ")[0] : "孙德强";
   const scales = SCALE_LIB[type];
   const [data, setData] = useState(scales);
   const [note, setNote] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
-  // 重置数据当类型变化
-  const switchType = (t: TherapistType) => {
-    onChangeType(t);
-    setData(SCALE_LIB[t]);
-  };
+  const [tab, setTab] = useState<EvalTabKey>("clinical");
+  const switchType = (t: TherapistType) => { onChangeType(t); setData(SCALE_LIB[t]); };
   const update = (si: number, ii: number, v: string) => {
     setData(prev => prev.map((s, i) => i !== si ? s : { ...s, items: s.items.map((it, j) => j !== ii ? it : { ...it, value: v }) }));
   };
-  return (
-    <div className="p-4 space-y-3">
-      {/* 患者信息 */}
-      <div className="bg-card rounded-2xl shadow-card p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl gradient-therapist text-white flex items-center justify-center font-bold text-lg">{name[0]}</div>
-          <div className="flex-1">
-            <div className="text-sm font-bold">{patient || "孙德强 · 男 60 · 床315"}</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">急性缺血性脑卒中 · 入院第 1 天 · 主管医师：李志远</div>
-          </div>
-          <span className="text-[10px] px-2 py-1 rounded-full bg-secondary-soft text-secondary font-semibold">首次评估</span>
-        </div>
-      </div>
 
-      {/* 治疗师类型切换 */}
+  const scalesBlock = (
+    <>
       <div>
         <div className="text-[11px] text-muted-foreground mb-1.5 px-1">当前治疗师类型 · 决定评估量表组</div>
         <div className="flex items-center gap-1.5 bg-muted rounded-full p-1">
@@ -735,7 +730,6 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         </div>
       </div>
 
-      {/* 量表列表（按名称展示，AI 预填可点击查看修改） */}
       <SectionTitle title={`${type} 评估量表 · ${data.length} 项`} extra={<button onClick={() => toast("已添加自定义量表")} className="text-[11px] text-secondary font-semibold flex items-center gap-1"><Plus className="w-3 h-3" />补充量表</button>} />
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
         {data.map((s, si) => {
@@ -747,14 +741,9 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
                   <div className="text-[12px] font-semibold truncate">{s.name}</div>
                   <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.desc}</div>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5">
-                  <Sparkles className="w-2.5 h-2.5" />AI 预填
-                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
                 <span className="text-[11px] text-secondary font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setData(data.filter((_, i) => i !== si)); toast.success(`已删除「${s.name}」`); }}
-                  className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30"
-                >删除</button>
+                <button onClick={(e) => { e.stopPropagation(); setData(data.filter((_, i) => i !== si)); toast.success(`已删除「${s.name}」`); }} className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30">删除</button>
               </button>
               {open && (
                 <div className="mt-2 divide-y divide-border/60 bg-muted/30 rounded-xl">
@@ -774,14 +763,32 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         })}
       </div>
 
-      {/* 康复目标设定评估（合并自原康复目标页面） */}
-      <SectionTitle title="康复目标设定评估" extra={<span className="text-[10px] text-muted-foreground">ICF · AI 生成 · 支持编辑/删除</span>} />
-      <InlineGoals accent="therapist" />
-
       <SectionTitle title="治疗师补充备注" />
       <div className="bg-card rounded-2xl shadow-card p-3">
         <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="临床触诊 / 患者主诉 / 评估过程中的偏差..." className="w-full bg-muted rounded-xl p-3 text-xs h-24 outline-none" />
       </div>
+    </>
+  );
+
+  return (
+    <div className="p-4 space-y-3">
+      {/* 患者信息 */}
+      <div className="bg-card rounded-2xl shadow-card p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl gradient-therapist text-white flex items-center justify-center font-bold text-lg">{name[0]}</div>
+          <div className="flex-1">
+            <div className="text-sm font-bold">{patient || "孙德强 · 男 60 · 床315"}</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">急性缺血性脑卒中 · 入院第 1 天 · 主管医师：李志远</div>
+          </div>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-secondary-soft text-secondary font-semibold">首次评估</span>
+        </div>
+      </div>
+
+      <EvalTabs active={tab} onChange={setTab} accent="therapist" />
+
+      {tab === "clinical" && <ClinicalPanel conclusions={TH_CLINICAL_CONCLUSIONS} />}
+      {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={TH_REHAB_CONCLUSIONS} />}
+      {tab === "goal" && <NumberedGoals accent="therapist" />}
     </div>
   );
 };

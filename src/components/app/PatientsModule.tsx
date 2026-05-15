@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { PhoneSheet, FormRow, PrimaryBtn } from "@/components/app/Sheet";
 import { AICard, SectionTitle } from "@/components/app/UI";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import {
   ChevronRight,
   Search,
@@ -781,6 +782,8 @@ export const IMChatSheet = ({
   const [summary, setSummary] = useState<string | null>(null);
   const [reminderSent, setReminderSent] = useState(false);
   const [planConfirmed, setPlanConfirmed] = useState(false);
+  const [pendingSummary, setPendingSummary] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const send = () => {
     if (!input.trim()) return;
@@ -790,10 +793,18 @@ export const IMChatSheet = ({
 
   const generateSummary = () => {
     const s = "📋 AI 会议纪要：\n1. 患者 FMA 提升 8 分，整体康复进度符合预期；\n2. 一致同意将 PT 训练强度上调 20%，新增 OT 厨房训练；\n3. ST 维持原计划，下周复评后再决定是否调整；\n4. 出院评估：再观察 1 周，待 Barthel ≥ 75 启动二级方案。";
-    setSummary(s);
-    setMsgs([...msgs, { id: "ai-" + Date.now(), author: "AI 助手", text: s, time: "刚刚", isAI: true }]);
-    onAISummary(s);
-    toast.success("AI 已生成纪要并同步至患者首次评估及康复方案");
+    setPendingSummary(s);
+    setConfirmOpen(true);
+  };
+
+  const confirmAndApply = () => {
+    if (!pendingSummary) return;
+    setSummary(pendingSummary);
+    setMsgs([...msgs, { id: "ai-" + Date.now(), author: "AI 助手", text: pendingSummary, time: "刚刚", isAI: true }]);
+    onAISummary(pendingSummary);
+    toast.success("康复医生已确认 · 纪要已同步至首次评估、康复方案、康复医嘱");
+    setConfirmOpen(false);
+    setPendingSummary(null);
   };
 
   return (
@@ -891,6 +902,28 @@ export const IMChatSheet = ({
           <Send className="w-4 h-4" />
         </button>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="max-w-[360px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-[15px]">
+              <Sparkles className="w-4 h-4 text-ai" /> 康复医生确认会议结论
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[12px]">
+              以下为 AI 自动生成的会议纪要，确认后将同步至 <b>首次评估 / 康复方案 / 康复医嘱</b>。请康复医生审核：
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="bg-ai-soft border border-ai/20 rounded-xl p-3 text-[12px] whitespace-pre-line max-h-[200px] overflow-y-auto">
+            {pendingSummary}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-[12px]">暂不更新</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmAndApply} className="text-[12px] gradient-ai text-white">
+              康复医生确认 · 更新档案
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

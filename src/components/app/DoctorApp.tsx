@@ -31,6 +31,7 @@ import {
 import { RehabPlanModule, PlanStage } from "@/components/app/RehabPlanModule";
 import { RxDetail } from "@/components/app/RxDetail";
 import { MeStats } from "@/components/app/MeStats";
+import { EvalTabs, EvalTabKey, ClinicalPanel, RehabPanel, NumberedGoals, RoleConclusionRow } from "@/components/app/EvalShared";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -1169,37 +1170,130 @@ export const InlineGoals = ({ accent = "doctor" }: { accent?: "doctor" | "therap
   );
 };
 
+const ROLE_CLINICAL_CONCLUSIONS = [
+  { role: "医师 · 李志远", time: "今日 09:30", text: "急性缺血性脑卒中，BP 偏高 / LDL 偏高 / 阵发性房颤，需启动二级预防 + 抗凝评估。", tone: "doctor" as const },
+  { role: "护士 · 赵静怡", time: "今日 10:15", text: "意识嗜睡、骶尾发红，跌倒 / 压疮 / VTE 均为高危，已启动三大风险护理预案。", tone: "nurse" as const },
+];
+const ROLE_REHAB_CONCLUSIONS = [
+  { role: "医师 · 李志远", time: "今日 09:35", text: "神经方向为主、心肺方向为辅；NIHSS 14 / mRS 4，建议床边 + Bobath 起步。", tone: "doctor" as const },
+  { role: "PT 治疗师 · 王雅琴", time: "今日 10:40", text: "Berg 32、FAC 2 级、6MWT 120m；先 1 周等长收缩，再渐进负重转移。", tone: "therapist" as const },
+  { role: "OT 治疗师 · 陈思雨", time: "今日 11:05", text: "FMA-UE 24 / MBI 45；优先躯干稳定 + 患手任务导向训练。", tone: "therapist" as const },
+];
+
 const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchMeeting: () => void }) => {
   const name = patient ? patient.split(" ")[0] : "张建国";
   const [conclusion, setConclusion] = useState(AI_DEFAULT_CONCLUSION);
   const [draft, setDraft] = useState(conclusion);
   const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState<EvalTabKey>("clinical");
 
-  // 医师量表始终显示
   const [docScales, setDocScales] = useState<Scale[]>(DOCTOR_SCALES);
-  // 已加入的治疗师量表
-  const [extraScales, setExtraScales] = useState<Scale[]>(
-    THERAPIST_SCALE_LIB.filter((s) => s.status !== "待填写"),
-  );
+  const [extraScales, setExtraScales] = useState<Scale[]>(THERAPIST_SCALE_LIB.filter((s) => s.status !== "待填写"));
   const [showLib, setShowLib] = useState(false);
   const [libRole, setLibRole] = useState<ScaleRole | "ALL">("ALL");
   const [viewing, setViewing] = useState<Scale | null>(null);
 
   const addScale = (s: Scale) => {
-    if (extraScales.find((x) => x.key === s.key)) {
-      toast("该量表已添加");
-      return;
-    }
+    if (extraScales.find((x) => x.key === s.key)) { toast("该量表已添加"); return; }
     setExtraScales([...extraScales, s]);
     toast.success(`已加入「${s.name}」`);
   };
   const removeScale = (k: string) => setExtraScales(extraScales.filter((x) => x.key !== k));
-
   const viewScale = (s: Scale) => setViewing(s);
 
   const libList = THERAPIST_SCALE_LIB.filter((s) => libRole === "ALL" || s.role === libRole);
   const completedCount = [...docScales, ...extraScales].filter((s) => s.status !== "待填写").length;
   const totalCount = docScales.length + extraScales.length;
+
+  const scalesBlock = (
+    <>
+      <SectionTitle title={`医师评估量表 · ${docScales.length}`} extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount}</span>} />
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {docScales.map((s) => (
+          <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => setDocScales(docScales.filter((x) => x.key !== s.key))} />
+        ))}
+      </div>
+
+      <SectionTitle
+        title={`补充评估量表 · ${extraScales.length}`}
+        extra={<button onClick={() => setShowLib(!showLib)} className="text-[11px] font-semibold text-primary flex items-center gap-1"><Plus className="w-3 h-3" />{showLib ? "收起量表库" : "从量表库添加"}</button>}
+      />
+      {extraScales.length > 0 ? (
+        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+          {extraScales.map((s) => (
+            <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => removeScale(s.key)} />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-muted/40 rounded-2xl p-4 text-[11px] text-muted-foreground text-center">
+          暂未添加治疗师量表，可点击「从量表库添加」补充 PT / OT / ST 量表
+        </div>
+      )}
+
+      {showLib && (
+        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+          <div className="px-4 pt-3 pb-2 border-b border-border/60">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[12px] font-semibold flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />治疗师量表库</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">含 PT / OT / ST 共 {THERAPIST_SCALE_LIB.length} 份</div>
+              </div>
+              <button onClick={() => setShowLib(false)} className="text-[11px] text-muted-foreground">关闭</button>
+            </div>
+            <div className="mt-2 flex gap-1 bg-muted rounded-full p-1 w-fit">
+              {(["ALL", "PT", "OT", "ST"] as const).map((r) => {
+                const active = libRole === r;
+                return (
+                  <button key={r} onClick={() => setLibRole(r)} className={`text-[11px] px-3 py-1 rounded-full font-semibold ${active ? "gradient-doctor text-white" : "text-foreground/70"}`}>
+                    {r === "ALL" ? "全部" : r}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="max-h-[280px] overflow-y-auto divide-y divide-border/60">
+            {libList.map((s) => {
+              const added = !!extraScales.find((x) => x.key === s.key);
+              const role = ROLE_BADGE[s.role];
+              return (
+                <button key={s.key} onClick={() => !added && addScale(s)} className="w-full px-4 py-2.5 flex items-start gap-2 text-left active:bg-muted/40">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[12px] font-semibold">{s.name}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}</span>
+                      {s.recommended && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />推荐</span>)}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{s.brief}</div>
+                  </div>
+                  <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${added ? "bg-success-soft text-success" : "gradient-doctor text-white"}`}>
+                    {added ? "已添加" : "+ 添加"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <AICard
+        title="AI 康复评估辅助结论"
+        action={<button onClick={() => setEditing(!editing)} className="text-[11px] font-semibold text-ai flex items-center gap-1"><Edit2 className="w-3 h-3" />{editing ? "完成编辑" : "编辑结论"}</button>}
+      >
+        {editing ? (
+          <div className="space-y-2">
+            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="w-full min-h-[160px] text-[12px] leading-relaxed bg-background/60 border border-ai/20 rounded-xl p-2 focus:outline-none focus:ring-1 focus:ring-ai/40" />
+            <div className="flex gap-2">
+              <button className="flex-1 border border-ai/30 text-ai rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-1" onClick={() => { setDraft(AI_DEFAULT_CONCLUSION); toast("已重新生成 AI 结论"); }}><RotateCcw className="w-3 h-3" />重新生成</button>
+              <button className="flex-1 gradient-doctor text-white rounded-xl py-2 text-xs font-semibold" onClick={() => { setConclusion(draft); setEditing(false); toast.success("结论已保存"); }}>保存</button>
+            </div>
+          </div>
+        ) : (
+          <div className="whitespace-pre-line text-[12px] leading-relaxed">{conclusion}</div>
+        )}
+        <div className="mt-2 text-[10px] text-muted-foreground">评估医师：康复医学科 王敏 · 已纳入 {completedCount} 份量表数据</div>
+      </AICard>
+    </>
+  );
 
   return (
     <div className="p-4 space-y-3">
@@ -1223,141 +1317,13 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
         </div>
       </div>
 
-      {/* 医师量表 */}
-      <SectionTitle title={`医师评估量表 · ${docScales.length}`} extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount}</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        {docScales.map((s) => (
-          <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => setDocScales(docScales.filter((x) => x.key !== s.key))} />
-        ))}
-      </div>
+      <EvalTabs active={tab} onChange={setTab} accent="doctor" />
 
-      {/* 已添加的治疗师量表 */}
-      <SectionTitle
-        title={`补充评估量表 · ${extraScales.length}`}
-        extra={
-          <button
-            onClick={() => setShowLib(!showLib)}
-            className="text-[11px] font-semibold text-primary flex items-center gap-1"
-          >
-            <Plus className="w-3 h-3" />{showLib ? "收起量表库" : "从量表库添加"}
-          </button>
-        }
-      />
-      {extraScales.length > 0 ? (
-        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-          {extraScales.map((s) => (
-            <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => removeScale(s.key)} />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-muted/40 rounded-2xl p-4 text-[11px] text-muted-foreground text-center">
-          暂未添加治疗师量表，可点击「从量表库添加」补充 PT / OT / ST 量表
-        </div>
-      )}
+      {tab === "clinical" && <ClinicalPanel conclusions={ROLE_CLINICAL_CONCLUSIONS} />}
+      {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={ROLE_REHAB_CONCLUSIONS} />}
+      {tab === "goal" && <NumberedGoals accent="doctor" />}
 
-      {/* 量表库 */}
-      {showLib && (
-        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
-          <div className="px-4 pt-3 pb-2 border-b border-border/60">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[12px] font-semibold flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-primary" />治疗师量表库
-                </div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">含 PT / OT / ST 共 {THERAPIST_SCALE_LIB.length} 份；标记 AI 推荐者为本患者高相关</div>
-              </div>
-              <button onClick={() => setShowLib(false)} className="text-[11px] text-muted-foreground">关闭</button>
-            </div>
-            <div className="mt-2 flex gap-1 bg-muted rounded-full p-1 w-fit">
-              {(["ALL", "PT", "OT", "ST"] as const).map((r) => {
-                const active = libRole === r;
-                return (
-                  <button
-                    key={r}
-                    onClick={() => setLibRole(r)}
-                    className={`text-[11px] px-3 py-1 rounded-full font-semibold ${active ? "gradient-doctor text-white" : "text-foreground/70"}`}
-                  >
-                    {r === "ALL" ? "全部" : r}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div className="max-h-[280px] overflow-y-auto divide-y divide-border/60">
-            {libList.map((s) => {
-              const added = !!extraScales.find((x) => x.key === s.key);
-              const role = ROLE_BADGE[s.role];
-              return (
-                <button
-                  key={s.key}
-                  onClick={() => !added && addScale(s)}
-                  className="w-full px-4 py-2.5 flex items-start gap-2 text-left active:bg-muted/40"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[12px] font-semibold">{s.name}</span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}</span>
-                      {s.recommended && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5">
-                          <Sparkles className="w-2.5 h-2.5" />推荐
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{s.brief}</div>
-                  </div>
-                  <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${added ? "bg-success-soft text-success" : "gradient-doctor text-white"}`}>
-                    {added ? "已添加" : "+ 添加"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 康复目标（AI 生成 · 可编辑删除） */}
-      <SectionTitle title="康复目标" extra={<span className="text-[10px] text-muted-foreground">AI 基于 ICF 自动生成 · 支持编辑/删除</span>} />
-      <InlineGoals />
-
-      {/* AI 结论 */}
-      <AICard
-        title="AI 首次评估辅助结论"
-        action={
-          <button
-            onClick={() => setEditing(!editing)}
-            className="text-[11px] font-semibold text-ai flex items-center gap-1"
-          >
-            <Edit2 className="w-3 h-3" />{editing ? "完成编辑" : "编辑结论"}
-          </button>
-        }
-      >
-        {editing ? (
-          <div className="space-y-2">
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              className="w-full min-h-[160px] text-[12px] leading-relaxed bg-background/60 border border-ai/20 rounded-xl p-2 focus:outline-none focus:ring-1 focus:ring-ai/40"
-            />
-            <div className="flex gap-2">
-              <button
-                className="flex-1 border border-ai/30 text-ai rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-1"
-                onClick={() => { setDraft(AI_DEFAULT_CONCLUSION); toast("已重新生成 AI 结论"); }}
-              ><RotateCcw className="w-3 h-3" />重新生成</button>
-              <button
-                className="flex-1 gradient-doctor text-white rounded-xl py-2 text-xs font-semibold"
-                onClick={() => { setConclusion(draft); setEditing(false); toast.success("结论已保存"); }}
-              >保存</button>
-            </div>
-          </div>
-        ) : (
-          <div className="whitespace-pre-line text-[12px] leading-relaxed">{conclusion}</div>
-        )}
-        <div className="mt-2 text-[10px] text-muted-foreground">评估医师：康复医学科 王敏 · 已纳入 {completedCount} 份量表数据</div>
-      </AICard>
-
-      {viewing && (
-        <ScaleDetail scale={viewing} onClose={() => setViewing(null)} />
-      )}
+      {viewing && (<ScaleDetail scale={viewing} onClose={() => setViewing(null)} />)}
     </div>
   );
 };
