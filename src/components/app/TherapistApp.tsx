@@ -784,9 +784,8 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         </div>
       </div>
 
-      <EvalTabs active={tab} onChange={setTab} accent="therapist" />
+      <EvalTabs active={tab} onChange={setTab} accent="therapist" hideClinical />
 
-      {tab === "clinical" && <ClinicalPanel conclusions={TH_CLINICAL_CONCLUSIONS} />}
       {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={TH_REHAB_CONCLUSIONS} />}
       {tab === "goal" && <NumberedGoals accent="therapist" />}
     </div>
