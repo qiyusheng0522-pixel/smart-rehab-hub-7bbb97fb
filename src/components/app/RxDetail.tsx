@@ -144,27 +144,8 @@ export const RxDetail = ({
       </div>
 
       {/* 3. 康复治疗项目 */}
-      <SectionTitle title="③ 康复治疗项目" extra={<span className="text-[10px] text-muted-foreground">院内执行</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        {[
-          { type: "PT", name: "下肢力量训练", set: "3 组 × 10 次", freq: "每日" },
-          { type: "PT", name: "平衡板训练", set: "15 分钟", freq: "每日" },
-          { type: "PT", name: "步态训练", set: "30 分钟", freq: "5 次/周" },
-          { type: "OT", name: "穿衣 ADL", set: "20 分钟", freq: "每日" },
-          { type: "OT", name: "厨房活动", set: "25 分钟", freq: "3 次/周" },
-          { type: "ST", name: "构音训练", set: "30 分钟", freq: "3 次/周" },
-          { type: "物理因子", name: "低频电刺激", set: "20 分钟", freq: "5 次/周" },
-        ].map((r) => (
-          <div key={r.name} className="flex items-center gap-3 py-2.5 px-3">
-            <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${accentSoft}`}>{r.type}</span>
-            <div className="flex-1">
-              <div className="text-[12px] font-semibold">{r.name}</div>
-              <div className="text-[10px] text-muted-foreground">{r.set} · {r.freq}</div>
-            </div>
-            <button className={accentText}><Edit3 className="w-3.5 h-3.5" /></button>
-          </div>
-        ))}
-      </div>
+      <SectionTitle title="③ 康复治疗项目" extra={<span className="text-[10px] text-muted-foreground">康复医师可手动调整治疗师 / 时段</span>} />
+      <TreatmentItemsEditor accentSoft={accentSoft} accentText={accentText} canAdjust={accent === "doctor"} />
 
       {/* 4. 康复辅具/设备处方 */}
       <SectionTitle title="④ 康复辅具 / 设备处方" extra={<span className="text-[10px] text-muted-foreground">配备清单</span>} />
