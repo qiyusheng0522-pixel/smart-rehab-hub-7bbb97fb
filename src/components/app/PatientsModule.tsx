@@ -782,6 +782,8 @@ export const IMChatSheet = ({
   const [summary, setSummary] = useState<string | null>(null);
   const [reminderSent, setReminderSent] = useState(false);
   const [planConfirmed, setPlanConfirmed] = useState(false);
+  const [pendingSummary, setPendingSummary] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const send = () => {
     if (!input.trim()) return;
@@ -791,10 +793,18 @@ export const IMChatSheet = ({
 
   const generateSummary = () => {
     const s = "📋 AI 会议纪要：\n1. 患者 FMA 提升 8 分，整体康复进度符合预期；\n2. 一致同意将 PT 训练强度上调 20%，新增 OT 厨房训练；\n3. ST 维持原计划，下周复评后再决定是否调整；\n4. 出院评估：再观察 1 周，待 Barthel ≥ 75 启动二级方案。";
-    setSummary(s);
-    setMsgs([...msgs, { id: "ai-" + Date.now(), author: "AI 助手", text: s, time: "刚刚", isAI: true }]);
-    onAISummary(s);
-    toast.success("AI 已生成纪要并同步至患者首次评估及康复方案");
+    setPendingSummary(s);
+    setConfirmOpen(true);
+  };
+
+  const confirmAndApply = () => {
+    if (!pendingSummary) return;
+    setSummary(pendingSummary);
+    setMsgs([...msgs, { id: "ai-" + Date.now(), author: "AI 助手", text: pendingSummary, time: "刚刚", isAI: true }]);
+    onAISummary(pendingSummary);
+    toast.success("康复医生已确认 · 纪要已同步至首次评估、康复方案、康复医嘱");
+    setConfirmOpen(false);
+    setPendingSummary(null);
   };
 
   return (
