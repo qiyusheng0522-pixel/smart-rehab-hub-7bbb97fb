@@ -30,8 +30,7 @@ export type PatientFilter =
   | "院中"
   | "待出院"
   | "院后"
-  | "待首次评估"
-  | "退回重评";
+  | "待首次评估";
 
 export type Patient = {
   id: string;
@@ -182,7 +181,6 @@ export const PatientsPage = ({
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "待首次评估") return !!p.needFirstAssess;
-    if (statusFilter === "退回重评") return !!p.returnedReassess;
     return getPatientStage(p) === statusFilter;
   };
   const matchAdmit = (p: Patient) => {
@@ -319,7 +317,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
             <div className="text-[13px] font-semibold">{p.name}</div>
             <span className="text-[10px] text-muted-foreground">床 {p.bed}</span>
             {p.isNew && <span className="text-[9px] px-1.5 py-0.5 rounded bg-warning text-white font-bold">NEW</span>}
-            {p.returnedReassess && <span className="text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-semibold">退回重评</span>}
+            
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{p.meta}</div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -387,12 +385,7 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
         </div>
       </div>
 
-      {patient.returnedReassess && (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-[12px] text-destructive">
-          <div className="font-semibold flex items-center gap-1">⟲ 已被退回 · 需重新首次评估</div>
-          <div className="text-[11px] mt-1 text-destructive/80 leading-relaxed">{patient.returnReason}</div>
-        </div>
-      )}
+      {/* 退回重评提示已移除 */}
 
       {/* 操作按钮已迁移至 PhoneSheet 底部 footer（PatientActionsBar），保持冻结于底部 */}
 

@@ -1,0 +1,711 @@
+import { ReactNode, useState } from "react";
+import { AICard, SectionTitle } from "@/components/app/UI";
+import { FormRow } from "@/components/app/Sheet";
+import {
+  Sparkles,
+  Stethoscope,
+  Activity,
+  Brain,
+  HeartPulse,
+  AlertTriangle,
+  CheckCircle2,
+  Edit2,
+  X,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  Users,
+  Calendar,
+  ChevronLeft,
+} from "lucide-react";
+import { toast } from "sonner";
+
+/* ==============================================================
+ * 三段式 Tabs：临床评估 / 康复评估 / 康复目标
+ * ============================================================== */
+export type EvalTabKey = "clinical" | "rehab" | "goal";
+
+export const EvalTabs = ({
+  active,
+  onChange,
+  accent = "doctor",
+}: {
+  active: EvalTabKey;
+  onChange: (k: EvalTabKey) => void;
+  accent?: "doctor" | "therapist" | "nurse";
+}) => {
+  const grad = accent === "therapist" ? "gradient-therapist" : accent === "nurse" ? "gradient-nurse" : "gradient-doctor";
+  const items: { k: EvalTabKey; label: string }[] = [
+    { k: "clinical", label: "临床评估" },
+    { k: "rehab", label: "康复评估" },
+    { k: "goal", label: "康复目标" },
+  ];
+  return (
+    <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2 bg-background/95 backdrop-blur">
+      <div className="flex items-center gap-1.5 bg-muted rounded-full p-1">
+        {items.map((it) => {
+          const isActive = active === it.k;
+          return (
+            <button
+              key={it.k}
+              onClick={() => onChange(it.k)}
+              className={`flex-1 text-[12px] py-1.5 rounded-full font-semibold transition-all ${
+                isActive ? `${grad} text-white shadow-card` : "text-foreground/70"
+              }`}
+            >
+              {it.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* 角色 + 时间标签 */
+export const RoleConclusionRow = ({
+  role,
+  time,
+  text,
+  tone = "doctor",
+}: {
+  role: string;
+  time: string;
+  text: string;
+  tone?: "doctor" | "therapist" | "nurse" | "ai";
+}) => {
+  const cls =
+    tone === "therapist"
+      ? "bg-secondary-soft text-secondary"
+      : tone === "nurse"
+        ? "bg-rose-50 text-role-nurse"
+        : tone === "ai"
+          ? "bg-ai/10 text-ai"
+          : "bg-primary-soft text-primary";
+  return (
+    <div className="px-3 py-2.5 border-b border-border/60 last:border-0">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${cls}`}>{role}</span>
+        <span className="text-[10px] text-muted-foreground">{time}</span>
+      </div>
+      <div className="text-[12px] text-foreground/85 mt-1.5 leading-relaxed">{text}</div>
+    </div>
+  );
+};
+
+/* H1 / H2 / item 三级层次 */
+export const H1 = ({ children, icon: Icon }: { children: ReactNode; icon?: any }) => (
+  <div className="flex items-center gap-2 mt-3 mb-1.5 px-1">
+    {Icon && <Icon className="w-4 h-4 text-primary" />}
+    <span className="text-[13px] font-bold text-foreground">{children}</span>
+  </div>
+);
+
+export const H2 = ({ children, extra }: { children: ReactNode; extra?: ReactNode }) => (
+  <div className="flex items-center justify-between mt-1.5 mb-1 px-1">
+    <span className="text-[11px] font-semibold text-muted-foreground tracking-wide">{children}</span>
+    {extra}
+  </div>
+);
+
+/* ==============================================================
+ * 临床评估面板（医师 / 护士共用）
+ * ============================================================== */
+export const ClinicalPanel = ({
+  showNursing = false,
+  conclusions,
+}: {
+  showNursing?: boolean;
+  conclusions?: { role: string; time: string; text: string; tone?: "doctor" | "therapist" | "nurse" | "ai" }[];
+}) => (
+  <div className="space-y-1">
+    <H1 icon={HeartPulse}>一、生命体征</H1>
+    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+      <H2>(1) 当前生命体征</H2>
+      <FormRow label="血压 BP" value="142 / 88 mmHg" hint="入院偏高" />
+      <FormRow label="心率 HR" value="78 bpm · 律齐" />
+      <FormRow label="呼吸 RR" value="18 /min" />
+      <FormRow label="血氧 SpO₂" value="97 %" />
+      <FormRow label="体温 T" value="36.7 ℃" />
+    </div>
+
+    <H1 icon={Activity}>二、生化与影像结果</H1>
+    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+      <H2>(1) 血液生化</H2>
+      <FormRow label="血常规" value="WBC 7.2 · Hb 132" />
+      <FormRow label="肝肾功能" value="ALT 28 · Cr 86 μmol/L" />
+      <FormRow label="电解质" value="K 4.1 · Na 138" />
+      <FormRow label="血脂 / 血糖" value="LDL 3.6 · 空腹 6.2" hint="LDL 偏高" />
+      <FormRow label="凝血功能" value="INR 1.0 · D-D 1.8" hint="D-二聚体偏高" />
+      <H2>(2) 影像学</H2>
+      <FormRow label="头颅 MRI" value="左基底节区急性梗死" hint="2026-05-07" />
+      <FormRow label="颈动脉超声" value="右颈内动脉 50% 狭窄" />
+    </div>
+
+    <H1 icon={Brain}>三、既往史与用药史</H1>
+    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+      <H2>(1) 既往疾病</H2>
+      <FormRow label="高血压" value="10 年" hint="氨氯地平 5mg qd" />
+      <FormRow label="糖尿病" value="无" />
+      <FormRow label="房颤" value="3 年" hint="未规范抗凝" />
+      <FormRow label="过敏史" value="无" />
+      <H2>(2) 既往用药</H2>
+      <FormRow label="降压" value="氨氯地平 5mg qd" />
+      <FormRow label="抗血小板" value="阿司匹林 100mg qd" />
+    </div>
+
+    {showNursing && (
+      <>
+        <H1 icon={Stethoscope}>四、护理首评要点</H1>
+        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+          <H2>(1) 一般情况</H2>
+          <FormRow label="意识 GCS" value="13 分 · 嗜睡" />
+          <FormRow label="皮肤情况" value="完整 · 骶尾部发红" />
+          <H2>(2) 风险评估</H2>
+          <FormRow label="跌倒 Morse" value="55 · 高危" />
+          <FormRow label="压疮 Braden" value="14 · 高危" />
+          <FormRow label="VTE Caprini" value="5 · 高危" />
+          <H2>(3) 管路 / 自理</H2>
+          <FormRow label="管路" value="导尿管 · PICC" />
+          <FormRow label="ADL Barthel" value="35 · 重度依赖" />
+          <H2>(4) 心理 / 营养</H2>
+          <FormRow label="疼痛 NRS" value="3 · 轻度" />
+          <FormRow label="HAMD 简版" value="9 · 轻度抑郁倾向" />
+          <FormRow label="营养 NRS-2002" value="3 · 有风险" />
+        </div>
+      </>
+    )}
+
+    {conclusions && conclusions.length > 0 && (
+      <>
+        <H1 icon={Users}>各角色临床评估结论</H1>
+        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+          {conclusions.map((c, i) => (
+            <RoleConclusionRow key={i} {...c} />
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+);
+
+/* ==============================================================
+ * 康复评估面板：心肺 / 神经 / 骨科 三方向折叠
+ * ============================================================== */
+export type RehabDirection = "cardiopulmonary" | "neuro" | "ortho";
+const DIRECTION_META: Record<RehabDirection, { label: string; icon: any; cls: string }> = {
+  cardiopulmonary: { label: "心肺方向", icon: HeartPulse, cls: "bg-rose-50 text-role-nurse" },
+  neuro: { label: "神经方向", icon: Brain, cls: "bg-primary-soft text-primary" },
+  ortho: { label: "骨科方向", icon: Activity, cls: "bg-secondary-soft text-secondary" },
+};
+
+export const RehabPanel = ({
+  defaultOpen = "neuro",
+  scaleSlot,
+  conclusions,
+}: {
+  defaultOpen?: RehabDirection;
+  /** 评估量表区域，由调用方传入（沿用各端原有量表样式） */
+  scaleSlot?: ReactNode;
+  conclusions?: { role: string; time: string; text: string; tone?: "doctor" | "therapist" | "nurse" | "ai" }[];
+}) => {
+  const [open, setOpen] = useState<RehabDirection | null>(defaultOpen);
+  return (
+    <div className="space-y-2">
+      <AICard title="AI 已按主诊断推荐评估方向">
+        基于「急性缺血性脑卒中 + 既往房颤」自动推荐：神经方向（主）+ 心肺方向（辅），骨科方向暂不必要。
+      </AICard>
+
+      {(Object.keys(DIRECTION_META) as RehabDirection[]).map((d) => {
+        const meta = DIRECTION_META[d];
+        const Icon = meta.icon;
+        const isOpen = open === d;
+        return (
+          <div key={d} className="bg-card rounded-2xl shadow-card overflow-hidden">
+            <button
+              onClick={() => setOpen(isOpen ? null : d)}
+              className="w-full px-3.5 py-2.5 flex items-center gap-2"
+            >
+              <div className={`w-8 h-8 rounded-lg ${meta.cls} flex items-center justify-center`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <span className="text-[13px] font-semibold text-foreground flex-1 text-left">{meta.label}</span>
+              {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+            </button>
+            {isOpen && (
+              <div className="px-3 pb-3 space-y-2">
+                {d === "neuro" && (
+                  <>
+                    <H2>(1) 专科评估</H2>
+                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+                      <FormRow label="NIHSS" value="14 · 中度" />
+                      <FormRow label="mRS" value="4 · 中重度残疾" />
+                      <FormRow label="MoCA" value="18/30 · 轻度损害" />
+                    </div>
+                    <H2>(2) 特殊评估</H2>
+                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+                      <FormRow label="平衡测试 Berg" value="32/56 · 高跌倒风险" />
+                      <FormRow label="痉挛 MAS（踝跖屈）" value="2 级" />
+                      <FormRow label="步态分析 GAITRite" value="步速 0.42 m/s" />
+                    </div>
+                  </>
+                )}
+                {d === "cardiopulmonary" && (
+                  <>
+                    <H2>(1) 专科评估</H2>
+                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+                      <FormRow label="6 分钟步行 6MWT" value="120 m · 受限" />
+                      <FormRow label="Borg 主观疲劳" value="13" />
+                      <FormRow label="呼吸功能 FEV1%" value="78 %" />
+                    </div>
+                    <H2>(2) 特殊评估</H2>
+                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+                      <FormRow label="心肺运动试验 CPET" value="峰值 VO₂ 14.2" hint="低心肺储备" />
+                      <FormRow label="心电图 / 动态" value="阵发性房颤" />
+                    </div>
+                  </>
+                )}
+                {d === "ortho" && (
+                  <>
+                    <H2>(1) 专科评估</H2>
+                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+                      <FormRow label="MMT 肌力" value="右下肢 2 级" />
+                      <FormRow label="ROM 关节活动度" value="髋屈 80° · 膝屈 110°" />
+                      <FormRow label="Harris 髋关节" value="—" hint="本患者非骨科主诊，可缺省" />
+                    </div>
+                    <H2>(2) 特殊评估</H2>
+                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
+                      <FormRow label="X 线 / CT" value="—" />
+                      <FormRow label="肌骨超声" value="—" />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {scaleSlot && (
+        <>
+          <H1>评估量表</H1>
+          {scaleSlot}
+        </>
+      )}
+
+      {conclusions && conclusions.length > 0 && (
+        <>
+          <H1 icon={Users}>各角色康复评估结论</H1>
+          <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+            {conclusions.map((c, i) => (
+              <RoleConclusionRow key={i} {...c} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+/* ==============================================================
+ * 康复目标 · 编号清晰版
+ * ============================================================== */
+export type NumberedGoal = {
+  id: string;
+  dim: "function" | "activity" | "participation";
+  period: "1 周" | "2 周" | "4 周" | "8 周";
+  source: "AI" | "医师" | "治疗师";
+  text: string;
+  measure?: string;
+};
+
+const DIM_META: Record<NumberedGoal["dim"], { label: string; cls: string }> = {
+  function: { label: "身体功能", cls: "bg-primary-soft text-primary" },
+  activity: { label: "活动", cls: "bg-secondary-soft text-secondary" },
+  participation: { label: "参与", cls: "bg-warning-soft text-warning" },
+};
+
+const NUMBER_GLYPH = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
+
+const DEFAULT_NUMBERED_GOALS: NumberedGoal[] = [
+  { id: "g1", dim: "function", period: "4 周", source: "AI", text: "右上下肢肌力由 2 级提升至 3+ 级", measure: "MMT ≥ 3+ · MAS ≤ 1+" },
+  { id: "g2", dim: "function", period: "4 周", source: "AI", text: "认知与忽略明显改善", measure: "MoCA ≥ 24" },
+  { id: "g3", dim: "activity", period: "2 周", source: "AI", text: "床椅独立转移 + 助行器辅助步行 30m", measure: "Berg ≥ 40" },
+  { id: "g4", dim: "activity", period: "4 周", source: "AI", text: "独立步行 ≥ 50m", measure: "FAC ≥ 3 · Barthel ≥ 75" },
+  { id: "g5", dim: "participation", period: "8 周", source: "AI", text: "回归家庭生活", measure: "独立完成 ADL 6 项" },
+];
+
+export const NumberedGoals = ({
+  accent = "doctor",
+  initial = DEFAULT_NUMBERED_GOALS,
+}: {
+  accent?: "doctor" | "therapist" | "nurse";
+  initial?: NumberedGoal[];
+}) => {
+  const grad = accent === "therapist" ? "gradient-therapist" : accent === "nurse" ? "gradient-nurse" : "gradient-doctor";
+  const accentText = accent === "therapist" ? "text-secondary" : accent === "nurse" ? "text-role-nurse" : "text-primary";
+  const [goals, setGoals] = useState<NumberedGoal[]>(initial);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [newDraft, setNewDraft] = useState("");
+
+  const refreshGoals = () => toast.success("已根据最新方案及患者档案更新目标");
+  const remove = (id: string) => { setGoals(goals.filter(g => g.id !== id)); toast.success("目标已删除"); };
+  const startEdit = (g: NumberedGoal) => { setEditingId(g.id); setDraft(g.text); };
+  const saveEdit = () => {
+    if (!editingId) return;
+    setGoals(goals.map(g => g.id === editingId ? { ...g, text: draft.trim() || g.text } : g));
+    setEditingId(null);
+    toast.success("目标已更新");
+  };
+  const addGoal = () => {
+    if (!newDraft.trim()) return;
+    setGoals([...goals, { id: `ng${Date.now()}`, dim: "activity", period: "4 周", source: "医师", text: newDraft.trim() }]);
+    setNewDraft("");
+    setAdding(false);
+    toast.success("已新增目标");
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <button
+          onClick={refreshGoals}
+          className={`flex-1 ${grad} text-white rounded-2xl py-2.5 text-[13px] font-bold flex items-center justify-center gap-1.5 shadow-card active:scale-[0.98]`}
+        >
+          <Sparkles className="w-4 h-4" />更新目标
+        </button>
+        <button
+          onClick={() => setAdding(true)}
+          className={`px-4 rounded-2xl border border-border bg-card text-[12px] font-semibold ${accentText} flex items-center gap-1`}
+        >
+          <Plus className="w-3.5 h-3.5" />新增
+        </button>
+      </div>
+
+      {adding && (
+        <div className="bg-card rounded-2xl shadow-card p-3 space-y-2">
+          <textarea
+            value={newDraft}
+            onChange={(e) => setNewDraft(e.target.value)}
+            placeholder="新增康复目标"
+            className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]"
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <button onClick={() => { setAdding(false); setNewDraft(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+            <button onClick={addGoal} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
+          </div>
+        </div>
+      )}
+
+      {goals.map((g, idx) => {
+        const dimMeta = DIM_META[g.dim];
+        const isEditing = editingId === g.id;
+        return (
+          <div key={g.id} className="bg-card rounded-2xl shadow-card p-3.5 flex gap-3">
+            <div className={`w-8 h-8 rounded-xl ${grad} text-white flex items-center justify-center text-base font-bold shrink-0`}>
+              {NUMBER_GLYPH[idx] ?? idx + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dimMeta.cls}`}>{dimMeta.label}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${g.source === "AI" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"}`}>{g.source}</span>
+              </div>
+              {isEditing ? (
+                <div className="mt-2 space-y-2">
+                  <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                  <div className="flex gap-2">
+                    <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+                    <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-[13px] text-foreground font-semibold mt-1.5 leading-relaxed">{g.text}</div>
+                  {g.measure && (
+                    <div className="text-[11px] text-muted-foreground mt-1">衡量指标：{g.measure}</div>
+                  )}
+                  <div className="mt-2 flex gap-3">
+                    <button onClick={() => startEdit(g)} className={`text-[11px] ${accentText} font-semibold flex items-center gap-0.5`}><Edit2 className="w-3 h-3" />编辑</button>
+                    <button onClick={() => remove(g.id)} className="text-[11px] text-destructive font-semibold flex items-center gap-0.5"><X className="w-3 h-3" />删除</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ==============================================================
+ * 团队会议 · 分歧自动发起
+ * ============================================================== */
+export type DisputeItem = {
+  id: string;
+  topic: string;
+  doctor: string;
+  therapist: string;
+  nurse: string;
+};
+
+const DEFAULT_DISPUTES: DisputeItem[] = [
+  {
+    id: "d1",
+    topic: "下肢负重时机",
+    doctor: "建议术后第 5 天起渐进负重 25%。",
+    therapist: "实际触诊疼痛 VAS 7，建议先 1 周等长收缩，第 7 天再负重。",
+    nurse: "夜间疼痛仍较重，倾向延后 2 天。",
+  },
+  {
+    id: "d2",
+    topic: "OT 训练强度",
+    doctor: "OT 厨房训练 25min × 5/周。",
+    therapist: "患者认知耐受不足，建议 15min × 5/周起步。",
+    nurse: "建议增加陪护配合度宣教。",
+  },
+];
+
+export const TeamMeetingBanner = ({
+  count = 2,
+  onOpen,
+}: {
+  count?: number;
+  onOpen: () => void;
+}) => (
+  <button
+    onClick={onOpen}
+    className="w-full bg-gradient-to-r from-warning/15 to-ai/15 border border-warning/30 rounded-2xl p-3 flex items-center gap-3 active:scale-[0.99]"
+  >
+    <div className="w-9 h-9 rounded-xl bg-ai text-white flex items-center justify-center shrink-0">
+      <Sparkles className="w-4 h-4" />
+    </div>
+    <div className="flex-1 text-left">
+      <div className="text-[12px] font-bold text-warning flex items-center gap-1.5">
+        <AlertTriangle className="w-3.5 h-3.5" /> AI 检测到 {count} 项评估分歧 · 已发起团队会议
+      </div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">医师 / 治疗师 / 护士 进入讨论 → 同步至评估 / 方案 / 医嘱</div>
+    </div>
+    <ChevronRight className="w-4 h-4 text-warning" />
+  </button>
+);
+
+export const TeamMeetingDisputeSheet = ({
+  onClose,
+  disputes = DEFAULT_DISPUTES,
+}: {
+  onClose: () => void;
+  disputes?: DisputeItem[];
+}) => {
+  const [syncTargets, setSyncTargets] = useState<Record<string, boolean>>({
+    eval: true,
+    plan: true,
+    rx: false,
+  });
+  const toggle = (k: string) => setSyncTargets({ ...syncTargets, [k]: !syncTargets[k] });
+  const finish = () => {
+    const labels = [
+      syncTargets.eval && "康复评估",
+      syncTargets.plan && "康复方案",
+      syncTargets.rx && "康复医嘱",
+    ].filter(Boolean).join(" / ");
+    toast.success(`会议结论已同步至 ${labels || "档案"}`);
+    onClose();
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <div className="bg-warning/10 border-b border-warning/20 px-4 py-3 flex items-center gap-2">
+        <button onClick={onClose} className="w-8 h-8 rounded-full bg-card flex items-center justify-center">
+          <ChevronLeft className="w-4 h-4 text-foreground" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="text-[14px] font-bold text-warning flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" /> AI 团队会议 · 分歧讨论
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">共 {disputes.length} 项分歧 · 医师 / 治疗师 / 护士 在线</div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <AICard title="AI 自动整理的分歧条目">
+          系统检测到三方评估在以下条目存在分歧，已自动召集相关角色进入会议讨论。
+        </AICard>
+
+        {disputes.map((d, i) => (
+          <div key={d.id} className="bg-card rounded-2xl shadow-card overflow-hidden">
+            <div className="px-3 py-2 bg-warning/10 border-b border-warning/20 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-warning text-white flex items-center justify-center text-[11px] font-bold">{i + 1}</span>
+              <span className="text-[13px] font-bold">{d.topic}</span>
+            </div>
+            <RoleConclusionRow role="医师 · 李志远" time="今日 09:30" text={d.doctor} tone="doctor" />
+            <RoleConclusionRow role="治疗师 · 王雅琴" time="今日 10:10" text={d.therapist} tone="therapist" />
+            <RoleConclusionRow role="护士 · 赵静怡" time="今日 10:25" text={d.nurse} tone="nurse" />
+          </div>
+        ))}
+
+        <H1>讨论区</H1>
+        <div className="bg-card rounded-2xl shadow-card p-3 space-y-2 text-[12px]">
+          <div className="flex gap-2">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary-soft text-primary font-semibold shrink-0">医师</span>
+            <span>同意先 1 周等长收缩，第 7 天复评后再决定负重。</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary-soft text-secondary font-semibold shrink-0">治疗师</span>
+            <span>OT 强度调整为 15min × 5/周，2 周后再加量。</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-50 text-role-nurse font-semibold shrink-0">护士</span>
+            <span>夜间疼痛干预方案同步增加镇痛护理。</span>
+          </div>
+        </div>
+
+        <H1>会议结论 · 同步范围</H1>
+        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+          {[
+            { k: "eval", label: "同步至 · 康复评估" },
+            { k: "plan", label: "同步至 · 康复方案" },
+            { k: "rx", label: "同步至 · 康复医嘱" },
+          ].map(it => (
+            <button key={it.k} onClick={() => toggle(it.k)} className="w-full px-3 py-3 flex items-center justify-between">
+              <span className="text-[13px]">{it.label}</span>
+              <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${syncTargets[it.k] ? "bg-primary border-primary text-white" : "border-border"}`}>
+                {syncTargets[it.k] && <CheckCircle2 className="w-3.5 h-3.5" />}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5">
+        <button onClick={finish} className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold shadow-card flex items-center justify-center gap-2">
+          <Sparkles className="w-4 h-4" /> 生成会议结论并同步
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ==============================================================
+ * AI 自动排班
+ * ============================================================== */
+type SlotCell = { therapist: string; patient: string; room: string; type: "PT" | "OT" | "ST" } | null;
+
+const SLOTS_AM = ["08:00", "09:00", "10:00", "11:00"];
+const SLOTS_PM = ["14:00", "15:00", "16:00", "17:00"];
+const ROOMS = ["A-301", "A-303", "B-201", "B-205"];
+const THERAPISTS = ["王雅琴(PT)", "陈治疗师(OT)", "陈思雨(ST)", "李建华(PT)"];
+
+const generateAutoSchedule = (): SlotCell[][] => {
+  const allSlots = [...SLOTS_AM, ...SLOTS_PM];
+  const patients = ["张建国 303", "王秀英 305", "李 强 307", "陈丽华 310", "刘伟明 312", "周建华 311"];
+  return allSlots.map((_, si) =>
+    THERAPISTS.map((t, ti) => {
+      // 简单避冲突：每 2 个时段空 1 格
+      if ((si + ti) % 3 === 2) return null;
+      const type: "PT" | "OT" | "ST" = t.includes("PT") ? "PT" : t.includes("OT") ? "OT" : "ST";
+      return {
+        therapist: t.split("(")[0],
+        patient: patients[(si + ti) % patients.length],
+        room: ROOMS[(si + ti) % ROOMS.length],
+        type,
+      };
+    })
+  );
+};
+
+export const AutoScheduleSheet = ({ onClose }: { onClose: () => void }) => {
+  const [grid, setGrid] = useState<SlotCell[][]>(generateAutoSchedule());
+  const allSlots = [...SLOTS_AM, ...SLOTS_PM];
+  const used = grid.flat().filter(Boolean).length;
+  const total = grid.length * THERAPISTS.length;
+  const utilization = Math.round((used / total) * 100);
+
+  const regenerate = () => {
+    setGrid(generateAutoSchedule());
+    toast.success("AI 已重新排班 · 已避开冲突");
+  };
+
+  const typeColor = (t: "PT" | "OT" | "ST") =>
+    t === "PT" ? "bg-primary/15 text-primary" : t === "OT" ? "bg-secondary-soft text-secondary" : "bg-success-soft text-success";
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <div className="bg-card border-b border-border/60 px-4 py-3 flex items-center gap-2">
+        <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="text-[14px] font-bold flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-ai" /> AI 自动排班
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">综合：设备 / 治疗师 / 患者空闲 · 排课模式（上午 4 段 / 下午 4 段）</div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto p-4 space-y-3">
+        <AICard title="AI 排班说明">
+          已综合「设备空闲 + 治疗师空闲 + 患者空闲」生成无冲突排班，最大化设备 / 人力利用率。
+          <div className="mt-2 text-[11px] flex gap-3 text-muted-foreground">
+            <span>设备利用率 <span className="text-foreground font-bold">{utilization}%</span></span>
+            <span>已排 <span className="text-foreground font-bold">{used}</span> / {total}</span>
+          </div>
+        </AICard>
+
+        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="text-[10px] min-w-full border-collapse">
+              <thead>
+                <tr className="bg-muted/60">
+                  <th className="sticky left-0 z-10 bg-muted/60 px-2 py-2 text-left border-r border-border/60 w-[64px]">时段</th>
+                  {THERAPISTS.map((t) => (
+                    <th key={t} className="px-1.5 py-2 font-semibold text-foreground border-r border-border/60 last:border-0 w-[80px]">{t}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {allSlots.map((slot, si) => {
+                  const isPM = si >= SLOTS_AM.length;
+                  return (
+                    <tr key={slot} className={`border-t border-border/60 ${isPM ? "bg-warning/5" : ""}`}>
+                      <td className="sticky left-0 z-10 bg-card px-2 py-1.5 border-r border-border/60 font-bold">
+                        {slot}
+                        <div className="text-[8px] text-muted-foreground">{isPM ? "下午" : "上午"}</div>
+                      </td>
+                      {grid[si].map((cell, ti) => (
+                        <td key={ti} className="px-1 py-1 border-r border-border/60 last:border-0">
+                          {cell ? (
+                            <div className={`rounded-md px-1.5 py-1 ${typeColor(cell.type)}`}>
+                              <div className="font-bold leading-tight">{cell.type}</div>
+                              <div className="leading-tight truncate">{cell.patient}</div>
+                              <div className="text-[9px] opacity-75 leading-tight">{cell.room}</div>
+                            </div>
+                          ) : (
+                            <div className="h-12 rounded-md border border-dashed border-border/50 flex items-center justify-center text-muted-foreground">空闲</div>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5 flex gap-2">
+        <button onClick={regenerate} className="flex-1 border border-ai/30 text-ai rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-1.5">
+          <Sparkles className="w-4 h-4" /> AI 重新排班
+        </button>
+        <button onClick={() => { toast.success("排班已发布给治疗师 / 患者"); onClose(); }} className="flex-1 gradient-ai text-white rounded-2xl py-3 text-sm font-semibold">
+          发布排班
+        </button>
+      </div>
+    </div>
+  );
+};
