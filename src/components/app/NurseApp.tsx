@@ -341,6 +341,7 @@ export const NurseApp = () => {
         title={`AI 随访${activeFollowUp ? " · " + activeFollowUp.name : ""}`}
         accent="nurse"
         flush
+        hideHeader
       >
         <FollowUpSheet
           patient={activeFollowUp}
