@@ -86,16 +86,18 @@ export const EvalTabs = ({
   active,
   onChange,
   accent = "doctor",
+  hideClinical = false,
 }: {
   active: EvalTabKey;
   onChange: (k: EvalTabKey) => void;
   accent?: "doctor" | "therapist" | "nurse";
+  hideClinical?: boolean;
 }) => {
   const grad = accent === "therapist" ? "gradient-therapist" : accent === "nurse" ? "gradient-nurse" : "gradient-doctor";
   const items: { k: EvalTabKey; label: string }[] = [
-    { k: "clinical", label: "临床评估" },
+    ...(hideClinical ? [] : [{ k: "clinical" as EvalTabKey, label: "临床评估" }]),
     { k: "rehab", label: "康复评估" },
-    { k: "goal", label: "康复目标" },
+    { k: "goal", label: "治疗目标" },
   ];
   return (
     <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2 bg-background/95 backdrop-blur">
