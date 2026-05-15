@@ -496,13 +496,16 @@ export const NumberedGoals = ({
 
       {adding && (
         <div className="bg-card rounded-2xl shadow-card p-3 space-y-2">
-          <textarea
-            value={newDraft}
-            onChange={(e) => setNewDraft(e.target.value)}
-            placeholder="新增康复目标"
-            className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]"
-            autoFocus
-          />
+          <div className="flex gap-2 items-start">
+            <textarea
+              value={newDraft}
+              onChange={(e) => setNewDraft(e.target.value)}
+              placeholder="新增治疗目标（可语音输入）"
+              className="flex-1 text-[12px] bg-muted rounded-lg p-2 min-h-[60px]"
+              autoFocus
+            />
+            <VoiceMic onTranscript={(t) => setNewDraft((v) => (v ? v + " " : "") + t)} sample="改善左下肢平衡能力，2 周内 Berg ≥ 40。" />
+          </div>
           <div className="flex gap-2">
             <button onClick={() => { setAdding(false); setNewDraft(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
             <button onClick={addGoal} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
