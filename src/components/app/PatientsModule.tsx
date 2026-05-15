@@ -30,8 +30,7 @@ export type PatientFilter =
   | "院中"
   | "待出院"
   | "院后"
-  | "待首次评估"
-  | "退回重评";
+  | "待首次评估";
 
 export type Patient = {
   id: string;
