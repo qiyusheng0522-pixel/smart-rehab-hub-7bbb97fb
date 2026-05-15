@@ -385,12 +385,7 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
         </div>
       </div>
 
-      {patient.returnedReassess && (
-        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-3 text-[12px] text-destructive">
-          <div className="font-semibold flex items-center gap-1">⟲ 已被退回 · 需重新首次评估</div>
-          <div className="text-[11px] mt-1 text-destructive/80 leading-relaxed">{patient.returnReason}</div>
-        </div>
-      )}
+      {/* 退回重评提示已移除 */}
 
       {/* 操作按钮已迁移至 PhoneSheet 底部 footer（PatientActionsBar），保持冻结于底部 */}
 
