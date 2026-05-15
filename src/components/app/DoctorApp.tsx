@@ -31,6 +31,7 @@ import {
 import { RehabPlanModule, PlanStage } from "@/components/app/RehabPlanModule";
 import { RxDetail } from "@/components/app/RxDetail";
 import { MeStats } from "@/components/app/MeStats";
+import { EvalTabs, EvalTabKey, ClinicalPanel, RehabPanel, NumberedGoals, RoleConclusionRow } from "@/components/app/EvalShared";
 import { toast } from "sonner";
 import {
   AlertDialog,
