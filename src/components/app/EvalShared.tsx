@@ -329,11 +329,11 @@ export const RehabPanel = ({
       {(Object.keys(DIRECTION_META) as RehabDirection[]).map((d) => {
         const meta = DIRECTION_META[d];
         const Icon = meta.icon;
-        const isOpen = open === d;
+        const isOpen = openMap[d];
         return (
           <div key={d} className="bg-card rounded-2xl shadow-card overflow-hidden">
             <button
-              onClick={() => setOpen(isOpen ? null : d)}
+              onClick={() => toggle(d)}
               className="w-full px-3.5 py-2.5 flex items-center gap-2"
             >
               <div className={`w-8 h-8 rounded-lg ${meta.cls} flex items-center justify-center`}>
