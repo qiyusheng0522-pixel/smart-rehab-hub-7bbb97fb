@@ -317,7 +317,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
             <div className="text-[13px] font-semibold">{p.name}</div>
             <span className="text-[10px] text-muted-foreground">床 {p.bed}</span>
             {p.isNew && <span className="text-[9px] px-1.5 py-0.5 rounded bg-warning text-white font-bold">NEW</span>}
-            {p.returnedReassess && <span className="text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-semibold">退回重评</span>}
+            
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{p.meta}</div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
