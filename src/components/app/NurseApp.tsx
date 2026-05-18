@@ -49,10 +49,8 @@ import { MeStats } from "@/components/app/MeStats";
 import {
   EvalTabs,
   EvalTabKey,
-  ClinicalPanel,
   RehabPanel,
   NumberedGoals,
-  ALL_CLINICAL_CONCLUSIONS,
   ALL_REHAB_CONCLUSIONS,
 } from "@/components/app/EvalShared";
 
@@ -424,7 +422,7 @@ const NurseHome = ({
         </div>
         <PendingTodoGrid
           items={[
-            { label: "待首评", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onOpenQueue("confirmAssess") },
+            { label: "待首次评估", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onOpenQueue("confirmAssess") },
             { label: "待护理", count: QUEUES.execTask.length, icon: HeartPulse, iconClass: "bg-success text-white", onClick: () => onOpenQueue("execTask") },
             { label: "待记录", count: QUEUES.vitals.length, icon: Activity, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("vitals") },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },
@@ -773,10 +771,38 @@ const NurseChatHub = ({
   </div>
 );
 
-/* ============== 护理首次评估（三段式 Tabs · 与医师/治疗师端一致） ============== */
+/* ============== 护理首次评估（参照康复医师端：2 段式 Tabs · 康复评估只展示护理内容 + 其他角色意见） ============== */
+const NurseNursingScales = () => (
+  <>
+    <SectionTitle title="护理首评量表" extra={<span className="text-[10px] text-muted-foreground">已完成 5 / 5</span>} />
+    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+      {[
+        { name: "Morse 跌倒评估", val: "55 · 高危" },
+        { name: "Braden 压疮评估", val: "14 · 高危" },
+        { name: "Caprini VTE 评估", val: "5 · 高危" },
+        { name: "Barthel ADL", val: "35 · 重度依赖" },
+        { name: "NRS-2002 营养筛查", val: "3 · 有风险" },
+      ].map(s => (
+        <div key={s.name} className="flex items-center justify-between px-3 py-2.5">
+          <span className="text-[12px] font-semibold">{s.name}</span>
+          <span className="text-[11px] text-foreground/80 font-semibold">{s.val}</span>
+        </div>
+      ))}
+    </div>
+    <SectionTitle title="护理观察要点" />
+    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+      <FormRow label="意识 GCS" value="13 分 · 嗜睡" />
+      <FormRow label="皮肤情况" value="完整 · 骶尾部发红" />
+      <FormRow label="管路" value="导尿管 · PICC" />
+      <FormRow label="疼痛 NRS" value="3 · 轻度" />
+      <FormRow label="HAMD 简版" value="9 · 轻度抑郁倾向" />
+    </div>
+  </>
+);
+
 const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
   const name = patient ? patient.split(" ").slice(-1)[0] : "王秀英";
-  const [tab, setTab] = useState<EvalTabKey>("clinical");
+  const [tab, setTab] = useState<EvalTabKey>("rehab");
   return (
     <div className="p-4 space-y-3">
       {/* 患者档案概要 */}
@@ -799,15 +825,27 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
         </div>
       </div>
 
-      <EvalTabs active={tab} onChange={setTab} accent="nurse" />
+      <EvalTabs active={tab} onChange={setTab} accent="nurse" hideClinical />
 
-      {tab === "clinical" && (
-        <ClinicalPanel showNursing conclusions={ALL_CLINICAL_CONCLUSIONS} />
-      )}
       {tab === "rehab" && (
-        <RehabPanel conclusions={ALL_REHAB_CONCLUSIONS} />
+        <RehabPanel
+          hideDirections
+          scaleSlot={<NurseNursingScales />}
+          conclusions={ALL_REHAB_CONCLUSIONS}
+          aiBottom={
+            <AICard title="AI 康复评估辅助结论">
+              <div className="text-[12px] leading-relaxed whitespace-pre-line">
+                {`综合护理首评 + 医师 / 治疗师评估：
+1. 当前主要护理风险：跌倒（Morse 55）/ 压疮（Braden 14）/ VTE（Caprini 5）均为高危，需 q2h 翻身 + 镇痛护理。
+2. 训练配合：训练时段建议安排在镇痛后 30min 内，避免 VAS > 4 进行下地训练。
+3. 出院前重点：自理训练 + 居家防跌倒宣教 + 家属照护培训。`}
+              </div>
+              <div className="mt-2 text-[10px] text-muted-foreground">AI · 基于护理首评 + 三角色档案综合生成</div>
+            </AICard>
+          }
+        />
       )}
-      {tab === "goal" && <NumberedGoals accent="nurse" />}
+      {tab === "goal" && <NumberedGoals accent="nurse" readOnly />}
     </div>
   );
 };
