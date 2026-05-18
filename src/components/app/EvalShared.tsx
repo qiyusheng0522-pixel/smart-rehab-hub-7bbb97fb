@@ -369,11 +369,20 @@ export const RehabPanel = ({
   defaultOpenAll = true,
   scaleSlot,
   conclusions,
+  hasDivergence = false,
+  onLaunchMeeting,
+  aiBottom,
+  hideDirections = false,
 }: {
   defaultOpenAll?: boolean;
-  /** 评估量表区域，由调用方传入（沿用各端原有量表样式） */
   scaleSlot?: ReactNode;
-  conclusions?: { role: string; time: string; text: string; tone?: "doctor" | "therapist" | "nurse" | "ai" }[];
+  conclusions?: RoleConclusionItem[];
+  hasDivergence?: boolean;
+  onLaunchMeeting?: () => void;
+  /** AI 康复评估辅助结论 · 渲染在面板最底部 */
+  aiBottom?: ReactNode;
+  /** 隐藏「心肺 / 神经 / 骨科」三方向卡片（如护士端只展示护理内容） */
+  hideDirections?: boolean;
 }) => {
   const [openMap, setOpenMap] = useState<Record<RehabDirection, boolean>>({
     cardiopulmonary: defaultOpenAll,
@@ -383,11 +392,7 @@ export const RehabPanel = ({
   const toggle = (d: RehabDirection) => setOpenMap({ ...openMap, [d]: !openMap[d] });
   return (
     <div className="space-y-2">
-      <AICard title="AI 已按主诊断推荐评估方向">
-        基于「急性缺血性脑卒中 + 既往房颤」自动推荐：神经方向（主）+ 心肺方向（辅），骨科方向暂不必要。
-      </AICard>
-
-      {(Object.keys(DIRECTION_META) as RehabDirection[]).map((d) => {
+      {!hideDirections && (Object.keys(DIRECTION_META) as RehabDirection[]).map((d) => {
         const meta = DIRECTION_META[d];
         const Icon = meta.icon;
         const isOpen = openMap[d];
@@ -465,15 +470,15 @@ export const RehabPanel = ({
       )}
 
       {conclusions && conclusions.length > 0 && (
-        <>
-          <H1 icon={Users}>各角色康复评估结论</H1>
-          <div className="bg-card rounded-2xl shadow-card overflow-hidden">
-            {conclusions.map((c, i) => (
-              <RoleConclusionRow key={i} {...c} />
-            ))}
-          </div>
-        </>
+        <RoleConclusionAccordion
+          title="各角色康复评估结论"
+          items={conclusions}
+          hasDivergence={hasDivergence}
+          onLaunchMeeting={onLaunchMeeting}
+        />
       )}
+
+      {aiBottom}
     </div>
   );
 };
