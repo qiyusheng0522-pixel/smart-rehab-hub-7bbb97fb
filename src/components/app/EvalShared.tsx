@@ -609,7 +609,7 @@ export const NumberedGoals = ({
           <div key={g.id} className="bg-card rounded-2xl shadow-card overflow-hidden">
             <button onClick={() => toggle(g.id)} className="w-full p-3.5 flex gap-3 items-start text-left">
               <div className={`relative w-9 h-9 rounded-xl ${grad} text-white flex items-center justify-center shrink-0 shadow-card`}>
-                <Target className="w-4.5 h-4.5" strokeWidth={2.4} />
+                <Target className="w-5 h-5" strokeWidth={2.4} />
                 <span className="absolute -bottom-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-background text-[9px] font-bold text-foreground border border-border flex items-center justify-center">
                   {pad2(idx + 1)}
                 </span>
