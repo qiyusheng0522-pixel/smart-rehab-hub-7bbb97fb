@@ -261,9 +261,16 @@ const ClinicalCard = ({
 export const ClinicalPanel = ({
   showNursing = false,
   conclusions,
+  hasDivergence = false,
+  onLaunchMeeting,
+  aiBottom,
 }: {
   showNursing?: boolean;
-  conclusions?: { role: string; time: string; text: string; tone?: "doctor" | "therapist" | "nurse" | "ai" }[];
+  conclusions?: RoleConclusionItem[];
+  hasDivergence?: boolean;
+  onLaunchMeeting?: () => void;
+  /** AI 临床评估辅助结论 · 渲染在面板最底部 */
+  aiBottom?: ReactNode;
 }) => (
   <div className="space-y-2">
     <ClinicalCard k="vitals">
@@ -336,15 +343,15 @@ export const ClinicalPanel = ({
     )}
 
     {conclusions && conclusions.length > 0 && (
-      <>
-        <H1 icon={Users}>各角色临床评估结论</H1>
-        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
-          {conclusions.map((c, i) => (
-            <RoleConclusionRow key={i} {...c} />
-          ))}
-        </div>
-      </>
+      <RoleConclusionAccordion
+        title="各角色临床评估结论"
+        items={conclusions}
+        hasDivergence={hasDivergence}
+        onLaunchMeeting={onLaunchMeeting}
+      />
     )}
+
+    {aiBottom}
   </div>
 );
 
