@@ -504,7 +504,7 @@ const DIM_META: Record<NumberedGoal["dim"], { label: string; cls: string }> = {
   participation: { label: "参与", cls: "bg-warning-soft text-warning" },
 };
 
-const NUMBER_GLYPH = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
+const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 
 const DEFAULT_NUMBERED_GOALS: NumberedGoal[] = [
   {
