@@ -3,11 +3,10 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { DoctorApp } from "@/components/app/DoctorApp";
 import { TherapistApp } from "@/components/app/TherapistApp";
 import { NurseApp } from "@/components/app/NurseApp";
-import { PhysioApp } from "@/components/app/PhysioApp";
-import { Sparkles, Stethoscope, Activity, HeartPulse, Cpu, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, Stethoscope, Activity, HeartPulse, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { WorkflowSection } from "@/components/WorkflowSection";
 
-type Role = "landing" | "doctor" | "therapist" | "nurse" | "physio";
+type Role = "landing" | "doctor" | "therapist" | "nurse";
 
 const roleMeta = {
   doctor: {
@@ -43,17 +42,6 @@ const roleMeta = {
     label: "护士 · 工作台",
     features: ["AI 智能任务排序", "给药安全核对", "康复护理执行", "AI 宣教内容推送"],
   },
-  physio: {
-    title: "理疗设备主管",
-    subtitle: "Physiotherapy Device Manager",
-    desc: "理疗设备分配、使用监控与排班调度",
-    icon: Cpu,
-    gradient: "gradient-physio",
-    softBg: "bg-orange-50",
-    text: "text-role-physio",
-    label: "理疗端 · 设备工作台",
-    features: ["设备实时状态监控", "时段×设备排班矩阵", "AI 智能预约调度", "维护与故障工单"],
-  },
 };
 
 const Index = () => {
@@ -64,8 +52,7 @@ const Index = () => {
     const RoleApp =
       role === "doctor" ? DoctorApp
       : role === "therapist" ? TherapistApp
-      : role === "nurse" ? NurseApp
-      : PhysioApp;
+      : NurseApp;
     return (
       <div className="min-h-screen gradient-mesh bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
@@ -165,8 +152,8 @@ const Index = () => {
           <span className="text-xs text-muted-foreground hidden sm:block">点击卡片预览对应 APP</span>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {(["doctor", "therapist", "nurse", "physio"] as const).map((key) => {
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {(["doctor", "therapist", "nurse"] as const).map((key) => {
             const m = roleMeta[key];
             return (
               <button
