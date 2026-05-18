@@ -121,33 +121,87 @@ export const EvalTabs = ({
   );
 };
 
-/* 角色 + 时间标签 */
-export const RoleConclusionRow = ({
-  role,
-  time,
-  text,
-  tone = "doctor",
-}: {
+/* 角色 + 时间 · 风琴样式（默认收起） */
+type RoleConclusionItem = {
   role: string;
   time: string;
   text: string;
   tone?: "doctor" | "therapist" | "nurse" | "ai";
+};
+
+const toneCls = (tone?: RoleConclusionItem["tone"]) =>
+  tone === "therapist"
+    ? "bg-secondary-soft text-secondary"
+    : tone === "nurse"
+      ? "bg-rose-50 text-role-nurse"
+      : tone === "ai"
+        ? "bg-ai/10 text-ai"
+        : "bg-primary-soft text-primary";
+
+export const RoleConclusionRow = ({ role, time, text, tone }: RoleConclusionItem) => (
+  <div className="px-3 py-2.5 border-b border-border/60 last:border-0">
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${toneCls(tone)}`}>{role}</span>
+      <span className="text-[10px] text-muted-foreground">{time}</span>
+    </div>
+    <div className="text-[12px] text-foreground/85 mt-1.5 leading-relaxed">{text}</div>
+  </div>
+);
+
+/** 各角色评估结论 · 风琴折叠（默认收起）+ AI 分歧团队会议提示 */
+export const RoleConclusionAccordion = ({
+  title = "各角色首次评估结论",
+  items,
+  hasDivergence = false,
+  onLaunchMeeting,
+}: {
+  title?: string;
+  items: RoleConclusionItem[];
+  hasDivergence?: boolean;
+  onLaunchMeeting?: () => void;
 }) => {
-  const cls =
-    tone === "therapist"
-      ? "bg-secondary-soft text-secondary"
-      : tone === "nurse"
-        ? "bg-rose-50 text-role-nurse"
-        : tone === "ai"
-          ? "bg-ai/10 text-ai"
-          : "bg-primary-soft text-primary";
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  if (!items?.length) return null;
   return (
-    <div className="px-3 py-2.5 border-b border-border/60 last:border-0">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${cls}`}>{role}</span>
-        <span className="text-[10px] text-muted-foreground">{time}</span>
+    <div className="space-y-2">
+      <H1 icon={Users}>{title}</H1>
+      <div className="bg-card rounded-2xl shadow-card overflow-hidden divide-y divide-border/60">
+        {items.map((c, i) => {
+          const open = openIdx === i;
+          return (
+            <div key={i}>
+              <button
+                onClick={() => setOpenIdx(open ? null : i)}
+                className="w-full px-3 py-2.5 flex items-center gap-2"
+              >
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${toneCls(c.tone)}`}>{c.role}</span>
+                <span className="text-[10px] text-muted-foreground flex-1 text-left">{c.time}</span>
+                {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+              </button>
+              {open && (
+                <div className="px-3 pb-3 text-[12px] text-foreground/85 leading-relaxed">{c.text}</div>
+              )}
+            </div>
+          );
+        })}
       </div>
-      <div className="text-[12px] text-foreground/85 mt-1.5 leading-relaxed">{text}</div>
+      {hasDivergence && onLaunchMeeting && (
+        <button
+          onClick={onLaunchMeeting}
+          className="w-full bg-gradient-to-r from-warning/15 to-ai/15 border border-warning/30 rounded-2xl p-3 flex items-center gap-3 active:scale-[0.99]"
+        >
+          <div className="w-9 h-9 rounded-xl bg-ai text-white flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-[12px] font-bold text-warning flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5" /> AI 检测到各角色结论存在较大分歧
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">点击进入团队会议 · AI 将先发送分歧点</div>
+          </div>
+          <span className="text-[11px] font-semibold text-warning px-2 py-1 rounded-full bg-warning/10 border border-warning/30 shrink-0">进入团队会议</span>
+        </button>
+      )}
     </div>
   );
 };
