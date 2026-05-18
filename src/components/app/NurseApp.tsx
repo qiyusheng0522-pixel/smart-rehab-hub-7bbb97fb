@@ -223,12 +223,12 @@ export const NurseApp = () => {
         </PhoneSheet>
       ))}
 
-      <PhoneSheet open={sheet === "confirmAssess"} onClose={close} title={`评估结果确认${activePatient ? " · " + activePatient : ""}`} accent="nurse"
+      <PhoneSheet open={sheet === "confirmAssess"} onClose={close} title={`首次评估${activePatient ? " · " + activePatient : ""}`} accent="nurse"
         footer={<div className="flex gap-2">
-          <button onClick={() => { toast("已请医师再次评估 · 结果不确定"); close(); }} className="flex-1 border border-border rounded-2xl py-3 text-sm font-semibold">结果不确定</button>
-          <button onClick={() => { toast.success("评估已确认 · 已同步医师 / 治疗师"); close(); }} className="flex-1 gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold">确认结果</button>
+          <button onClick={() => { toast("已暂存草稿"); close(); }} className="flex-1 border border-border rounded-2xl py-3 text-sm font-semibold">暂存</button>
+          <button onClick={() => { toast.success("首次评估已确认 · 已同步医师 / 治疗师"); close(); }} className="flex-1 gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold">确认提交</button>
         </div>}>
-        <NurseConfirmAssessSheet patient={activePatient} />
+        <NurseFirstAssessSheet patient={activePatient} />
       </PhoneSheet>
 
       <PhoneSheet open={sheet === "meetingList"} onClose={close} title="团队会议" accent="nurse">
