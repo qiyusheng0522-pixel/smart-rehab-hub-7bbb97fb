@@ -46,6 +46,16 @@ import {
 import { toast } from "sonner";
 import { MeStats } from "@/components/app/MeStats";
 
+import {
+  EvalTabs,
+  EvalTabKey,
+  ClinicalPanel,
+  RehabPanel,
+  NumberedGoals,
+  ALL_CLINICAL_CONCLUSIONS,
+  ALL_REHAB_CONCLUSIONS,
+} from "@/components/app/EvalShared";
+
 const NURSE_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
   { key: "patients", label: "患者管理", icon: UsersRound },
@@ -83,7 +93,7 @@ const QUEUE_TITLE: Record<QueueKey, string> = {
   inject: "待执行注射",
   obs: "待病情观察",
   execTask: "待执行护理任务",
-  confirmAssess: "待评估确认",
+  confirmAssess: "待首次评估",
 };
 
 // 根据康复处方生成的待办（按患者维度）
@@ -111,8 +121,8 @@ const QUEUES: Record<QueueKey, TodoItem[]> = {
     { id: "et3", patient: "307 李 强", meta: "导尿管护理", detail: "每日清洁", time: "17:00", urgency: "medium" },
   ],
   confirmAssess: [
-    { id: "ca1", patient: "305 王秀英", meta: "髋关节置换术后", detail: "医师 + 治疗师评估意见 · 待护士确认", urgency: "high" },
-    { id: "ca2", patient: "311 周建华", meta: "脑梗死恢复期", detail: "FMA 38 / DVT Wells 2 · 待护士补充观察", urgency: "medium" },
+    { id: "ca1", patient: "305 王秀英", meta: "髋关节置换术后", detail: "护理首评 · 一般情况 / ADL / 风险评估", urgency: "high" },
+    { id: "ca2", patient: "311 周建华", meta: "脑梗死恢复期", detail: "护理首评 · 跌倒 / 压疮 / VTE / 营养", urgency: "medium" },
   ],
 };
 
@@ -213,12 +223,12 @@ export const NurseApp = () => {
         </PhoneSheet>
       ))}
 
-      <PhoneSheet open={sheet === "confirmAssess"} onClose={close} title={`评估结果确认${activePatient ? " · " + activePatient : ""}`} accent="nurse"
+      <PhoneSheet open={sheet === "confirmAssess"} onClose={close} title={`首次评估${activePatient ? " · " + activePatient : ""}`} accent="nurse"
         footer={<div className="flex gap-2">
-          <button onClick={() => { toast("已请医师再次评估 · 结果不确定"); close(); }} className="flex-1 border border-border rounded-2xl py-3 text-sm font-semibold">结果不确定</button>
-          <button onClick={() => { toast.success("评估已确认 · 已同步医师 / 治疗师"); close(); }} className="flex-1 gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold">确认结果</button>
+          <button onClick={() => { toast("已暂存草稿"); close(); }} className="flex-1 border border-border rounded-2xl py-3 text-sm font-semibold">暂存</button>
+          <button onClick={() => { toast.success("首次评估已确认 · 已同步医师 / 治疗师"); close(); }} className="flex-1 gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold">确认提交</button>
         </div>}>
-        <NurseConfirmAssessSheet patient={activePatient} />
+        <NurseFirstAssessSheet patient={activePatient} />
       </PhoneSheet>
 
       <PhoneSheet open={sheet === "meetingList"} onClose={close} title="团队会议" accent="nurse">
@@ -414,6 +424,7 @@ const NurseHome = ({
         </div>
         <PendingTodoGrid
           items={[
+            { label: "待首评", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onOpenQueue("confirmAssess") },
             { label: "待护理", count: QUEUES.execTask.length, icon: HeartPulse, iconClass: "bg-success text-white", onClick: () => onOpenQueue("execTask") },
             { label: "待记录", count: QUEUES.vitals.length, icon: Activity, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("vitals") },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },
@@ -762,70 +773,45 @@ const NurseChatHub = ({
   </div>
 );
 
-/* ============== 评估结果确认（护士视角） ============== */
-const NurseConfirmAssessSheet = ({ patient }: { patient?: string }) => {
+/* ============== 护理首次评估（三段式 Tabs · 与医师/治疗师端一致） ============== */
+const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
   const name = patient ? patient.split(" ").slice(-1)[0] : "王秀英";
-  const [supplement, setSupplement] = useState(
-    "夜间巡视 q2h：意识清楚，伤口干洁；3:00 一过性 BP 152/90 已记录，VAS 由 6 降至 3；尚需观察 24h 跌倒倾向。"
-  );
+  const [tab, setTab] = useState<EvalTabKey>("clinical");
   return (
     <div className="p-4 space-y-3">
+      {/* 患者档案概要 */}
       <div className="bg-card rounded-2xl shadow-card p-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl gradient-nurse text-white flex items-center justify-center font-bold text-lg">{name[0]}</div>
           <div className="flex-1">
             <div className="text-sm font-bold">{patient || "305 王秀英 · 女 68 岁"}</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">髋关节置换术后 · 入院第 5 天</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">床号 305 · 髋关节置换术后 · 入院第 5 天</div>
           </div>
-          <span className="text-[10px] px-2 py-1 rounded-full bg-rose-50 text-role-nurse font-semibold">评估确认</span>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-rose-50 text-role-nurse font-semibold">护理首评</span>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">BP</div><div className="text-[12px] font-semibold mt-0.5">128/82</div></div>
           <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">VAS</div><div className="text-[12px] font-semibold mt-0.5">6 → 3</div></div>
           <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">DVT 风险</div><div className="text-[12px] font-semibold mt-0.5">中</div></div>
         </div>
-      </div>
-
-      <SectionTitle title="康复医师评估意见" extra={<span className="text-[10px] text-muted-foreground">李志远 · 主任医师</span>} />
-      <div className="bg-card rounded-2xl shadow-card p-3 text-[12px] text-foreground/85 leading-relaxed">
-        Harris 65 / Berg 32 / VAS 6。综合判定：术后早期，疼痛是主要限制因素，康复潜力良好。
-        建议先 1 周疼痛干预 + 渐进负重 + 平衡训练；DVT 中风险，请加强皮下注射依从性与下肢观察。
-      </div>
-
-      <SectionTitle title="治疗师评估意见" extra={<span className="text-[10px] text-muted-foreground">王雅琴 · PT/OT</span>} />
-      <div className="bg-card rounded-2xl shadow-card p-3 text-[12px] text-foreground/85 leading-relaxed">
-        实测 ROM 屈曲 60°、外展 25°，主动活动 VAS 7；床椅转移需中等辅助。
-        建议先 1 周等长收缩 + 疼痛干预，再渐进负重；夜间疼痛与睡眠请护理协助监测。
-      </div>
-
-      <AICard title="AI 多角色对比">
-        医师与治疗师结论一致：术后早期 · 疼痛主导 · 康复潜力良好。
-        请护士结合床旁观察补充意见，确认后将作为康复方案启动依据。
-      </AICard>
-
-      <SectionTitle title="护士补充意见（必填）" extra={<span className="text-[10px] text-muted-foreground">床旁观察 · 用药依从 · 风险</span>} />
-      <div className="bg-card rounded-2xl shadow-card p-3">
-        <textarea
-          value={supplement}
-          onChange={(e) => setSupplement(e.target.value)}
-          placeholder="补充夜间观察、疼痛变化、用药执行、跌倒/压疮风险……"
-          className="w-full bg-muted rounded-xl p-3 text-xs h-28 outline-none"
-        />
-        <div className="flex justify-end mt-2">
-          <button onClick={() => setSupplement("")} className="text-[11px] text-muted-foreground">一键清空</button>
+        <div className="mt-2 text-[11px] text-foreground/75 leading-relaxed bg-muted/60 rounded-xl px-3 py-2">
+          基础情况：术后第 5 天，伤口干洁；夜间血压一过性升高，疼痛 VAS 6→3；跌倒 / 压疮 / VTE 均为高风险。
         </div>
       </div>
 
-      <SectionTitle title="逐项核对" />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="疼痛 VAS 趋势" value="6 → 3 ✓" hint="夜间用药后下降" />
-        <FormRow label="DVT 预防执行" value="低分子肝素 0.4ml ih ✓" />
-        <FormRow label="跌倒预防" value="床栏 + 呼叫器 ✓" />
-        <FormRow label="伤口情况" value="干洁 ✓" />
-      </div>
+      <EvalTabs active={tab} onChange={setTab} accent="nurse" />
+
+      {tab === "clinical" && (
+        <ClinicalPanel showNursing conclusions={ALL_CLINICAL_CONCLUSIONS} />
+      )}
+      {tab === "rehab" && (
+        <RehabPanel conclusions={ALL_REHAB_CONCLUSIONS} />
+      )}
+      {tab === "goal" && <NumberedGoals accent="nurse" />}
     </div>
   );
 };
+
 
 /* ============== 随访清单 ============== */
 const STATUS_TONE: Record<FollowUpStatus, { label: string; cls: string }> = {
