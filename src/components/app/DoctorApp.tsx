@@ -1273,25 +1273,41 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
         </div>
       )}
 
-      <AICard
-        title="AI 康复评估辅助结论"
-        action={<button onClick={() => setEditing(!editing)} className="text-[11px] font-semibold text-ai flex items-center gap-1"><Edit2 className="w-3 h-3" />{editing ? "完成编辑" : "编辑结论"}</button>}
-      >
-        {editing ? (
-          <div className="space-y-2">
-            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="w-full min-h-[160px] text-[12px] leading-relaxed bg-background/60 border border-ai/20 rounded-xl p-2 focus:outline-none focus:ring-1 focus:ring-ai/40" />
-            <div className="flex gap-2">
-              <button className="flex-1 border border-ai/30 text-ai rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-1" onClick={() => { setDraft(AI_DEFAULT_CONCLUSION); toast("已重新生成 AI 结论"); }}><RotateCcw className="w-3 h-3" />重新生成</button>
-              <button className="flex-1 gradient-doctor text-white rounded-xl py-2 text-xs font-semibold" onClick={() => { setConclusion(draft); setEditing(false); toast.success("结论已保存"); }}>保存</button>
-            </div>
-          </div>
-        ) : (
-          <div className="whitespace-pre-line text-[12px] leading-relaxed">{conclusion}</div>
-        )}
-        <div className="mt-2 text-[10px] text-muted-foreground">评估医师：康复医学科 王敏 · 已纳入 {completedCount} 份量表数据</div>
-      </AICard>
     </>
   );
+
+  const aiRehabConclusion = (
+    <AICard
+      title="AI 康复评估辅助结论"
+      action={<button onClick={() => setEditing(!editing)} className="text-[11px] font-semibold text-ai flex items-center gap-1"><Edit2 className="w-3 h-3" />{editing ? "完成编辑" : "编辑结论"}</button>}
+    >
+      {editing ? (
+        <div className="space-y-2">
+          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="w-full min-h-[160px] text-[12px] leading-relaxed bg-background/60 border border-ai/20 rounded-xl p-2 focus:outline-none focus:ring-1 focus:ring-ai/40" />
+          <div className="flex gap-2">
+            <button className="flex-1 border border-ai/30 text-ai rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-1" onClick={() => { setDraft(AI_DEFAULT_CONCLUSION); toast("已重新生成 AI 结论"); }}><RotateCcw className="w-3 h-3" />重新生成</button>
+            <button className="flex-1 gradient-doctor text-white rounded-xl py-2 text-xs font-semibold" onClick={() => { setConclusion(draft); setEditing(false); toast.success("结论已保存"); }}>保存</button>
+          </div>
+        </div>
+      ) : (
+        <div className="whitespace-pre-line text-[12px] leading-relaxed">{conclusion}</div>
+      )}
+      <div className="mt-2 text-[10px] text-muted-foreground">评估医师：康复医学科 王敏 · 已纳入 {completedCount} 份量表数据</div>
+    </AICard>
+  );
+
+  const aiClinicalConclusion = (
+    <AICard title="AI 临床评估辅助结论">
+      <div className="text-[12px] leading-relaxed whitespace-pre-line">
+        {`综合生命体征、生化、影像与既往史：
+1. 急性缺血性脑卒中恢复期（左基底节区梗死），右侧偏瘫为主，需启动神经康复二级预防。
+2. 风险点：BP 142/88（偏高）、LDL 3.6（偏高）、阵发性房颤 + INR 1.0 → 抗凝评估优先级高。
+3. 临床建议：调整降压方案、加用他汀强化降脂、神内 / 心内联合评估抗凝指征，避免下地训练时低血压。`}
+      </div>
+      <div className="mt-2 text-[10px] text-muted-foreground">AI · 基于患者档案 + 入院 24h 生化 / 影像数据</div>
+    </AICard>
+  );
+
 
   return (
     <div className="p-4 space-y-3">
