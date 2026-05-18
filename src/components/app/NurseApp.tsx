@@ -295,13 +295,39 @@ export const NurseApp = () => {
         accent="nurse"
         footer={
           pickedPatient ? (
-            <PatientActionsBar
-              accent="nurse"
-              actions={[
-                { key: "care", label: "护理记录", icon: ClipboardCheck, onClick: () => setSheet("dailyNote") },
-                { key: "note", label: "备注", icon: Activity, onClick: () => setSheet("addNote") },
-              ]}
-            />
+            pickedPatient.needFirstAssess ? (
+              <PatientActionsBar
+                accent="nurse"
+                actions={[
+                  {
+                    key: "assess",
+                    label: "确认首次评估",
+                    icon: ClipboardCheck,
+                    onClick: () => {
+                      setActivePatient(`${pickedPatient.bed} ${pickedPatient.name}`);
+                      setSheet("confirmAssess");
+                    },
+                  },
+                  {
+                    key: "meeting",
+                    label: "团队会议评估",
+                    icon: Users,
+                    onClick: () => {
+                      setActiveMeeting(null);
+                      setSheet("meeting");
+                    },
+                  },
+                ]}
+              />
+            ) : (
+              <PatientActionsBar
+                accent="nurse"
+                actions={[
+                  { key: "care", label: "护理记录", icon: ClipboardCheck, onClick: () => setSheet("dailyNote") },
+                  { key: "note", label: "备注", icon: Activity, onClick: () => setSheet("addNote") },
+                ]}
+              />
+            )
           ) : undefined
         }
       >
@@ -422,7 +448,7 @@ const NurseHome = ({
         </div>
         <PendingTodoGrid
           items={[
-            { label: "待首次评估", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onOpenQueue("confirmAssess") },
+            { label: "待首次评估", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
             { label: "待护理", count: QUEUES.execTask.length, icon: HeartPulse, iconClass: "bg-success text-white", onClick: () => onOpenQueue("execTask") },
             { label: "待记录", count: QUEUES.vitals.length, icon: Activity, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("vitals") },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },

@@ -21,6 +21,7 @@ import {
   ClipboardList,
   Pill,
   ShieldAlert,
+  Target,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -503,7 +504,7 @@ const DIM_META: Record<NumberedGoal["dim"], { label: string; cls: string }> = {
   participation: { label: "参与", cls: "bg-warning-soft text-warning" },
 };
 
-const NUMBER_GLYPH = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
+const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 
 const DEFAULT_NUMBERED_GOALS: NumberedGoal[] = [
   {
@@ -607,8 +608,11 @@ export const NumberedGoals = ({
         return (
           <div key={g.id} className="bg-card rounded-2xl shadow-card overflow-hidden">
             <button onClick={() => toggle(g.id)} className="w-full p-3.5 flex gap-3 items-start text-left">
-              <div className={`w-8 h-8 rounded-xl ${grad} text-white flex items-center justify-center text-base font-bold shrink-0`}>
-                {NUMBER_GLYPH[idx] ?? idx + 1}
+              <div className={`relative w-9 h-9 rounded-xl ${grad} text-white flex items-center justify-center shrink-0 shadow-card`}>
+                <Target className="w-5 h-5" strokeWidth={2.4} />
+                <span className="absolute -bottom-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-background text-[9px] font-bold text-foreground border border-border flex items-center justify-center">
+                  {pad2(idx + 1)}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
