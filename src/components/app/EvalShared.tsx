@@ -493,6 +493,8 @@ export type NumberedGoal = {
   source: "AI" | "医师" | "治疗师";
   text: string;
   measure?: string;
+  /** 二级子目标 · 有则默认展开，无则默认收起 */
+  subGoals?: { id: string; text: string; period?: string }[];
 };
 
 const DIM_META: Record<NumberedGoal["dim"], { label: string; cls: string }> = {
@@ -504,9 +506,26 @@ const DIM_META: Record<NumberedGoal["dim"], { label: string; cls: string }> = {
 const NUMBER_GLYPH = ["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
 
 const DEFAULT_NUMBERED_GOALS: NumberedGoal[] = [
-  { id: "g1", dim: "function", period: "4 周", source: "AI", text: "右上下肢肌力由 2 级提升至 3+ 级", measure: "MMT ≥ 3+ · MAS ≤ 1+" },
+  {
+    id: "g1", dim: "function", period: "4 周", source: "AI",
+    text: "右上下肢肌力由 2 级提升至 3+ 级",
+    measure: "MMT ≥ 3+ · MAS ≤ 1+",
+    subGoals: [
+      { id: "g1-1", text: "右上肢 MMT 由 2 级 → 3 级", period: "2 周" },
+      { id: "g1-2", text: "右下肢 MMT 由 2 级 → 3+ 级", period: "4 周" },
+      { id: "g1-3", text: "踝跖屈 MAS ≤ 1+", period: "4 周" },
+    ],
+  },
   { id: "g2", dim: "function", period: "4 周", source: "AI", text: "认知与忽略明显改善", measure: "MoCA ≥ 24" },
-  { id: "g3", dim: "activity", period: "2 周", source: "AI", text: "床椅独立转移 + 助行器辅助步行 30m", measure: "Berg ≥ 40" },
+  {
+    id: "g3", dim: "activity", period: "2 周", source: "AI",
+    text: "床椅独立转移 + 助行器辅助步行 30m",
+    measure: "Berg ≥ 40",
+    subGoals: [
+      { id: "g3-1", text: "床椅转移由 2 级辅助 → 监督独立", period: "1 周" },
+      { id: "g3-2", text: "助行器辅助下步行 ≥ 30m", period: "2 周" },
+    ],
+  },
   { id: "g4", dim: "activity", period: "4 周", source: "AI", text: "独立步行 ≥ 50m", measure: "FAC ≥ 3 · Barthel ≥ 75" },
   { id: "g5", dim: "participation", period: "8 周", source: "AI", text: "回归家庭生活", measure: "独立完成 ADL 6 项" },
 ];
@@ -514,9 +533,12 @@ const DEFAULT_NUMBERED_GOALS: NumberedGoal[] = [
 export const NumberedGoals = ({
   accent = "doctor",
   initial = DEFAULT_NUMBERED_GOALS,
+  readOnly = false,
 }: {
   accent?: "doctor" | "therapist" | "nurse";
   initial?: NumberedGoal[];
+  /** 只读模式 · 隐藏新增 / 编辑 / 删除按钮（如护士端） */
+  readOnly?: boolean;
 }) => {
   const grad = accent === "therapist" ? "gradient-therapist" : accent === "nurse" ? "gradient-nurse" : "gradient-doctor";
   const accentText = accent === "therapist" ? "text-secondary" : accent === "nurse" ? "text-role-nurse" : "text-primary";
@@ -525,8 +547,11 @@ export const NumberedGoals = ({
   const [draft, setDraft] = useState("");
   const [adding, setAdding] = useState(false);
   const [newDraft, setNewDraft] = useState("");
+  const [openMap, setOpenMap] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(initial.map(g => [g.id, !!(g.subGoals && g.subGoals.length)]))
+  );
+  const toggle = (id: string) => setOpenMap(m => ({ ...m, [id]: !(m[id] ?? false) }));
 
-  const refreshGoals = () => toast.success("已根据最新方案及患者档案更新目标");
   const remove = (id: string) => { setGoals(goals.filter(g => g.id !== id)); toast.success("目标已删除"); };
   const startEdit = (g: NumberedGoal) => { setEditingId(g.id); setDraft(g.text); };
   const saveEdit = () => {
@@ -537,30 +562,25 @@ export const NumberedGoals = ({
   };
   const addGoal = () => {
     if (!newDraft.trim()) return;
-    setGoals([...goals, { id: `ng${Date.now()}`, dim: "activity", period: "4 周", source: "医师", text: newDraft.trim() }]);
-    setNewDraft("");
-    setAdding(false);
+    const id = `ng${Date.now()}`;
+    setGoals([...goals, { id, dim: "activity", period: "4 周", source: "医师", text: newDraft.trim() }]);
+    setOpenMap(m => ({ ...m, [id]: false }));
+    setNewDraft(""); setAdding(false);
     toast.success("已新增目标");
   };
 
   return (
     <div className="space-y-2">
-      <div className="flex gap-2">
-        <button
-          onClick={refreshGoals}
-          className={`flex-1 ${grad} text-white rounded-2xl py-2.5 text-[13px] font-bold flex items-center justify-center gap-1.5 shadow-card active:scale-[0.98]`}
-        >
-          <Sparkles className="w-4 h-4" />更新目标
-        </button>
+      {!readOnly && (
         <button
           onClick={() => setAdding(true)}
-          className={`px-4 rounded-2xl border border-border bg-card text-[12px] font-semibold ${accentText} flex items-center gap-1`}
+          className={`w-full ${grad} text-white rounded-2xl py-2.5 text-[13px] font-bold flex items-center justify-center gap-1.5 shadow-card active:scale-[0.98]`}
         >
-          <Plus className="w-3.5 h-3.5" />新增
+          <Plus className="w-4 h-4" />新增治疗目标
         </button>
-      </div>
+      )}
 
-      {adding && (
+      {adding && !readOnly && (
         <div className="bg-card rounded-2xl shadow-card p-3 space-y-2">
           <div className="flex gap-2 items-start">
             <textarea
@@ -582,41 +602,68 @@ export const NumberedGoals = ({
       {goals.map((g, idx) => {
         const dimMeta = DIM_META[g.dim];
         const isEditing = editingId === g.id;
+        const hasSub = !!(g.subGoals && g.subGoals.length);
+        const open = openMap[g.id] ?? hasSub;
         return (
-          <div key={g.id} className="bg-card rounded-2xl shadow-card p-3.5 flex gap-3">
-            <div className={`w-8 h-8 rounded-xl ${grad} text-white flex items-center justify-center text-base font-bold shrink-0`}>
-              {NUMBER_GLYPH[idx] ?? idx + 1}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dimMeta.cls}`}>{dimMeta.label}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${g.source === "AI" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"}`}>{g.source}</span>
+          <div key={g.id} className="bg-card rounded-2xl shadow-card overflow-hidden">
+            <button onClick={() => toggle(g.id)} className="w-full p-3.5 flex gap-3 items-start text-left">
+              <div className={`w-8 h-8 rounded-xl ${grad} text-white flex items-center justify-center text-base font-bold shrink-0`}>
+                {NUMBER_GLYPH[idx] ?? idx + 1}
               </div>
-              {isEditing ? (
-                <div className="mt-2 space-y-2">
-                  <div className="flex gap-2 items-start">
-                    <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="flex-1 text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
-                    <VoiceMic onTranscript={(t) => setDraft((v) => (v ? v + " " : "") + t)} sample="将训练时间调整为每日 30 分钟。" />
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
-                    <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="text-[13px] text-foreground font-semibold mt-1.5 leading-relaxed">{g.text}</div>
-                  {g.measure && (
-                    <div className="text-[11px] text-muted-foreground mt-1">衡量指标：{g.measure}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dimMeta.cls}`}>{dimMeta.label}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${g.source === "AI" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"}`}>{g.source}</span>
+                  {hasSub && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning-soft text-warning font-semibold">含 {g.subGoals!.length} 项子目标</span>
                   )}
-                  <div className="mt-2 flex gap-3">
-                    <button onClick={() => startEdit(g)} className={`text-[11px] ${accentText} font-semibold flex items-center gap-0.5`}><Edit2 className="w-3 h-3" />编辑</button>
-                    <button onClick={() => remove(g.id)} className="text-[11px] text-destructive font-semibold flex items-center gap-0.5"><X className="w-3 h-3" />删除</button>
+                </div>
+                <div className="text-[13px] text-foreground font-semibold mt-1.5 leading-relaxed">{g.text}</div>
+              </div>
+              {open ? <ChevronDown className="w-4 h-4 text-muted-foreground mt-1" /> : <ChevronRight className="w-4 h-4 text-muted-foreground mt-1" />}
+            </button>
+
+            {open && (
+              <div className="px-3.5 pb-3.5 -mt-1 space-y-2">
+                {g.measure && (
+                  <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">衡量指标：{g.measure}</div>
+                )}
+                {hasSub && (
+                  <div className="bg-muted/30 rounded-xl divide-y divide-border/60">
+                    {g.subGoals!.map((sg, j) => (
+                      <div key={sg.id} className="flex items-start gap-2 px-3 py-2">
+                        <span className="text-[11px] font-bold text-foreground/70 shrink-0 w-7">{idx + 1}.{j + 1}</span>
+                        <div className="flex-1 text-[12px] text-foreground/90 leading-relaxed">{sg.text}</div>
+                        {sg.period && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-card text-muted-foreground shrink-0">{sg.period}</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                </>
-              )}
-            </div>
+                )}
+
+                {!readOnly && (
+                  isEditing ? (
+                    <div className="space-y-2">
+                      <div className="flex gap-2 items-start">
+                        <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="flex-1 text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                        <VoiceMic onTranscript={(t) => setDraft((v) => (v ? v + " " : "") + t)} sample="将训练时间调整为每日 30 分钟。" />
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+                        <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-3">
+                      <button onClick={(e) => { e.stopPropagation(); startEdit(g); }} className={`text-[11px] ${accentText} font-semibold flex items-center gap-0.5`}><Edit2 className="w-3 h-3" />编辑</button>
+                      <button onClick={(e) => { e.stopPropagation(); remove(g.id); }} className="text-[11px] text-destructive font-semibold flex items-center gap-0.5"><X className="w-3 h-3" />删除</button>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
           </div>
         );
       })}
