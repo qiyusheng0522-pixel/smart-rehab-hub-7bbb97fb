@@ -786,7 +786,23 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
 
       <EvalTabs active={tab} onChange={setTab} accent="therapist" hideClinical />
 
-      {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={TH_REHAB_CONCLUSIONS} />}
+      {tab === "rehab" && (
+        <RehabPanel
+          scaleSlot={scalesBlock}
+          conclusions={TH_REHAB_CONCLUSIONS}
+          aiBottom={
+            <AICard title="AI 康复评估辅助结论">
+              <div className="text-[12px] leading-relaxed whitespace-pre-line">
+                {`基于 ${type} 量表 + 医师诊断综合分析：
+1. 重点障碍：${type === "PT" ? "平衡 Berg 32 / FAC 2 级 / 6MWT 120m" : type === "OT" ? "FMA-UE 24 / MBI 45 / 患手任务表现差" : "EAT-10 4 分 / 构音 78% / 进食呛咳"}。
+2. 训练建议：先 1 周等长收缩 + 床旁起步，第 2 周渐进负重转移，强度按 RPE 12-14。
+3. 风险提示：跌倒高危，下地训练需双人保护并监测血压心率。`}
+              </div>
+              <div className="mt-2 text-[10px] text-muted-foreground">AI · 基于 {type} 量表与患者档案综合生成</div>
+            </AICard>
+          }
+        />
+      )}
       {tab === "goal" && <NumberedGoals accent="therapist" />}
     </div>
   );
