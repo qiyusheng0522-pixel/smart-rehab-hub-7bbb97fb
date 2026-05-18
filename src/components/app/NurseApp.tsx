@@ -93,7 +93,7 @@ const QUEUE_TITLE: Record<QueueKey, string> = {
   inject: "待执行注射",
   obs: "待病情观察",
   execTask: "待执行护理任务",
-  confirmAssess: "待评估确认",
+  confirmAssess: "待首次评估",
 };
 
 // 根据康复处方生成的待办（按患者维度）
