@@ -49,10 +49,8 @@ import { MeStats } from "@/components/app/MeStats";
 import {
   EvalTabs,
   EvalTabKey,
-  ClinicalPanel,
   RehabPanel,
   NumberedGoals,
-  ALL_CLINICAL_CONCLUSIONS,
   ALL_REHAB_CONCLUSIONS,
 } from "@/components/app/EvalShared";
 
