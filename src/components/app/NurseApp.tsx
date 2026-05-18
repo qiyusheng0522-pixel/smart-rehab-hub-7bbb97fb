@@ -45,6 +45,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MeStats } from "@/components/app/MeStats";
+import {
+  EvalTabs,
+  EvalTabKey,
+  ClinicalPanel,
+  RehabPanel,
+  NumberedGoals,
+  ALL_CLINICAL_CONCLUSIONS,
+  ALL_REHAB_CONCLUSIONS,
+} from "@/components/app/EvalShared";
 
 const NURSE_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
