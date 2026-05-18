@@ -201,7 +201,20 @@ export const NurseApp = () => {
           onOpenFollowUp={(p) => { setActiveFollowUp(p); open("followUp"); }}
         />
       )}
-      {tab === "patients" && <PatientsPage accent="nurse" onPick={pickPatient} initialFilter={patientsFilter} />}
+      {tab === "patients" && (
+        <PatientsPage
+          accent="nurse"
+          onPick={pickPatient}
+          initialFilter={patientsFilter}
+          onAction={(key, p) => {
+            if (key === "assess") {
+              setActivePatient(`${p.name} · 床${p.bed}`);
+              setPickedPatient({ ...p, notes: patientNotes[p.id] ?? p.notes });
+              setSheet("confirmAssess");
+            }
+          }}
+        />
+      )}
       {tab === "edu" && <EduPage onOpenPush={() => open("eduPush")} />}
       {tab === "chat" && (
         <NurseChatHub
