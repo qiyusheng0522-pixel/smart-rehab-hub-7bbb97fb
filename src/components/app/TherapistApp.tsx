@@ -744,9 +744,15 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
             <div key={s.name} className="px-3 py-2.5">
               <button onClick={() => setExpanded(open ? null : si)} className="w-full flex items-center gap-2 text-left">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12px] font-semibold truncate">{s.name}</div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[12px] font-semibold truncate">{s.name}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary-soft text-secondary font-semibold shrink-0">
+                      {type}{s.direction ? `-${s.direction}方向` : ""}
+                    </span>
+                  </div>
                   <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.desc}</div>
                 </div>
+
                 <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
                 <span className="text-[11px] text-secondary font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
                 <button onClick={(e) => { e.stopPropagation(); setData(data.filter((_, i) => i !== si)); toast.success(`已删除「${s.name}」`); }} className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30">删除</button>
