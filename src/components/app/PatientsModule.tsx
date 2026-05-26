@@ -178,6 +178,22 @@ export const PatientsPage = ({
   const [statusFilter, setStatusFilter] = useState<PatientFilter>(initialFilter);
   const [condition, setCondition] = useState<string>("");
   const [admitRange, setAdmitRange] = useState<"all" | "0-3" | "4-14" | "15+">("all");
+  const [assessLevel, setAssessLevel] = useState<"" | "A" | "B" | "C">("");
+  const [therapyType, setTherapyType] = useState<"" | "PT" | "OT" | "ST">("");
+  const [direction, setDirection] = useState<"" | "心肺" | "神经" | "骨科">("");
+
+  // 基于患者 id 派生评估等级 / 治疗方向（mock）
+  const derive = (p: Patient) => {
+    const levels: ("A" | "B" | "C")[] = ["A", "B", "C"];
+    const dirs: ("心肺" | "神经" | "骨科")[] = ["神经", "心肺", "骨科"];
+    const seed = p.id.charCodeAt(p.id.length - 1);
+    const level = levels[seed % 3];
+    const dir: ("心肺" | "神经" | "骨科") =
+      p.condition.includes("脑") ? "神经" : p.condition.includes("骨") || p.condition.includes("关节") ? "骨科" : dirs[seed % 3];
+    const types: ("PT" | "OT" | "ST")[] =
+      dir === "神经" ? ["PT", "OT", "ST"] : dir === "心肺" ? ["PT"] : ["PT", "OT"];
+    return { level, dir, types };
+  };
 
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
@@ -190,12 +206,19 @@ export const PatientsPage = ({
     if (admitRange === "4-14") return p.admitDays >= 4 && p.admitDays <= 14;
     return p.admitDays >= 15;
   };
-  const list = PATIENTS.filter(p =>
-    (p.name.includes(q) || p.bed.includes(q)) &&
-    matchStatus(p) &&
-    (!condition || p.condition === condition) &&
-    matchAdmit(p)
-  );
+  const list = PATIENTS.filter(p => {
+    const d = derive(p);
+    return (
+      (p.name.includes(q) || p.bed.includes(q)) &&
+      matchStatus(p) &&
+      (!condition || p.condition === condition) &&
+      matchAdmit(p) &&
+      (!assessLevel || d.level === assessLevel) &&
+      (!therapyType || d.types.includes(therapyType)) &&
+      (!direction || d.dir === direction)
+    );
+  });
+
 
   const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p) === s).length;
   const filterChips: { key: PatientFilter; label: string; count: number }[] = [
@@ -250,6 +273,7 @@ export const PatientsPage = ({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 text-[11px]">
+
             <div>
               <div className="text-[10px] text-muted-foreground mb-1 px-0.5">病症</div>
               <select
@@ -273,8 +297,48 @@ export const PatientsPage = ({
                 <option value="4-14">4-14 天</option>
                 <option value="15+">15 天以上</option>
               </select>
+            <div>
+              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">评估等级</div>
+              <select
+                value={assessLevel}
+                onChange={e => setAssessLevel(e.target.value as any)}
+                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
+              >
+                <option value="">全部等级</option>
+                <option value="A">A 级 · 重症</option>
+                <option value="B">B 级 · 中度</option>
+                <option value="C">C 级 · 轻症</option>
+              </select>
+            </div>
+            <div>
+              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">治疗类型</div>
+              <select
+                value={therapyType}
+                onChange={e => setTherapyType(e.target.value as any)}
+                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
+              >
+                <option value="">全部 (PT/OT/ST)</option>
+                <option value="PT">PT 物理治疗</option>
+                <option value="OT">OT 作业治疗</option>
+                <option value="ST">ST 言语 / 吞咽</option>
+              </select>
+            </div>
+            <div>
+              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">康复方向</div>
+              <select
+                value={direction}
+                onChange={e => setDirection(e.target.value as any)}
+                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
+              >
+                <option value="">全部方向</option>
+                <option value="心肺">心肺方向</option>
+                <option value="神经">神经方向</option>
+                <option value="骨科">骨科方向</option>
+              </select>
             </div>
           </div>
+        </div>
+
         </div>
 
         {/* 待首次评估提示已合并至筛选筹码与列表标签，无需额外横幅 */}

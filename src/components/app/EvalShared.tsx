@@ -385,83 +385,10 @@ export const RehabPanel = ({
   /** 隐藏「心肺 / 神经 / 骨科」三方向卡片（如护士端只展示护理内容） */
   hideDirections?: boolean;
 }) => {
-  const [openMap, setOpenMap] = useState<Record<RehabDirection, boolean>>({
-    cardiopulmonary: defaultOpenAll,
-    neuro: defaultOpenAll,
-    ortho: defaultOpenAll,
-  });
-  const toggle = (d: RehabDirection) => setOpenMap({ ...openMap, [d]: !openMap[d] });
   return (
     <div className="space-y-2">
-      {!hideDirections && (Object.keys(DIRECTION_META) as RehabDirection[]).map((d) => {
-        const meta = DIRECTION_META[d];
-        const Icon = meta.icon;
-        const isOpen = openMap[d];
-        return (
-          <div key={d} className="bg-card rounded-2xl shadow-card overflow-hidden">
-            <button
-              onClick={() => toggle(d)}
-              className="w-full px-3.5 py-2.5 flex items-center gap-2"
-            >
-              <div className={`w-8 h-8 rounded-lg ${meta.cls} flex items-center justify-center`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <span className="text-[13px] font-semibold text-foreground flex-1 text-left">{meta.label}</span>
-              {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-            </button>
-            {isOpen && (
-              <div className="px-3 pb-3 space-y-2">
-                {d === "neuro" && (
-                  <>
-                    <H2>(1) 专科评估</H2>
-                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
-                      <FormRow label="NIHSS" value="14 · 中度" />
-                      <FormRow label="mRS" value="4 · 中重度残疾" />
-                      <FormRow label="MoCA" value="18/30 · 轻度损害" />
-                    </div>
-                    <H2>(2) 特殊评估</H2>
-                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
-                      <FormRow label="平衡测试 Berg" value="32/56 · 高跌倒风险" />
-                      <FormRow label="痉挛 MAS（踝跖屈）" value="2 级" />
-                      <FormRow label="步态分析 GAITRite" value="步速 0.42 m/s" />
-                    </div>
-                  </>
-                )}
-                {d === "cardiopulmonary" && (
-                  <>
-                    <H2>(1) 专科评估</H2>
-                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
-                      <FormRow label="6 分钟步行 6MWT" value="120 m · 受限" />
-                      <FormRow label="Borg 主观疲劳" value="13" />
-                      <FormRow label="呼吸功能 FEV1%" value="78 %" />
-                    </div>
-                    <H2>(2) 特殊评估</H2>
-                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
-                      <FormRow label="心肺运动试验 CPET" value="峰值 VO₂ 14.2" hint="低心肺储备" />
-                      <FormRow label="心电图 / 动态" value="阵发性房颤" />
-                    </div>
-                  </>
-                )}
-                {d === "ortho" && (
-                  <>
-                    <H2>(1) 专科评估</H2>
-                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
-                      <FormRow label="MMT 肌力" value="右下肢 2 级" />
-                      <FormRow label="ROM 关节活动度" value="髋屈 80° · 膝屈 110°" />
-                      <FormRow label="Harris 髋关节" value="—" hint="本患者非骨科主诊，可缺省" />
-                    </div>
-                    <H2>(2) 特殊评估</H2>
-                    <div className="bg-muted/40 rounded-xl divide-y divide-border/60">
-                      <FormRow label="X 线 / CT" value="—" />
-                      <FormRow label="肌骨超声" value="—" />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {/* 心肺 / 神经 / 骨科 三方向已下沉至量表库的方向标签，不再单独展示 */}
+
 
       {scaleSlot && (
         <>
