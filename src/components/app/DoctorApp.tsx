@@ -1333,8 +1333,9 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
 
       <EvalTabs active={tab} onChange={setTab} accent="doctor" />
 
-      {tab === "clinical" && <ClinicalPanel conclusions={ROLE_CLINICAL_CONCLUSIONS} hasDivergence onLaunchMeeting={onLaunchMeeting} aiBottom={aiClinicalConclusion} />}
-      {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={ROLE_REHAB_CONCLUSIONS} hasDivergence onLaunchMeeting={onLaunchMeeting} aiBottom={aiRehabConclusion} />}
+      {tab === "clinical" && <ClinicalPanel aiBottom={aiClinicalConclusion} />}
+      {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={ROLE_REHAB_CONCLUSIONS} aiBottom={aiRehabConclusion} />}
+
       {tab === "goal" && <NumberedGoals accent="doctor" />}
 
       {viewing && (<ScaleDetail scale={viewing} onClose={() => setViewing(null)} />)}
