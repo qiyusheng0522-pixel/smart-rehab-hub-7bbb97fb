@@ -251,94 +251,71 @@ export const PatientsPage = ({
       </div>
 
       <div className="px-4 -mt-5 space-y-3 relative">
-        {/* 筛选卡片：状态 / 病症 / 入院时间 */}
-        <div className="bg-card rounded-2xl shadow-card p-3 space-y-2.5">
-          <div>
-            <div className="text-[10px] text-muted-foreground mb-1.5 px-0.5">状态</div>
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-0.5 px-0.5">
-              {filterChips.map(c => {
-                const active = statusFilter === c.key;
-                return (
-                  <button
-                    key={c.key}
-                    onClick={() => setStatusFilter(c.key)}
-                    className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full font-semibold transition-all ${
-                      active ? `${accentBg[accent]} text-white shadow-card` : "bg-muted text-foreground/70"
+        {/* 筛选卡片：横向滑动 · 支持组合查询 */}
+        <div className="bg-card rounded-2xl shadow-card p-3 space-y-2">
+          <div className="flex items-center justify-between px-0.5">
+            <div className="text-[11px] font-semibold text-foreground/80">筛选条件 · 可组合</div>
+            {(condition || admitRange !== "all" || assessLevel || therapyType || direction || statusFilter !== "all") && (
+              <button
+                onClick={() => {
+                  setStatusFilter("all"); setCondition(""); setAdmitRange("all");
+                  setAssessLevel(""); setTherapyType(""); setDirection("");
+                }}
+                className="text-[10px] text-muted-foreground"
+              >
+                清空
+              </button>
+            )}
+          </div>
+          {/* 状态 chips · 横向滑动 */}
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-0.5 px-0.5 pb-0.5">
+            {filterChips.map(c => {
+              const active = statusFilter === c.key;
+              return (
+                <button
+                  key={c.key}
+                  onClick={() => setStatusFilter(c.key)}
+                  className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full font-semibold transition-all ${
+                    active ? `${accentBg[accent]} text-white shadow-card` : "bg-muted text-foreground/70"
+                  }`}
+                >
+                  {c.label} <span className={active ? "opacity-80" : "text-muted-foreground"}>({c.count})</span>
+                </button>
+              );
+            })}
+          </div>
+          {/* 多维度 select · 横向滑动 */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-0.5 px-0.5 text-[11px]">
+            {[
+              { label: "病症", value: condition, on: setCondition, placeholder: "全部病症", opts: ALL_CONDITIONS.map(c => ({ v: c, t: c })) },
+              { label: "入院", value: admitRange, on: (v: string) => setAdmitRange(v as any), placeholder: "全部时间", opts: [{ v: "all", t: "全部" }, { v: "0-3", t: "0-3 天" }, { v: "4-14", t: "4-14 天" }, { v: "15+", t: "15 天以上" }], allValue: "all" },
+              { label: "评估等级", value: assessLevel, on: (v: string) => setAssessLevel(v as any), placeholder: "全部等级", opts: [{ v: "A", t: "A 级 · 重症" }, { v: "B", t: "B 级 · 中度" }, { v: "C", t: "C 级 · 轻症" }] },
+              { label: "治疗类型", value: therapyType, on: (v: string) => setTherapyType(v as any), placeholder: "PT/OT/ST", opts: [{ v: "PT", t: "PT 物理治疗" }, { v: "OT", t: "OT 作业治疗" }, { v: "ST", t: "ST 言语/吞咽" }] },
+              { label: "康复方向", value: direction, on: (v: string) => setDirection(v as any), placeholder: "全部方向", opts: [{ v: "心肺", t: "心肺方向" }, { v: "神经", t: "神经方向" }, { v: "骨科", t: "骨科方向" }] },
+            ].map(f => {
+              const allValue = (f as any).allValue ?? "";
+              const isActive = f.value !== allValue && f.value !== "";
+              return (
+                <div key={f.label} className="shrink-0 relative">
+                  <select
+                    value={f.value}
+                    onChange={e => f.on(e.target.value)}
+                    className={`appearance-none pl-3 pr-7 py-1.5 rounded-full border outline-none transition-colors ${
+                      isActive
+                        ? `${accentBg[accent]} text-white border-transparent font-semibold`
+                        : "bg-muted border-border text-foreground/80"
                     }`}
                   >
-                    {c.label} <span className={active ? "opacity-80" : "text-muted-foreground"}>({c.count})</span>
-                  </button>
-                );
-              })}
-            </div>
+                    <option value={allValue}>{f.label}：{f.placeholder}</option>
+                    {f.opts.filter(o => o.v !== allValue).map(o => (
+                      <option key={o.v} value={o.v}>{f.label}：{o.t}</option>
+                    ))}
+                  </select>
+                  <ChevronRight className={`w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none ${isActive ? "text-white/80" : "text-muted-foreground"}`} />
+                </div>
+              );
+            })}
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-
-            <div>
-              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">病症</div>
-              <select
-                value={condition}
-                onChange={e => setCondition(e.target.value)}
-                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
-              >
-                <option value="">全部病症</option>
-                {ALL_CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">入院时间</div>
-              <select
-                value={admitRange}
-                onChange={e => setAdmitRange(e.target.value as any)}
-                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
-              >
-                <option value="all">全部</option>
-                <option value="0-3">0-3 天</option>
-                <option value="4-14">4-14 天</option>
-                <option value="15+">15 天以上</option>
-              </select>
-            <div>
-              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">评估等级</div>
-              <select
-                value={assessLevel}
-                onChange={e => setAssessLevel(e.target.value as any)}
-                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
-              >
-                <option value="">全部等级</option>
-                <option value="A">A 级 · 重症</option>
-                <option value="B">B 级 · 中度</option>
-                <option value="C">C 级 · 轻症</option>
-              </select>
-            </div>
-            <div>
-              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">治疗类型</div>
-              <select
-                value={therapyType}
-                onChange={e => setTherapyType(e.target.value as any)}
-                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
-              >
-                <option value="">全部 (PT/OT/ST)</option>
-                <option value="PT">PT 物理治疗</option>
-                <option value="OT">OT 作业治疗</option>
-                <option value="ST">ST 言语 / 吞咽</option>
-              </select>
-            </div>
-            <div>
-              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">康复方向</div>
-              <select
-                value={direction}
-                onChange={e => setDirection(e.target.value as any)}
-                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
-              >
-                <option value="">全部方向</option>
-                <option value="心肺">心肺方向</option>
-                <option value="神经">神经方向</option>
-                <option value="骨科">骨科方向</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
         </div>
 
         {/* 待首次评估提示已合并至筛选筹码与列表标签，无需额外横幅 */}
