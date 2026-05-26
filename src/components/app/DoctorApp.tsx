@@ -876,7 +876,9 @@ const ScaleRow = ({ s, onView, onRemove }: { s: Scale; onView: () => void; onRem
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-[12px] font-semibold">{s.name}</span>
-          <span className={`text-[9px] px-1.5 py-0.5 rounded ${role.cls} font-semibold`}>{role.label}</span>
+          <span className={`text-[9px] px-1.5 py-0.5 rounded ${role.cls} font-semibold`}>
+            {role.label}{s.direction ? `-${s.direction}方向` : ""}
+          </span>
           {s.recommended && (
             <span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5">
               <Sparkles className="w-2.5 h-2.5" />AI 推荐
@@ -884,6 +886,7 @@ const ScaleRow = ({ s, onView, onRemove }: { s: Scale; onView: () => void; onRem
           )}
         </div>
         <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
+
         {s.result && <div className="text-[11px] text-foreground/80 mt-1 font-medium">{s.result}</div>}
       </div>
       <div className="flex flex-col items-end gap-1.5 shrink-0">
