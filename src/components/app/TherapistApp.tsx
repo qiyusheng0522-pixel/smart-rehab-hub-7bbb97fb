@@ -609,88 +609,94 @@ const Me = ({ onOpenTeam }: { onOpenTeam: () => void }) => (
 
 /* ============== 治疗师首次评估（按 PT/OT/ST 类型） ============== */
 type ScaleItem = { label: string; value: string; hint?: string };
-const SCALE_LIB: Record<TherapistType, { name: string; desc: string; items: ScaleItem[] }[]> = {
+type ScaleDir = "心肺" | "神经" | "骨科";
+const SCALE_LIB: Record<TherapistType, { name: string; desc: string; items: ScaleItem[]; direction?: ScaleDir }[]> = {
   PT: [
-    { name: "Fugl-Meyer 下肢 (FMA-LE)", desc: "下肢运动功能 · 满分 34", items: [
+    { name: "Fugl-Meyer 下肢 (FMA-LE)", desc: "下肢运动功能 · 满分 34", direction: "神经", items: [
       { label: "髋屈曲（仰卧）", value: "1" },
       { label: "膝屈曲（坐位）", value: "1" },
       { label: "踝背屈（坐位）", value: "0" },
       { label: "协同运动 / 反射", value: "1" },
       { label: "总分", value: "18 / 34", hint: "中度功能障碍" },
     ]},
-    { name: "Berg 平衡量表 (BBS)", desc: "动静态平衡 · 满分 56", items: [
+    { name: "Berg 平衡量表 (BBS)", desc: "动静态平衡 · 满分 56", direction: "神经", items: [
       { label: "由坐到站", value: "3" },
       { label: "无支撑站立 2 min", value: "2" },
       { label: "闭眼站立", value: "2" },
       { label: "转身 360°", value: "2" },
       { label: "总分", value: "32 / 56", hint: "跌倒风险中-高" },
     ]},
-    { name: "FAC 步行能力分级", desc: "0-5 级", items: [
+    { name: "FAC 步行能力分级", desc: "0-5 级", direction: "神经", items: [
       { label: "分级", value: "2 级", hint: "需治疗师持续接触辅助" },
     ]},
-    { name: "改良 Ashworth (MAS)", desc: "肌张力 · 0-4", items: [
+    { name: "改良 Ashworth (MAS)", desc: "肌张力 · 0-4", direction: "神经", items: [
       { label: "膝伸肌", value: "1+" },
       { label: "踝跖屈肌", value: "2", hint: "明显增高" },
     ]},
-    { name: "6 分钟步行距离 (6MWT)", desc: "心肺耐力", items: [
+    { name: "6 分钟步行距离 (6MWT)", desc: "心肺耐力", direction: "心肺", items: [
       { label: "距离", value: "120 m", hint: "受力弱限制" },
       { label: "Borg 主观疲劳", value: "13" },
     ]},
+    { name: "徒手肌力 MMT", desc: "0–5 级肌力", direction: "骨科", items: [
+      { label: "右下肢", value: "2 级" },
+      { label: "右上肢", value: "2 级" },
+    ]},
   ],
   OT: [
-    { name: "Fugl-Meyer 上肢 (FMA-UE)", desc: "上肢运动功能 · 满分 66", items: [
+    { name: "Fugl-Meyer 上肢 (FMA-UE)", desc: "上肢运动功能 · 满分 66", direction: "神经", items: [
       { label: "肩 / 肘 / 前臂", value: "12" },
       { label: "腕", value: "4" },
       { label: "手", value: "6" },
       { label: "协调与速度", value: "2" },
       { label: "总分", value: "24 / 66", hint: "重度上肢障碍" },
     ]},
-    { name: "改良 Barthel 指数 (MBI)", desc: "ADL · 满分 100", items: [
+    { name: "改良 Barthel 指数 (MBI)", desc: "ADL · 满分 100", direction: "神经", items: [
       { label: "进食", value: "5" },
       { label: "穿衣", value: "5" },
       { label: "如厕", value: "5" },
       { label: "转移", value: "8" },
       { label: "总分", value: "45 / 100", hint: "中度依赖" },
     ]},
-    { name: "ARAT 上肢动作研究", desc: "抓握 / 捏 / 粗大动作", items: [
+    { name: "ARAT 上肢动作研究", desc: "抓握 / 捏 / 粗大动作", direction: "神经", items: [
       { label: "抓握", value: "8" },
       { label: "握持", value: "5" },
       { label: "捏", value: "4" },
       { label: "粗大运动", value: "6" },
       { label: "总分", value: "23 / 57" },
     ]},
-    { name: "MoCA 蒙特利尔认知", desc: "认知筛查 · 满分 30", items: [
+    { name: "MoCA 蒙特利尔认知", desc: "认知筛查 · 满分 30", direction: "神经", items: [
       { label: "总分", value: "21 / 30", hint: "轻度认知障碍" },
     ]},
-    { name: "Lindmark 精细动作", desc: "手部精细", items: [
+    { name: "Lindmark 精细动作", desc: "手部精细", direction: "骨科", items: [
       { label: "九孔插板用时", value: "62 s（患侧）" },
     ]},
   ],
   ST: [
-    { name: "WAB 失语症", desc: "西方失语症成套测验", items: [
+    { name: "WAB 失语症", desc: "西方失语症成套测验", direction: "神经", items: [
       { label: "自发言语", value: "12 / 20" },
       { label: "听理解", value: "6.5 / 10" },
       { label: "复述", value: "5 / 10" },
       { label: "命名", value: "6 / 10" },
       { label: "失语商 AQ", value: "59.0", hint: "中度运动性失语" },
     ]},
-    { name: "洼田饮水试验", desc: "1-5 级", items: [
+    { name: "洼田饮水试验", desc: "1-5 级", direction: "神经", items: [
       { label: "分级", value: "3 级", hint: "可疑误吸 · 建议 VFSS" },
     ]},
-    { name: "标准吞咽功能 (SSA)", desc: "床旁筛查", items: [
+    { name: "标准吞咽功能 (SSA)", desc: "床旁筛查", direction: "神经", items: [
       { label: "意识 / 头控制", value: "正常" },
       { label: "饮水反应", value: "呛咳 1 次" },
       { label: "总分", value: "28 / 46", hint: "异常" },
     ]},
-    { name: "构音障碍 Frenchay", desc: "构音器官检查", items: [
+    { name: "构音障碍 Frenchay", desc: "构音器官检查", direction: "神经", items: [
       { label: "唇 / 舌 / 软腭", value: "中度异常" },
       { label: "言语清晰度", value: "60%" },
     ]},
-    { name: "MMSE 简易精神状态", desc: "认知 · 满分 30", items: [
+    { name: "MMSE 简易精神状态", desc: "认知 · 满分 30", direction: "神经", items: [
       { label: "总分", value: "23 / 30", hint: "轻度认知下降" },
     ]},
   ],
 };
+
 
 const TH_CLINICAL_CONCLUSIONS = [
   { role: "医师 · 李志远", time: "今日 09:30", text: "急性缺血性脑卒中，BP 偏高 / LDL 偏高 / 阵发性房颤，需启动二级预防 + 抗凝评估。", tone: "doctor" as const },
