@@ -178,6 +178,22 @@ export const PatientsPage = ({
   const [statusFilter, setStatusFilter] = useState<PatientFilter>(initialFilter);
   const [condition, setCondition] = useState<string>("");
   const [admitRange, setAdmitRange] = useState<"all" | "0-3" | "4-14" | "15+">("all");
+  const [assessLevel, setAssessLevel] = useState<"" | "A" | "B" | "C">("");
+  const [therapyType, setTherapyType] = useState<"" | "PT" | "OT" | "ST">("");
+  const [direction, setDirection] = useState<"" | "心肺" | "神经" | "骨科">("");
+
+  // 基于患者 id 派生评估等级 / 治疗方向（mock）
+  const derive = (p: Patient) => {
+    const levels: ("A" | "B" | "C")[] = ["A", "B", "C"];
+    const dirs: ("心肺" | "神经" | "骨科")[] = ["神经", "心肺", "骨科"];
+    const seed = p.id.charCodeAt(p.id.length - 1);
+    const level = levels[seed % 3];
+    const dir: ("心肺" | "神经" | "骨科") =
+      p.condition.includes("脑") ? "神经" : p.condition.includes("骨") || p.condition.includes("关节") ? "骨科" : dirs[seed % 3];
+    const types: ("PT" | "OT" | "ST")[] =
+      dir === "神经" ? ["PT", "OT", "ST"] : dir === "心肺" ? ["PT"] : ["PT", "OT"];
+    return { level, dir, types };
+  };
 
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
@@ -190,12 +206,19 @@ export const PatientsPage = ({
     if (admitRange === "4-14") return p.admitDays >= 4 && p.admitDays <= 14;
     return p.admitDays >= 15;
   };
-  const list = PATIENTS.filter(p =>
-    (p.name.includes(q) || p.bed.includes(q)) &&
-    matchStatus(p) &&
-    (!condition || p.condition === condition) &&
-    matchAdmit(p)
-  );
+  const list = PATIENTS.filter(p => {
+    const d = derive(p);
+    return (
+      (p.name.includes(q) || p.bed.includes(q)) &&
+      matchStatus(p) &&
+      (!condition || p.condition === condition) &&
+      matchAdmit(p) &&
+      (!assessLevel || d.level === assessLevel) &&
+      (!therapyType || d.types.includes(therapyType)) &&
+      (!direction || d.dir === direction)
+    );
+  });
+
 
   const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p) === s).length;
   const filterChips: { key: PatientFilter; label: string; count: number }[] = [
