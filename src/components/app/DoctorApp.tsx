@@ -1002,7 +1002,7 @@ const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) 
           )}
           <div className="text-[10px] opacity-80 mt-0.5">{scale.brief} · 支持自定义编辑</div>
         </div>
-        <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}</span>
+        <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}{scale.direction ? `-${scale.direction}方向` : ""}</span>
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-3 pb-24">
