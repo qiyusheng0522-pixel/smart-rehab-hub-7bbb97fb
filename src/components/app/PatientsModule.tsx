@@ -273,6 +273,7 @@ export const PatientsPage = ({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 text-[11px]">
+
             <div>
               <div className="text-[10px] text-muted-foreground mb-1 px-0.5">病症</div>
               <select
