@@ -741,11 +741,19 @@ export const TeamMeetingDisputeSheet = ({
         </div>
       </div>
 
-      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5">
+      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5 space-y-2">
+        <button
+          onClick={() => setShowFirstNote(true)}
+          className="w-full border border-primary/50 text-primary bg-primary/5 rounded-2xl py-2.5 text-sm font-semibold flex items-center justify-center gap-2"
+        >
+          <Sparkles className="w-4 h-4" /> 生成首程
+        </button>
         <button onClick={finish} className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold shadow-card flex items-center justify-center gap-2">
           <Sparkles className="w-4 h-4" /> 生成会议结论并同步
         </button>
       </div>
+
+      {showFirstNote && <FirstNoteSheet onClose={() => setShowFirstNote(false)} />}
     </div>
   );
 };
