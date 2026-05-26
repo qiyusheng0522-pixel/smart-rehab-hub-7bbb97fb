@@ -666,6 +666,7 @@ export const TeamMeetingDisputeSheet = ({
     plan: true,
     rx: false,
   });
+  const [showFirstNote, setShowFirstNote] = useState(false);
   const toggle = (k: string) => setSyncTargets({ ...syncTargets, [k]: !syncTargets[k] });
   const finish = () => {
     const labels = [
@@ -741,11 +742,19 @@ export const TeamMeetingDisputeSheet = ({
         </div>
       </div>
 
-      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5">
+      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5 space-y-2">
+        <button
+          onClick={() => setShowFirstNote(true)}
+          className="w-full border border-primary/50 text-primary bg-primary/5 rounded-2xl py-2.5 text-sm font-semibold flex items-center justify-center gap-2"
+        >
+          <Sparkles className="w-4 h-4" /> 生成首程
+        </button>
         <button onClick={finish} className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold shadow-card flex items-center justify-center gap-2">
           <Sparkles className="w-4 h-4" /> 生成会议结论并同步
         </button>
       </div>
+
+      {showFirstNote && <FirstNoteSheet onClose={() => setShowFirstNote(false)} />}
     </div>
   );
 };
@@ -864,6 +873,77 @@ export const AutoScheduleSheet = ({ onClose }: { onClose: () => void }) => {
         </button>
         <button onClick={() => { toast.success("排班已发布给治疗师 / 患者"); onClose(); }} className="flex-1 gradient-ai text-white rounded-2xl py-3 text-sm font-semibold">
           发布排班
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ==============================================================
+ * 首程记录 · 团队会议一键生成
+ * ============================================================== */
+export const FirstNoteSheet = ({ onClose }: { onClose: () => void }) => {
+  const [sections, setSections] = useState({
+    chief: "患者主诉右侧肢体无力 5 天,伴言语含糊,生活不能自理。",
+    history: "5 天前晨起活动时突发右侧肢体乏力,持物不稳,行走偏斜,送至急诊查头颅 MRI 提示左侧基底节区脑梗死,经神经内科溶栓 + 抗血小板治疗病情稳定,现转入康复科继续治疗。",
+    exam: "神清,构音障碍,右侧鼻唇沟变浅,伸舌右偏;右上肢肌力 3 级、右下肢肌力 3+ 级,腱反射稍亢进,Babinski 征 (+);Brunnstrom 上肢 III 期、手 III 期、下肢 IV 期。",
+    diagnosis: "1) 脑梗死恢复期(左侧基底节区)\n2) 右侧偏瘫\n3) 构音障碍\n4) 高血压病 2 级 高危",
+    plan: "辅助检查:复查头颅 MRI+MRA、颈动脉超声、24h 动态血压、凝血四项、同型半胱氨酸、心脏彩超。\n治疗方案:抗血小板 + 他汀稳定斑块;PT 偏瘫肢体综合训练 + 平衡训练 40min/日;OT 手功能 + ADL 训练 30min/日;ST 构音 + 吞咽训练 20min/日;针灸 / 经颅磁刺激辅助。",
+    risk: "存在跌倒(Morse 65 分,高风险)、误吸、压疮、深静脉血栓、二次卒中复发等风险,已告知家属并签署知情同意书,夜间需专人陪护。",
+  });
+  const fields: { key: keyof typeof sections; label: string; hint: string }[] = [
+    { key: "chief", label: "主诉 · 哪里不舒服", hint: "病人主要不适及持续时间" },
+    { key: "history", label: "现病史 · 发病过程", hint: "起病-就诊-治疗-转入经过" },
+    { key: "exam", label: "查体情况", hint: "专科查体 + 阳性体征" },
+    { key: "diagnosis", label: "初步诊断", hint: "主诊断 / 次诊断 / 合并症" },
+    { key: "plan", label: "下一步诊疗计划", hint: "检查 + 治疗方案" },
+    { key: "risk", label: "风险告知", hint: "潜在风险 + 沟通签字情况" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-background flex flex-col animate-in slide-in-from-bottom-4">
+      <div className="bg-gradient-to-r from-ai/15 to-primary/10 border-b border-border/60 px-4 py-3 flex items-center gap-2">
+        <button onClick={onClose} className="w-8 h-8 rounded-full bg-card flex items-center justify-center">
+          <ChevronLeft className="w-4 h-4 text-foreground" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="text-[14px] font-bold flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-ai" /> 生成首程
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">AI 已根据团队会议讨论与三方评估自动生成</div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <AICard title="AI 首程模板">
+          已整合医师 / 治疗师 / 护士首次评估结论与会议讨论,按规范模板生成首程记录,可编辑后保存。
+        </AICard>
+        {fields.map((f, i) => (
+          <div key={f.key} className="bg-card rounded-2xl shadow-card overflow-hidden">
+            <div className="px-3 py-2 bg-muted/60 border-b border-border/60 flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-ai/15 text-ai flex items-center justify-center text-[10px] font-bold">{i + 1}</span>
+              <span className="text-[12px] font-bold">{f.label}</span>
+              <span className="text-[10px] text-muted-foreground ml-auto">{f.hint}</span>
+            </div>
+            <textarea
+              value={sections[f.key]}
+              onChange={e => setSections({ ...sections, [f.key]: e.target.value })}
+              className="w-full text-[12px] leading-relaxed p-3 bg-transparent outline-none resize-none min-h-[72px]"
+              rows={f.key === "plan" || f.key === "diagnosis" ? 4 : 3}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 pb-5 flex gap-2">
+        <button onClick={onClose} className="flex-1 border border-border rounded-2xl py-3 text-sm font-semibold text-foreground/70">
+          取消
+        </button>
+        <button
+          onClick={() => { toast.success("首程已保存至病历档案"); onClose(); }}
+          className="flex-1 gradient-ai text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-1.5"
+        >
+          <Sparkles className="w-4 h-4" /> 保存首程
         </button>
       </div>
     </div>
