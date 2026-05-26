@@ -296,8 +296,48 @@ export const PatientsPage = ({
                 <option value="4-14">4-14 天</option>
                 <option value="15+">15 天以上</option>
               </select>
+            <div>
+              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">评估等级</div>
+              <select
+                value={assessLevel}
+                onChange={e => setAssessLevel(e.target.value as any)}
+                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
+              >
+                <option value="">全部等级</option>
+                <option value="A">A 级 · 重症</option>
+                <option value="B">B 级 · 中度</option>
+                <option value="C">C 级 · 轻症</option>
+              </select>
+            </div>
+            <div>
+              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">治疗类型</div>
+              <select
+                value={therapyType}
+                onChange={e => setTherapyType(e.target.value as any)}
+                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
+              >
+                <option value="">全部 (PT/OT/ST)</option>
+                <option value="PT">PT 物理治疗</option>
+                <option value="OT">OT 作业治疗</option>
+                <option value="ST">ST 言语 / 吞咽</option>
+              </select>
+            </div>
+            <div>
+              <div className="text-[10px] text-muted-foreground mb-1 px-0.5">康复方向</div>
+              <select
+                value={direction}
+                onChange={e => setDirection(e.target.value as any)}
+                className="w-full bg-muted border border-border rounded-full px-3 py-1.5 outline-none"
+              >
+                <option value="">全部方向</option>
+                <option value="心肺">心肺方向</option>
+                <option value="神经">神经方向</option>
+                <option value="骨科">骨科方向</option>
+              </select>
             </div>
           </div>
+        </div>
+
         </div>
 
         {/* 待首次评估提示已合并至筛选筹码与列表标签，无需额外横幅 */}
