@@ -683,7 +683,6 @@ const DoctorHome = ({
           <PendingTodoGrid
             items={[
             { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-              { label: "待确认方案", count: 3, icon: FileText, iconClass: "bg-secondary text-white", onClick: () => onGoPlan("plan") },
               { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
               { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
             ]}
