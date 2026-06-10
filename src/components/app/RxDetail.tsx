@@ -121,40 +121,49 @@ export const RxDetail = ({
       </AICard>
 
       {/* 1. 基本信息 */}
-      <SectionTitle title="① 处方基本信息" extra={<span className="text-[10px] text-muted-foreground">编号 / 患者 / 医师</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="处方编号" value="RX-2026-0507-0031" />
-        <FormRow label="患者" value={`${patient?.split("·")[0]?.trim() || "张建国"} · 56 岁 · 男`} />
-        <FormRow label="主治医师" value="李志远 主任医师" hint="康复医学科" />
-        <FormRow label="责任治疗师" value="王雅琴 (PT) / 陈思雨 (OT/ST)" />
-        <FormRow label="诊断" value="脑梗死恢复期" hint="左侧偏瘫 · ASIA D" />
-        <FormRow label="开方日期" value="2026-05-06" />
-        <FormRow label="治疗周期" value="4 周" hint="2026-05-06 → 2026-06-02" />
-      </div>
+      <SectionTitle title="① 处方基本信息" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "处方编号", value: "RX-2026-0507-0031" },
+          { label: "患者", value: `${patient?.split("·")[0]?.trim() || "张建国"} · 56 岁 · 男` },
+          { label: "主治医师", value: "李志远 主任医师", hint: "康复医学科" },
+          { label: "责任治疗师", value: "王雅琴 (PT) / 陈思雨 (OT/ST)" },
+          { label: "诊断", value: "脑梗死恢复期", hint: "左侧偏瘫 · ASIA D" },
+          { label: "开方日期", value: "2026-05-06" },
+          { label: "治疗周期", value: "4 周", hint: "2026-05-06 → 2026-06-02" },
+        ]}
+      />
 
       {/* 2. 康复评估数据 */}
-      <SectionTitle title="② 康复评估数据" extra={<span className="text-[10px] text-muted-foreground">治疗前基线</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="生活能力 (Barthel)" value="55 / 100" hint="进食 5 · 转移 10 · 步行 5" />
-        <FormRow label="运动功能 (FMA)" value="上肢 22 / 下肢 20" hint="共计 42 / 100" />
-        <FormRow label="肌力 (MMT)" value="左下肢 3 / 左上肢 2+" hint="右侧 5 级" />
-        <FormRow label="平衡 (Berg)" value="36 / 56" hint="跌倒中风险" />
-        <FormRow label="疼痛 (VAS)" value="3 / 10" hint="左肩 · 活动诱发" />
-        <FormRow label="言语 (构音)" value="清晰度 78%" hint="EAT-10：4" />
-      </div>
+      <SectionTitle title="② 康复评估数据" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "生活能力 (Barthel)", value: "55 / 100", hint: "进食 5 · 转移 10 · 步行 5" },
+          { label: "运动功能 (FMA)", value: "上肢 22 / 下肢 20", hint: "共计 42 / 100" },
+          { label: "肌力 (MMT)", value: "左下肢 3 / 左上肢 2+", hint: "右侧 5 级" },
+          { label: "平衡 (Berg)", value: "36 / 56", hint: "跌倒中风险" },
+          { label: "疼痛 (VAS)", value: "3 / 10", hint: "左肩 · 活动诱发" },
+          { label: "言语 (构音)", value: "清晰度 78%", hint: "EAT-10：4" },
+        ]}
+      />
 
       {/* 3. 康复治疗项目 */}
       <SectionTitle title="③ 康复治疗项目" extra={<span className="text-[10px] text-muted-foreground">康复医师可手动调整治疗师 / 时段</span>} />
       <TreatmentItemsEditor accentSoft={accentSoft} accentText={accentText} canAdjust={accent === "doctor"} />
 
       {/* 4. 康复辅具/设备处方 */}
-      <SectionTitle title="④ 康复辅具 / 设备处方" extra={<span className="text-[10px] text-muted-foreground">配备清单</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="踝足矫形器 (AFO)" value="左侧 1 副" hint="日间步行佩戴" />
-        <FormRow label="四脚拐" value="1 支" hint="过渡期辅助" />
-        <FormRow label="平衡训练垫" value="病房使用" hint="每日早晚 10 min" />
-        <FormRow label="家用握力球" value="1 组 (软/中)" hint="居家手功能训练" />
-      </div>
+      <SectionTitle title="④ 康复辅具 / 设备处方" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "踝足矫形器 (AFO)", value: "左侧 1 副", hint: "日间步行佩戴" },
+          { label: "四脚拐", value: "1 支", hint: "过渡期辅助" },
+          { label: "平衡训练垫", value: "病房使用", hint: "每日早晚 10 min" },
+          { label: "家用握力球", value: "1 组 (软/中)", hint: "居家手功能训练" },
+        ]}
+      />
 
       {/* 5. 用药处方（AI 建议 + 手动调整） */}
       <SectionTitle title="⑤ 用药处方" extra={<span className="text-[10px] text-muted-foreground">AI 建议 · 可手动调整</span>} />
