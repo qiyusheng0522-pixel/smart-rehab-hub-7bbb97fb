@@ -471,6 +471,30 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
         </button>
       )}
 
+      {/* 医嘱：分「临床医嘱」与「康复医嘱」两类 · 医师 / 治疗师视角一致 */}
+      {(accent === "doctor" || accent === "therapist") && (
+        <>
+          <SectionTitle title="医嘱 · 临床医嘱" extra={<span className="text-[10px] text-muted-foreground">主管医师签发</span>} />
+          <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+            <FormRow label="阿司匹林肠溶片" value="100 mg qd" hint="二级预防 · 早餐后" />
+            <FormRow label="阿托伐他汀钙" value="20 mg qn" hint="调脂 · 睡前" />
+            <FormRow label="苯磺酸氨氯地平" value="5 mg qd" hint="降压 · 晨服" />
+            <FormRow label="低分子肝素钙" value="4100 IU q12h" hint="DVT 预防 · 7 天" />
+            <FormRow label="护理级别" value="一级护理 · 跌倒 / 压疮预警" />
+          </div>
+
+          <SectionTitle title="医嘱 · 康复医嘱" extra={<span className="text-[10px] text-muted-foreground">康复医学科签发</span>} />
+          <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+            <FormRow label="PT 物理治疗" value="60 min × 5/周" hint="步态 + 平衡 + 力量" />
+            <FormRow label="OT 作业治疗" value="45 min × 5/周" hint="ADL + 厨房" />
+            <FormRow label="ST 言语治疗" value="30 min × 3/周" hint="构音 + 吞咽" />
+            <FormRow label="物理因子" value="低频电刺激 20 min × 5/周" hint="左下肢" />
+            <FormRow label="辅具" value="AFO 1 副 · 四脚拐 1 支" hint="日间步行佩戴" />
+            <FormRow label="居家自训" value="床边坐起 + 踝泵 + 站立训练" hint="每日 30 min" />
+          </div>
+        </>
+      )}
+
       {/* 治疗师档案：PT/OT/ST 治疗记录（默认仅展示最新一条，历史可展开） */}
       {patient.therapyRecords && patient.therapyRecords.length > 0 && (
         <CollapsibleRecords

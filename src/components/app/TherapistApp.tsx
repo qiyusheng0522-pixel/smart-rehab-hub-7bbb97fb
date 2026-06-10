@@ -61,8 +61,7 @@ import { toast } from "sonner";
 const THERAPIST_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: ClipboardList },
   { key: "patients", label: "患者管理", icon: UsersRound },
-  { key: "plan", label: "康复方案", icon: FileHeart },
-  { key: "rx", label: "医嘱", icon: FileText },
+  { key: "rx", label: "康复方案", icon: FileHeart },
   { key: "chat", label: "沟通", icon: MessageCircle, badge: PATIENT_UNREAD },
   { key: "me", label: "我的", icon: UserIcon },
 ];
@@ -815,7 +814,16 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
           }
         />
       )}
-      {tab === "goal" && <NumberedGoals accent="therapist" />}
+      {tab === "goal" && (
+        <div className="space-y-3">
+          <AICard title="治疗目标 · 基于 ICF + SMART 原则">
+            治疗师目标基于 <b>ICF</b>（身体功能 / 活动 / 参与）三个维度自动展开，并遵循 <b>SMART</b> 原则：
+            <span className="text-foreground/80">具体（Specific）· 可衡量（Measurable）· 可达成（Achievable）· 相关（Relevant）· 有时限（Time-bound）</span>。
+            每条目标含「衡量指标 + 周期」，可编辑、删除或新增。
+          </AICard>
+          <NumberedGoals accent="therapist" />
+        </div>
+      )}
     </div>
   );
 };
@@ -1201,8 +1209,8 @@ const RxTab = ({ onPick }: { onPick: (item: TodoItem) => void }) => (
     <div className="gradient-therapist px-5 pt-6 pb-6 text-white relative overflow-hidden">
       <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
       <div className="relative">
-        <div className="text-xs opacity-80">康复医嘱</div>
-        <div className="text-[15px] font-semibold mt-0.5">待确认 · {QUEUES.rx.length} 项</div>
+        <div className="text-xs opacity-80">康复方案</div>
+        <div className="text-[15px] font-semibold mt-0.5">待确认康复方案 · {QUEUES.rx.length} 位</div>
         <div className="text-[11px] opacity-80 mt-1">康复整体计划 · 全套训练 + 流程安排，含居家训练</div>
       </div>
     </div>

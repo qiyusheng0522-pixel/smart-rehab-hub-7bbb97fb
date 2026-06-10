@@ -121,40 +121,49 @@ export const RxDetail = ({
       </AICard>
 
       {/* 1. 基本信息 */}
-      <SectionTitle title="① 处方基本信息" extra={<span className="text-[10px] text-muted-foreground">编号 / 患者 / 医师</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="处方编号" value="RX-2026-0507-0031" />
-        <FormRow label="患者" value={`${patient?.split("·")[0]?.trim() || "张建国"} · 56 岁 · 男`} />
-        <FormRow label="主治医师" value="李志远 主任医师" hint="康复医学科" />
-        <FormRow label="责任治疗师" value="王雅琴 (PT) / 陈思雨 (OT/ST)" />
-        <FormRow label="诊断" value="脑梗死恢复期" hint="左侧偏瘫 · ASIA D" />
-        <FormRow label="开方日期" value="2026-05-06" />
-        <FormRow label="治疗周期" value="4 周" hint="2026-05-06 → 2026-06-02" />
-      </div>
+      <SectionTitle title="① 处方基本信息" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "处方编号", value: "RX-2026-0507-0031" },
+          { label: "患者", value: `${patient?.split("·")[0]?.trim() || "张建国"} · 56 岁 · 男` },
+          { label: "主治医师", value: "李志远 主任医师", hint: "康复医学科" },
+          { label: "责任治疗师", value: "王雅琴 (PT) / 陈思雨 (OT/ST)" },
+          { label: "诊断", value: "脑梗死恢复期", hint: "左侧偏瘫 · ASIA D" },
+          { label: "开方日期", value: "2026-05-06" },
+          { label: "治疗周期", value: "4 周", hint: "2026-05-06 → 2026-06-02" },
+        ]}
+      />
 
       {/* 2. 康复评估数据 */}
-      <SectionTitle title="② 康复评估数据" extra={<span className="text-[10px] text-muted-foreground">治疗前基线</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="生活能力 (Barthel)" value="55 / 100" hint="进食 5 · 转移 10 · 步行 5" />
-        <FormRow label="运动功能 (FMA)" value="上肢 22 / 下肢 20" hint="共计 42 / 100" />
-        <FormRow label="肌力 (MMT)" value="左下肢 3 / 左上肢 2+" hint="右侧 5 级" />
-        <FormRow label="平衡 (Berg)" value="36 / 56" hint="跌倒中风险" />
-        <FormRow label="疼痛 (VAS)" value="3 / 10" hint="左肩 · 活动诱发" />
-        <FormRow label="言语 (构音)" value="清晰度 78%" hint="EAT-10：4" />
-      </div>
+      <SectionTitle title="② 康复评估数据" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "生活能力 (Barthel)", value: "55 / 100", hint: "进食 5 · 转移 10 · 步行 5" },
+          { label: "运动功能 (FMA)", value: "上肢 22 / 下肢 20", hint: "共计 42 / 100" },
+          { label: "肌力 (MMT)", value: "左下肢 3 / 左上肢 2+", hint: "右侧 5 级" },
+          { label: "平衡 (Berg)", value: "36 / 56", hint: "跌倒中风险" },
+          { label: "疼痛 (VAS)", value: "3 / 10", hint: "左肩 · 活动诱发" },
+          { label: "言语 (构音)", value: "清晰度 78%", hint: "EAT-10：4" },
+        ]}
+      />
 
       {/* 3. 康复治疗项目 */}
       <SectionTitle title="③ 康复治疗项目" extra={<span className="text-[10px] text-muted-foreground">康复医师可手动调整治疗师 / 时段</span>} />
       <TreatmentItemsEditor accentSoft={accentSoft} accentText={accentText} canAdjust={accent === "doctor"} />
 
       {/* 4. 康复辅具/设备处方 */}
-      <SectionTitle title="④ 康复辅具 / 设备处方" extra={<span className="text-[10px] text-muted-foreground">配备清单</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="踝足矫形器 (AFO)" value="左侧 1 副" hint="日间步行佩戴" />
-        <FormRow label="四脚拐" value="1 支" hint="过渡期辅助" />
-        <FormRow label="平衡训练垫" value="病房使用" hint="每日早晚 10 min" />
-        <FormRow label="家用握力球" value="1 组 (软/中)" hint="居家手功能训练" />
-      </div>
+      <SectionTitle title="④ 康复辅具 / 设备处方" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "踝足矫形器 (AFO)", value: "左侧 1 副", hint: "日间步行佩戴" },
+          { label: "四脚拐", value: "1 支", hint: "过渡期辅助" },
+          { label: "平衡训练垫", value: "病房使用", hint: "每日早晚 10 min" },
+          { label: "家用握力球", value: "1 组 (软/中)", hint: "居家手功能训练" },
+        ]}
+      />
 
       {/* 5. 用药处方（AI 建议 + 手动调整） */}
       <SectionTitle title="⑤ 用药处方" extra={<span className="text-[10px] text-muted-foreground">AI 建议 · 可手动调整</span>} />
@@ -180,25 +189,91 @@ export const RxDetail = ({
       </div>
 
       {/* 7. 复诊与随访 */}
-      <SectionTitle title="⑦ 复诊与随访计划" />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="下次复诊" value="2026-05-20 上午" hint="康复门诊 · 李志远" />
-        <FormRow label="复查项目" value="FMA / Barthel / Berg" hint="同步颅脑 MRI 评估" />
-        <FormRow label="远程随访" value="每周 1 次" hint="视频回访 + 量表" />
-        <FormRow label="紧急联系人" value="家属 张女士 138****8821" />
-        <FormRow label="紧急预警" value="跌倒 / 疼痛突增" hint="自动通知医师 + 家属" />
-      </div>
+      <SectionTitle title="⑦ 复诊与随访计划" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "下次复诊", value: "2026-05-20 上午", hint: "康复门诊 · 李志远" },
+          { label: "复查项目", value: "FMA / Barthel / Berg", hint: "同步颅脑 MRI 评估" },
+          { label: "远程随访", value: "每周 1 次", hint: "视频回访 + 量表" },
+          { label: "紧急联系人", value: "家属 张女士 138****8821" },
+          { label: "紧急预警", value: "跌倒 / 疼痛突增", hint: "自动通知医师 + 家属" },
+        ]}
+      />
 
       {/* 8. 状态与执行记录 */}
-      <SectionTitle title="⑧ 处方状态与执行记录" />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="当前状态" value={<span className="text-[11px] text-warning font-semibold">待确认</span>} hint="AI 已生成 · 等待签发" />
-        <FormRow label="执行进度" value="0 / 28 天" hint="待医师确认后启动" />
-        <FormRow label="依从性 (近 7 日)" value="—" hint="确认后开始统计" />
-        <FormRow label="进展记录" value="本周 FMA +3 / Barthel +5" hint="较上周改善" />
-        <FormRow label="结局评估" value="预计 4 周达 Barthel 75" hint="AI 预测置信度 82%" />
-      </div>
+      <SectionTitle title="⑧ 处方状态与执行记录" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
+      <EditableRows
+        accent={accent}
+        initial={[
+          { label: "当前状态", value: "待确认", hint: "AI 已生成 · 等待签发" },
+          { label: "执行进度", value: "0 / 28 天", hint: "待医师确认后启动" },
+          { label: "依从性 (近 7 日)", value: "—", hint: "确认后开始统计" },
+          { label: "进展记录", value: "本周 FMA +3 / Barthel +5", hint: "较上周改善" },
+          { label: "结局评估", value: "预计 4 周达 Barthel 75", hint: "AI 预测置信度 82%" },
+        ]}
+      />
     </div>
+  );
+};
+
+/* ===== 可编辑字段列表 · 用于「待确认医嘱」全字段编辑 / 删除 / 新增 ===== */
+type EditRow = { label: string; value: string; hint?: string };
+const EditableRows = ({ accent, initial }: { accent: RxAccent; initial: EditRow[] }) => {
+  const [rows, setRows] = useState<EditRow[]>(initial);
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState<EditRow>({ label: "", value: "", hint: "" });
+  const accentText = accent === "doctor" ? "text-role-doctor" : "text-role-therapist";
+  const grad = accent === "doctor" ? "gradient-doctor" : "gradient-therapist";
+  const update = (i: number, patch: Partial<EditRow>) => setRows(rows.map((x, idx) => idx === i ? { ...x, ...patch } : x));
+  const remove = (i: number) => { setRows(rows.filter((_, idx) => idx !== i)); setEditIdx(null); toast("已删除该字段"); };
+
+  return (
+    <>
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {rows.map((r, i) => (
+          <div key={i} className="px-3 py-2.5">
+            {editIdx === i ? (
+              <div className="space-y-1.5">
+                <input value={r.label} onChange={(e) => update(i, { label: e.target.value })} className="w-full bg-muted rounded px-2 py-1.5 text-[12px]" placeholder="字段名" />
+                <input value={r.value} onChange={(e) => update(i, { value: e.target.value })} className="w-full bg-muted rounded px-2 py-1.5 text-[12px]" placeholder="字段值" />
+                <input value={r.hint ?? ""} onChange={(e) => update(i, { hint: e.target.value })} className="w-full bg-muted rounded px-2 py-1.5 text-[12px]" placeholder="备注（可选）" />
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => remove(i)} className="text-[11px] text-destructive flex items-center gap-1"><Trash2 className="w-3 h-3" />删除</button>
+                  <button onClick={() => { setEditIdx(null); toast.success("已保存修改"); }} className={`text-[11px] px-3 py-1 rounded-full text-white ${grad}`}>完成</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] text-muted-foreground">{r.label}</div>
+                  <div className="text-[12px] font-semibold text-foreground mt-0.5">{r.value}</div>
+                  {r.hint && <div className="text-[10px] text-muted-foreground mt-0.5">{r.hint}</div>}
+                </div>
+                <button onClick={() => setEditIdx(i)} className={`${accentText} p-1`}><Edit3 className="w-3.5 h-3.5" /></button>
+                <button onClick={() => remove(i)} className="text-destructive p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      {adding ? (
+        <div className="bg-card rounded-2xl shadow-card p-3 space-y-1.5 border border-dashed border-border">
+          <input value={draft.label} onChange={(e) => setDraft({ ...draft, label: e.target.value })} className="w-full bg-muted rounded px-2 py-1.5 text-[12px]" placeholder="新字段名" />
+          <input value={draft.value} onChange={(e) => setDraft({ ...draft, value: e.target.value })} className="w-full bg-muted rounded px-2 py-1.5 text-[12px]" placeholder="字段值" />
+          <input value={draft.hint ?? ""} onChange={(e) => setDraft({ ...draft, hint: e.target.value })} className="w-full bg-muted rounded px-2 py-1.5 text-[12px]" placeholder="备注（可选）" />
+          <div className="flex justify-end gap-2">
+            <button onClick={() => { setAdding(false); setDraft({ label: "", value: "", hint: "" }); }} className="text-[11px] text-muted-foreground">取消</button>
+            <button onClick={() => { if (!draft.label) return; setRows([...rows, draft]); setAdding(false); setDraft({ label: "", value: "", hint: "" }); toast.success("已新增字段"); }} className={`text-[11px] px-3 py-1 rounded-full text-white ${grad}`}>新增</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setAdding(true)} className={`w-full flex items-center justify-center gap-1 text-xs ${accentText} font-semibold py-2`}>
+          <Plus className="w-3.5 h-3.5" /> 手动新增字段
+        </button>
+      )}
+    </>
   );
 };
 

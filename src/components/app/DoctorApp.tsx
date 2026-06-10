@@ -93,7 +93,6 @@ type SheetKey =
 const DOCTOR_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
   { key: "patients", label: "患者管理", icon: UsersRound },
-  { key: "plan", label: "康复方案", icon: FileHeart },
   { key: "rx", label: "医嘱", icon: Sparkles },
   { key: "chat", label: "沟通", icon: MessageCircle, badge: PATIENT_UNREAD },
   { key: "me", label: "我的", icon: UserIcon },
@@ -684,7 +683,6 @@ const DoctorHome = ({
           <PendingTodoGrid
             items={[
             { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-              { label: "待确认方案", count: 3, icon: FileText, iconClass: "bg-secondary text-white", onClick: () => onGoPlan("plan") },
               { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
               { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
             ]}
@@ -1408,6 +1406,8 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
   const [draft, setDraft] = useState("");
   const [subFor, setSubFor] = useState<string | null>(null);
   const [subDraft, setSubDraft] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
 
   const addGoal = (dim: ICFDim) => {
     if (!draft.trim()) return;
@@ -1421,6 +1421,14 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
     setSubDraft(""); setSubFor(null);
     toast.success("已新增子目标");
   };
+  const startEdit = (g: Goal) => { setEditingId(g.id); setEditDraft(g.text); };
+  const saveEdit = () => {
+    if (!editingId) return;
+    setGoals(goals.map(g => g.id === editingId ? { ...g, text: editDraft.trim() || g.text } : g));
+    setEditingId(null);
+    toast.success("目标已更新");
+  };
+  const removeGoal = (id: string) => { setGoals(goals.filter(g => g.id !== id)); toast.success("目标已删除"); };
 
   return (
     <div className="p-4 space-y-3">
@@ -1461,7 +1469,23 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
                           {g.source}
                         </span>
                       </div>
-                      <div className="text-[12px] text-foreground/90 mt-1 leading-relaxed">{g.text}</div>
+                      {editingId === g.id ? (
+                        <div className="mt-1.5 space-y-2">
+                          <textarea value={editDraft} onChange={(e) => setEditDraft(e.target.value)} className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                          <div className="flex gap-2">
+                            <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+                            <button onClick={saveEdit} className="flex-1 text-[11px] gradient-doctor text-white rounded-lg py-1.5 font-semibold">保存</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-[12px] text-foreground/90 mt-1 leading-relaxed">{g.text}</div>
+                          <div className="mt-1.5 flex gap-3">
+                            <button onClick={() => startEdit(g)} className="text-[11px] text-primary font-semibold flex items-center gap-0.5"><Edit2 className="w-3 h-3" />编辑</button>
+                            <button onClick={() => removeGoal(g.id)} className="text-[11px] text-destructive font-semibold flex items-center gap-0.5"><X className="w-3 h-3" />删除</button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
