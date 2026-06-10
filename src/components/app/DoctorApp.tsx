@@ -1469,7 +1469,23 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
                           {g.source}
                         </span>
                       </div>
-                      <div className="text-[12px] text-foreground/90 mt-1 leading-relaxed">{g.text}</div>
+                      {editingId === g.id ? (
+                        <div className="mt-1.5 space-y-2">
+                          <textarea value={editDraft} onChange={(e) => setEditDraft(e.target.value)} className="w-full text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
+                          <div className="flex gap-2">
+                            <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+                            <button onClick={saveEdit} className="flex-1 text-[11px] gradient-doctor text-white rounded-lg py-1.5 font-semibold">保存</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-[12px] text-foreground/90 mt-1 leading-relaxed">{g.text}</div>
+                          <div className="mt-1.5 flex gap-3">
+                            <button onClick={() => startEdit(g)} className="text-[11px] text-primary font-semibold flex items-center gap-0.5"><Edit2 className="w-3 h-3" />编辑</button>
+                            <button onClick={() => removeGoal(g.id)} className="text-[11px] text-destructive font-semibold flex items-center gap-0.5"><X className="w-3 h-3" />删除</button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
