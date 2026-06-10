@@ -1406,6 +1406,8 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
   const [draft, setDraft] = useState("");
   const [subFor, setSubFor] = useState<string | null>(null);
   const [subDraft, setSubDraft] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
 
   const addGoal = (dim: ICFDim) => {
     if (!draft.trim()) return;
@@ -1419,6 +1421,14 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
     setSubDraft(""); setSubFor(null);
     toast.success("已新增子目标");
   };
+  const startEdit = (g: Goal) => { setEditingId(g.id); setEditDraft(g.text); };
+  const saveEdit = () => {
+    if (!editingId) return;
+    setGoals(goals.map(g => g.id === editingId ? { ...g, text: editDraft.trim() || g.text } : g));
+    setEditingId(null);
+    toast.success("目标已更新");
+  };
+  const removeGoal = (id: string) => { setGoals(goals.filter(g => g.id !== id)); toast.success("目标已删除"); };
 
   return (
     <div className="p-4 space-y-3">
