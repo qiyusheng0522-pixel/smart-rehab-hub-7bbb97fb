@@ -814,7 +814,16 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
           }
         />
       )}
-      {tab === "goal" && <NumberedGoals accent="therapist" />}
+      {tab === "goal" && (
+        <div className="space-y-3">
+          <AICard title="治疗目标 · 基于 ICF + SMART 原则">
+            治疗师目标基于 <b>ICF</b>（身体功能 / 活动 / 参与）三个维度自动展开，并遵循 <b>SMART</b> 原则：
+            <span className="text-foreground/80">具体（Specific）· 可衡量（Measurable）· 可达成（Achievable）· 相关（Relevant）· 有时限（Time-bound）</span>。
+            每条目标含「衡量指标 + 周期」，可编辑、删除或新增。
+          </AICard>
+          <NumberedGoals accent="therapist" />
+        </div>
+      )}
     </div>
   );
 };
