@@ -1200,8 +1200,8 @@ const RxTab = ({ onPick }: { onPick: (item: TodoItem) => void }) => (
     <div className="gradient-therapist px-5 pt-6 pb-6 text-white relative overflow-hidden">
       <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
       <div className="relative">
-        <div className="text-xs opacity-80">康复医嘱</div>
-        <div className="text-[15px] font-semibold mt-0.5">待确认 · {QUEUES.rx.length} 项</div>
+        <div className="text-xs opacity-80">康复方案</div>
+        <div className="text-[15px] font-semibold mt-0.5">待确认康复方案 · {QUEUES.rx.length} 位</div>
         <div className="text-[11px] opacity-80 mt-1">康复整体计划 · 全套训练 + 流程安排，含居家训练</div>
       </div>
     </div>
