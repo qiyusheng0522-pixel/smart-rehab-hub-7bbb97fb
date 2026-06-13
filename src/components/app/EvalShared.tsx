@@ -545,12 +545,26 @@ export const NumberedGoals = ({
             />
             <VoiceMic onTranscript={(t) => setNewDraft((v) => (v ? v + " " : "") + t)} sample="改善左下肢平衡能力，2 周内 Berg ≥ 40。" />
           </div>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-[10px] text-muted-foreground self-center">ICF 维度：</span>
+            {DIMS.map(d => (
+              <button key={d} onClick={() => setNewDim(d)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${newDim === d ? DIM_META[d].cls + " border-transparent" : "bg-card text-muted-foreground border-border"}`}>{DIM_META[d].label}</button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-[10px] text-muted-foreground self-center">周期：</span>
+            {PERIODS.map(p => (
+              <button key={p} onClick={() => setNewPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${newPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
+            ))}
+          </div>
+          <input value={newMeasure} onChange={(e) => setNewMeasure(e.target.value)} placeholder="衡量指标（选填，如 Berg ≥ 40）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
           <div className="flex gap-2">
-            <button onClick={() => { setAdding(false); setNewDraft(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+            <button onClick={() => { setAdding(false); setNewDraft(""); setNewMeasure(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
             <button onClick={addGoal} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
           </div>
         </div>
       )}
+
 
       {goals.map((g, idx) => {
         const dimMeta = DIM_META[g.dim];
