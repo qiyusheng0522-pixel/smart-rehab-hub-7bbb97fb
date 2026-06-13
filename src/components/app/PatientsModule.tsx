@@ -384,7 +384,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
         </div>
         <ChevronRight className="w-4 h-4 text-muted-foreground self-center" />
       </button>
-      {(pendingVisible.length > 0 || showFirstNote || onSummary) && (
+      {(pendingVisible.length > 0 || showFirstNote || showSummary) && (
         <div className="mt-2.5 pt-2.5 border-t border-border/60 flex flex-wrap items-center gap-1.5">
           {pendingVisible.map((b) => (
             <button
@@ -407,7 +407,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
               查看首程
             </button>
           )}
-          {onSummary && (
+          {showSummary && (
             <button
               onClick={(e) => { e.stopPropagation(); onSummary(); }}
               className={`ml-auto text-[11.5px] px-3 py-1 rounded-full font-medium ${accentText[accent]} bg-transparent hover:bg-muted/60 inline-flex items-center gap-1`}
