@@ -1069,11 +1069,6 @@ export const TeamMeetingListSheet = ({
     <SectionTitle title={`会议列表 · ${meetings.length}`} />
     <div className="space-y-2">
       {meetings.map(m => {
-        const sc = {
-          "进行中": "bg-success-soft text-success",
-          "待开始": "bg-warning/15 text-warning",
-          "已结束": "bg-muted text-muted-foreground",
-        }[m.status];
         return (
           <button
             key={m.id}
@@ -1085,7 +1080,7 @@ export const TeamMeetingListSheet = ({
                 <MessageSquare className={`w-4 h-4 ${accentText[accent]}`} />
                 <span className="text-[13px] font-semibold">{m.patientName ? `${m.patientName} · ${m.topic}` : m.topic}</span>
               </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${sc}`}>{m.status}</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-muted text-muted-foreground">已结束</span>
             </div>
             <div className="text-[11px] text-muted-foreground mt-1">{m.time} · {m.participants.length} 人</div>
             <div className="text-[10px] text-muted-foreground mt-1 truncate">{m.participants.join(" · ")}</div>
