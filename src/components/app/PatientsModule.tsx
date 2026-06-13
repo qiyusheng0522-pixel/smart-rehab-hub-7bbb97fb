@@ -995,7 +995,7 @@ export const IMChatSheet = ({
 
 export const DEFAULT_MEETING_MSGS: ChatMessage[] = [
   { id: "1", author: "李志远", role: "康复医师", text: "各位老师下午好，我们来确认一下张建国的 V2 方案。本周 FMA 提升 8 分。", time: "10:31" },
-  { id: "2", author: "王雅琴", role: "PT 治疗师", text: "下肢力量训练完成度很好，建议把每日 PT 时长从 50 → 60 分钟。", time: "10:32" },
+  { id: "2", author: "王雅琴", role: "PT 治疗师", text: "下肢力量训练完成度很好，建议把 PT 频次从 4 次/周 → 5 次/周（单次仍 30 分钟）。", time: "10:32" },
   { id: "3", author: "陈思雨", role: "ST 治疗师", text: "构音训练保持原节奏，吞咽功能稳定，暂不调整。", time: "10:33" },
   { id: "4", author: "赵静怡", role: "护理", text: "夜间血压偶有波动，建议加强观察 q4h。", time: "10:34" },
   { id: "5", author: "孙博士", role: "心理", text: "情绪稳定，配合度高，可继续家属同伴支持模式。", time: "10:35" },
