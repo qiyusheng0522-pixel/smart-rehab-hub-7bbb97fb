@@ -170,6 +170,12 @@ export const TherapistApp = () => {
           onUploadDaily={() => open("uploadDaily")}
           onOpenMed={() => open("med")}
           onOpenSchedule={() => setScheduleOpen(true)}
+          meetings={meetings}
+          onOpenFirstAssess={(p) => { setActivePatient(`${p.name} · 床${p.bed}`); setSheet("firstAssess"); }}
+          onOpenSummary={(p) => { setActivePatient(`${p.name} · 床${p.bed}`); setSheet("summary"); }}
+          onOpenPatientChat={(p) => { setChatPatient(p); setSheet("patientChat"); }}
+          onPickMeeting={(m) => { setActiveMeeting(m); setSheet("meeting"); }}
+          onOpenDischarge={pickPatient}
         />
       )}
       {tab === "patients" && (
