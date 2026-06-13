@@ -125,7 +125,7 @@ export const RxDetail = ({
       <EditableRows
         accent={accent}
         initial={[
-          { label: "处方编号", value: "RX-2026-0507-0031" },
+          
           { label: "患者", value: `${patient?.split("·")[0]?.trim() || "张建国"} · 56 岁 · 男` },
           { label: "主治医师", value: "李志远 主任医师", hint: "康复医学科" },
           { label: "责任治疗师", value: "王雅琴 (PT) / 陈思雨 (OT/ST)" },
