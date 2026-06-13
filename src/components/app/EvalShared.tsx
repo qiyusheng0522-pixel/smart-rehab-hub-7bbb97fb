@@ -462,11 +462,14 @@ export const NumberedGoals = ({
   accent = "doctor",
   initial = DEFAULT_NUMBERED_GOALS,
   readOnly = false,
+  coarse = false,
 }: {
   accent?: "doctor" | "therapist" | "nurse";
   initial?: NumberedGoal[];
   /** 只读模式 · 隐藏新增 / 编辑 / 删除按钮（如护士端） */
   readOnly?: boolean;
+  /** 粗目标模式 · 医师端使用：仅 ICF 维度 + 大目标文本，隐藏周期/衡量指标/子目标 */
+  coarse?: boolean;
 }) => {
   const grad = accent === "therapist" ? "gradient-therapist" : accent === "nurse" ? "gradient-nurse" : "gradient-doctor";
   const accentText = accent === "therapist" ? "text-secondary" : accent === "nurse" ? "text-role-nurse" : "text-primary";
