@@ -116,9 +116,11 @@ export const RxDetail = ({
         </div>
       </div>
 
-      <AICard title="康复医嘱 · 康复整体计划">
-        由康复治疗师做的「全套训练 + 流程安排」，包含院内处方项目并新增日常居家训练，请{accent === "doctor" ? "医师" : "治疗师"}逐项核对后确认。
-      </AICard>
+      {accent !== "doctor" && (
+        <AICard title="康复医嘱 · 康复整体计划">
+          由康复治疗师做的「全套训练 + 流程安排」，包含院内处方项目并新增日常居家训练，请治疗师逐项核对后确认。
+        </AICard>
+      )}
 
       {/* 1. 基本信息 */}
       <SectionTitle title="① 处方基本信息" extra={<span className="text-[10px] text-muted-foreground">支持编辑 / 删除 / 新增</span>} />
