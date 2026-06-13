@@ -932,6 +932,8 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
   const [draft, setDraft] = useState("");
   const [subFor, setSubFor] = useState<string | null>(null);
   const [subDraft, setSubDraft] = useState("");
+  const [editSubId, setEditSubId] = useState<string | null>(null);
+  const [editSubDraft, setEditSubDraft] = useState("");
 
   const addGoal = (dim: ICFDim) => {
     if (!draft.trim()) return;
@@ -944,6 +946,17 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
     setGoals(goals.map((g) => g.id === goalId ? { ...g, subs: [...g.subs, { id: `s${Date.now()}`, text: subDraft.trim(), by: "治疗师 王雅琴" }] } : g));
     setSubDraft(""); setSubFor(null);
     toast.success("已新增子目标");
+  };
+  const startEditSub = (sid: string, text: string) => { setEditSubId(sid); setEditSubDraft(text); };
+  const saveEditSub = () => {
+    if (!editSubId) return;
+    setGoals(goals.map(g => ({ ...g, subs: g.subs.map(s => s.id === editSubId ? { ...s, text: editSubDraft.trim() || s.text } : s) })));
+    setEditSubId(null);
+    toast.success("子目标已更新");
+  };
+  const removeSub = (sid: string) => {
+    setGoals(goals.map(g => ({ ...g, subs: g.subs.filter(s => s.id !== sid) })));
+    toast.success("子目标已删除");
   };
 
   return (
