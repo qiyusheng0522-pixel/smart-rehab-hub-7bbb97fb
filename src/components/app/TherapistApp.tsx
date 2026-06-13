@@ -1060,20 +1060,6 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
                       <button onClick={() => setSubFor(null)} className="text-[11px] text-muted-foreground">取消</button>
                     </div>
                   ) : (
-
-                  {subFor === g.id ? (
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        value={subDraft}
-                        onChange={(e) => setSubDraft(e.target.value)}
-                        placeholder="输入子目标，例如：PT 坐站转换 ×5/组"
-                        className="flex-1 text-[11px] bg-background border border-border rounded-lg px-2 py-1.5"
-                        autoFocus
-                      />
-                      <button onClick={() => addSub(g.id)} className="text-[11px] gradient-therapist text-white rounded-lg px-3 font-semibold">添加</button>
-                      <button onClick={() => setSubFor(null)} className="text-[11px] text-muted-foreground">取消</button>
-                    </div>
-                  ) : (
                     <button onClick={() => { setSubFor(g.id); setSubDraft(""); }} className="mt-2 text-[11px] text-secondary font-semibold flex items-center gap-1">
                       <Plus className="w-3 h-3" />添加子目标
                     </button>
