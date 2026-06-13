@@ -1262,7 +1262,7 @@ export const MeetingSummarySheet = ({
           </button>
         ) : (
           <>
-            <AICard title="AI 会议总结" right={
+            <AICard title="AI 会议总结" action={
               <div className="flex items-center gap-1">
                 <button onClick={() => setEditing(!editing)} className="text-[10px] px-2 py-0.5 rounded-full bg-card border border-ai/20 text-ai">
                   {editing ? "完成编辑" : "二次修改"}
