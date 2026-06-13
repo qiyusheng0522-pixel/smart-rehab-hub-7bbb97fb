@@ -691,15 +691,16 @@ const DoctorHome = ({
 
         <div>
           <SectionTitle
-            title="今日紧急待办"
-            extra={<button onClick={() => onGoPlan("plan")} className="text-xs text-primary font-medium flex items-center">全部 <ChevronRight className="w-3 h-3" /></button>}
+            title="今日待办"
+            extra={<button onClick={onGoChat} className="text-xs text-primary font-medium flex items-center">全部 <ChevronRight className="w-3 h-3" /></button>}
           />
           <div className="space-y-2">
-            <PatientTaskCard onClick={() => onGoPlan("plan")} patient="待确认 AI 方案" tag="共 3 位患者" task="点击进入方案确认列表，逐位审核" urgency="high" time="10:30 团队会议" />
-            <PatientTaskCard onClick={() => onGoPatients("待首次评估")} patient="待首次评估" tag={`共 ${FIRST_ASSESS_COUNT} 位患者`} task="团队线上接入 · 进入患者列表" urgency="medium" time="今日" />
-            <PatientTaskCard onClick={onGoDischarge} patient="待二次确认出院方案" tag="共 2 位患者" task="AI 二级方案待医师二次确认" urgency="low" time="今日" />
+            <PatientTaskCard onClick={() => onGoPatients("待首次评估")} patient="患者首评" tag={`共 ${FIRST_ASSESS_COUNT} 位患者`} task="进入患者列表完成首次评估" urgency="high" time="今日" />
+            <PatientTaskCard onClick={onGoRx} patient="待确认医嘱" tag="共 4 条" task="审核 AI 生成 / 治疗师上报的医嘱" urgency="medium" time="今日" />
+            <PatientTaskCard onClick={onGoChat} patient="待回复消息" tag={`共 ${PATIENT_UNREAD} 条`} task="患者沟通 + 团队会议消息待回复" urgency="low" time="今日" />
           </div>
         </div>
+
       </div>
     </div>
   );
