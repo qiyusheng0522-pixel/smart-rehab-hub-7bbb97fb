@@ -1039,14 +1039,13 @@ export interface TeamMeeting {
   patientName?: string;
   topic: string;
   time: string;
-  status: "进行中" | "待开始" | "已结束";
   participants: string[];
 }
 
 export const DEFAULT_MEETINGS: TeamMeeting[] = [
-  { id: "tm1", patientId: "p1", patientName: "张建国", topic: "V2 方案确认", time: "今日 10:30", status: "进行中", participants: ["李医师", "王治疗师", "陈治疗师", "赵护士", "孙博士"] },
-  { id: "tm2", patientId: "p2", patientName: "王秀英", topic: "首次评估复议", time: "今日 16:00", status: "待开始", participants: ["李医师", "王治疗师", "赵护士"] },
-  { id: "tm3", patientId: "p3", patientName: "李 强", topic: "出院条件评估", time: "明日 09:00", status: "待开始", participants: ["李医师", "王治疗师", "赵护士"] },
+  { id: "tm1", patientId: "p1", patientName: "张建国", topic: "V2 方案确认", time: "今日 10:30", participants: ["李医师", "王治疗师", "陈治疗师", "赵护士", "孙博士"] },
+  { id: "tm2", patientId: "p2", patientName: "王秀英", topic: "首次评估复议", time: "昨日 16:00", participants: ["李医师", "王治疗师", "赵护士"] },
+  { id: "tm3", patientId: "p3", patientName: "李 强", topic: "出院条件评估", time: "前日 09:00", participants: ["李医师", "王治疗师", "赵护士"] },
 ];
 
 export const TeamMeetingListSheet = ({
@@ -1070,11 +1069,6 @@ export const TeamMeetingListSheet = ({
     <SectionTitle title={`会议列表 · ${meetings.length}`} />
     <div className="space-y-2">
       {meetings.map(m => {
-        const sc = {
-          "进行中": "bg-success-soft text-success",
-          "待开始": "bg-warning/15 text-warning",
-          "已结束": "bg-muted text-muted-foreground",
-        }[m.status];
         return (
           <button
             key={m.id}
@@ -1086,7 +1080,7 @@ export const TeamMeetingListSheet = ({
                 <MessageSquare className={`w-4 h-4 ${accentText[accent]}`} />
                 <span className="text-[13px] font-semibold">{m.patientName ? `${m.patientName} · ${m.topic}` : m.topic}</span>
               </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${sc}`}>{m.status}</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-muted text-muted-foreground">已结束</span>
             </div>
             <div className="text-[11px] text-muted-foreground mt-1">{m.time} · {m.participants.length} 人</div>
             <div className="text-[10px] text-muted-foreground mt-1 truncate">{m.participants.join(" · ")}</div>
@@ -1101,30 +1095,98 @@ export const TeamMeetingListSheet = ({
 export const MeetingSummarySheet = ({
   accent,
   meeting,
+  meetings = DEFAULT_MEETINGS,
   fallbackPatient,
   onClose,
+  onPickMeeting,
 }: {
   accent: Accent;
   meeting: TeamMeeting | null;
+  meetings?: TeamMeeting[];
   fallbackPatient?: string;
   onClose?: () => void;
+  onPickMeeting?: (m: TeamMeeting) => void;
 }) => {
   const title = meeting?.patientName ?? fallbackPatient ?? "张建国";
   const topic = meeting?.topic ?? "V2 方案确认";
   const time = meeting?.time ?? "今日 10:30";
   const participants = meeting?.participants ?? ["李医师", "王治疗师", "陈治疗师", "赵护士", "孙博士"];
-  const summary = [
-    "1. 患者 FMA 提升 8 分，整体康复进度符合预期。",
-    "2. 一致同意将 PT 训练强度上调 20%，新增 OT 厨房训练。",
-    "3. ST 维持原计划，下周复评后再决定是否调整。",
-    "4. 出院评估：再观察 1 周，待 Barthel ≥ 75 启动二级方案。",
+
+  const baseSummary = `1. 患者 FMA 提升 8 分，整体康复进度符合预期。
+2. 一致同意 PT 频次 4→5 次/周（单次仍 30 分钟），新增 OT 厨房 ADL 训练 30 min × 3/周。
+3. ST 维持原方案，下周复评再决定是否调整。
+4. 护理夜间血压 q4h 观察 3 天。
+5. 出院评估：再观察 1 周，待 Barthel ≥ 75 启动二级方案。`;
+
+  type ExtractItem = {
+    id: string;
+    target: "首次评估" | "康复评估" | "康复医嘱";
+    field: string;
+    before: string;
+    after: string;
+    selected: boolean;
+  };
+  const baseExtract: ExtractItem[] = [
+    { id: "x1", target: "康复医嘱", field: "PT 手法治疗频次", before: "40 min × 4/周", after: "40 min × 5/周", selected: true },
+    { id: "x2", target: "康复医嘱", field: "OT 新增项目", before: "—", after: "厨房 ADL 训练 30 min × 3/周", selected: true },
+    { id: "x3", target: "康复评估", field: "Berg 平衡评估", before: "36", after: "复评目标 42", selected: true },
+    { id: "x4", target: "首次评估", field: "出院条件", before: "Barthel ≥ 70", after: "Barthel ≥ 75 再启动二级方案", selected: false },
   ];
-  const decisions = [
-    { who: "PT · 王雅琴", text: "频次 4 → 5 次/周（单次仍 30 分钟）" },
-    { who: "OT · 陈治疗师", text: "新增厨房 ADL 训练 30 min × 3/周" },
-    { who: "ST · 陈思雨", text: "维持原方案，下周复评再调整" },
-    { who: "护理 · 赵静怡", text: "夜间血压 q4h 观察 3 天" },
-  ];
+
+  const [msgs, setMsgs] = useState<ChatMessage[]>(DEFAULT_MEETING_MSGS);
+  const [input, setInput] = useState("");
+  const [summarized, setSummarized] = useState(false);
+  const [summary, setSummary] = useState(baseSummary);
+  const [editing, setEditing] = useState(false);
+  const [extracts, setExtracts] = useState<ExtractItem[]>(baseExtract);
+  const [showHistory, setShowHistory] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  const otherMeetings = meetings.filter(m => m.id !== meeting?.id);
+
+  const send = () => {
+    const v = input.trim();
+    if (!v) return;
+    setMsgs([...msgs, { id: Date.now().toString(), author: "李志远", role: "康复医师", isMe: true, text: v, time: "刚刚" }]);
+    setInput("");
+  };
+
+  const generateSummary = () => {
+    toast("AI 正在生成会议总结…");
+    setTimeout(() => {
+      setSummarized(true);
+      setSummary(baseSummary);
+      setExtracts(baseExtract);
+      toast.success("会议总结已生成");
+    }, 700);
+  };
+
+  const regenerate = () => {
+    toast("AI 正在重新生成…");
+    setTimeout(() => {
+      setSummary(baseSummary + `\n6. 补充：根据新讨论，PT 训练后增加 10 min 步态再评估。`);
+      toast.success("已结合最新讨论更新总结");
+    }, 600);
+  };
+
+  const toggleExtract = (id: string) =>
+    setExtracts(extracts.map(e => (e.id === id ? { ...e, selected: !e.selected } : e)));
+
+  const confirmAndUpdate = () => {
+    const n = extracts.filter(e => e.selected).length;
+    setConfirmed(true);
+    toast.success(`已确认并更新 ${n} 项患者档案`);
+  };
+
+  const targetBadge = (t: ExtractItem["target"]) => {
+    const map = {
+      "首次评估": "bg-primary-soft text-primary",
+      "康复评估": "bg-secondary-soft text-secondary",
+      "康复医嘱": "bg-warning/15 text-warning",
+    } as const;
+    return map[t];
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className={`${accentBg[accent]} text-white px-4 py-3`}>
@@ -1138,6 +1200,12 @@ export const MeetingSummarySheet = ({
             <div className="text-sm font-bold">团队会议 · {title}</div>
             <div className="text-[11px] opacity-90 mt-0.5">{topic} · {time} · {participants.length} 人</div>
           </div>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-[11px] px-2 py-1 rounded-full bg-white/20 backdrop-blur whitespace-nowrap"
+          >
+            {showHistory ? "收起历史" : `历史 ${otherMeetings.length}`}
+          </button>
         </div>
         <div className="flex gap-1 mt-2 overflow-x-auto scrollbar-hide">
           {participants.map(p => (
@@ -1146,24 +1214,131 @@ export const MeetingSummarySheet = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-muted/30 p-4 space-y-3">
-        <AICard title="AI 会议纪要">
-          <ul className="space-y-1.5 text-[12px] leading-relaxed">
-            {summary.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
-        </AICard>
+      {showHistory && (
+        <div className="bg-card border-b border-border/60 px-4 py-3 max-h-[200px] overflow-y-auto">
+          <div className="text-[11px] text-muted-foreground mb-2">历史会议记录</div>
+          <div className="space-y-1.5">
+            {otherMeetings.length === 0 && (
+              <div className="text-[11px] text-muted-foreground">暂无其他历史会议</div>
+            )}
+            {otherMeetings.map(m => (
+              <button
+                key={m.id}
+                onClick={() => { onPickMeeting?.(m); setShowHistory(false); }}
+                className="w-full text-left bg-muted/50 rounded-xl px-3 py-2 active:scale-[0.99]"
+              >
+                <div className="text-[12px] font-semibold">{m.patientName} · {m.topic}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{m.time} · {m.participants.length} 人</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-        <SectionTitle title="关键决议" extra={<span className="text-[10px] text-muted-foreground">已同步首评 / 方案 / 医嘱</span>} />
-        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-          {decisions.map((d, i) => (
-            <FormRow key={i} label={d.who} value={d.text} />
+      <div className="flex-1 overflow-y-auto bg-muted/30 p-4 space-y-3">
+        <SectionTitle title="会议沟通记录" extra={<span className="text-[10px] text-muted-foreground">共 {msgs.length} 条</span>} />
+        <div className="bg-card rounded-2xl shadow-card p-3 space-y-3">
+          {msgs.map(m => (
+            <div key={m.id} className={`flex gap-2 ${m.isMe ? "flex-row-reverse" : ""}`}>
+              <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white ${m.isMe ? accentBg[accent] : "bg-muted-foreground"}`}>
+                {m.author[0]}
+              </div>
+              <div className="max-w-[78%] flex flex-col gap-1">
+                <div className="text-[10px] text-muted-foreground px-1">{m.author}{m.role ? ` · ${m.role}` : ""} · {m.time}</div>
+                <div className={`text-[12px] leading-relaxed px-3 py-2 rounded-2xl ${
+                  m.isMe ? `${accentBg[accent]} text-white rounded-tr-sm` : "bg-muted/60 rounded-tl-sm"
+                }`}>{m.text}</div>
+              </div>
+            </div>
           ))}
         </div>
 
-        <div className="bg-success-soft border border-success/30 rounded-2xl p-3 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />
-          <div className="text-[11px] text-success">会议总结已由康复医师确认 · 自动归档至病历</div>
-        </div>
+        {!summarized ? (
+          <button
+            onClick={generateSummary}
+            className="w-full gradient-ai text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-2 shadow-card"
+          >
+            <Sparkles className="w-4 h-4" /> AI 生成会议总结
+          </button>
+        ) : (
+          <>
+            <AICard title="AI 会议总结" action={
+              <div className="flex items-center gap-1">
+                <button onClick={() => setEditing(!editing)} className="text-[10px] px-2 py-0.5 rounded-full bg-card border border-ai/20 text-ai">
+                  {editing ? "完成编辑" : "二次修改"}
+                </button>
+                <button onClick={regenerate} className="text-[10px] px-2 py-0.5 rounded-full bg-card border border-ai/20 text-ai">
+                  重新生成
+                </button>
+              </div>
+            }>
+              {editing ? (
+                <textarea
+                  value={summary}
+                  onChange={e => setSummary(e.target.value)}
+                  className="w-full text-[12px] leading-relaxed bg-card rounded-xl p-2 border border-ai/20 outline-none min-h-[140px]"
+                />
+              ) : (
+                <div className="text-[12px] leading-relaxed whitespace-pre-line">{summary}</div>
+              )}
+            </AICard>
+
+            <SectionTitle title="AI 提炼 · 待更新档案项" extra={<span className="text-[10px] text-muted-foreground">勾选后写入</span>} />
+            <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+              {extracts.map(e => (
+                <button
+                  key={e.id}
+                  onClick={() => toggleExtract(e.id)}
+                  className="w-full text-left px-3 py-3 flex items-start gap-3 active:bg-muted/30"
+                >
+                  <div className={`w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                    e.selected ? `${accentBg[accent]} border-transparent` : "border-border"
+                  }`}>
+                    {e.selected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${targetBadge(e.target)}`}>{e.target}</span>
+                      <span className="text-[12px] font-semibold">{e.field}</span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      <span className="line-through opacity-70">{e.before}</span>
+                      <span className="mx-1">→</span>
+                      <span className="text-foreground font-medium">{e.after}</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {confirmed ? (
+              <div className="bg-success-soft border border-success/30 rounded-2xl p-3 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />
+                <div className="text-[11px] text-success">会议总结已由康复医师确认 · 患者档案已更新</div>
+              </div>
+            ) : (
+              <button
+                onClick={confirmAndUpdate}
+                className={`w-full ${accentBg[accent]} text-white rounded-2xl py-3 text-sm font-semibold shadow-card`}
+              >
+                医师确认 · 更新患者档案（{extracts.filter(e => e.selected).length} 项）
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="px-3 py-2 bg-card border-t border-border/60 flex items-center gap-2">
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") send(); }}
+          placeholder={summarized ? "可继续发起讨论，再次生成总结…" : "补充发言…"}
+          className="flex-1 bg-muted rounded-full px-4 py-2 text-xs outline-none"
+        />
+        <button onClick={send} className={`w-9 h-9 rounded-full ${accentBg[accent]} text-white flex items-center justify-center`}>
+          <Send className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
@@ -1403,7 +1578,6 @@ export const NewMeetingSheet = ({
             patientName: p.name,
             topic,
             time,
-            status: "待开始",
             participants: ["李医师", "王治疗师", "赵护士"],
           });
         }}

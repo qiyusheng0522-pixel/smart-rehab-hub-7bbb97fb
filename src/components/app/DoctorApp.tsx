@@ -281,8 +281,10 @@ export const DoctorApp = () => {
         <MeetingSummarySheet
           accent="doctor"
           meeting={activeMeeting}
+          meetings={meetings}
           fallbackPatient={activePatient ? activePatient.split(" ")[0] : undefined}
           onClose={() => setSheet(activeMeeting ? "meetingList" : null)}
+          onPickMeeting={(m) => setActiveMeeting(m)}
         />
       </PhoneSheet>
 
