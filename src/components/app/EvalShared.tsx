@@ -600,10 +600,10 @@ export const NumberedGoals = ({
 
             {open && (
               <div className="px-3.5 pb-3.5 -mt-1 space-y-2">
-                {g.measure && (
+                {!coarse && g.measure && (
                   <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">衡量指标：{g.measure}</div>
                 )}
-                {hasSub && (
+                {!coarse && hasSub && (
                   <div className="bg-muted/30 rounded-xl divide-y divide-border/60">
                     {g.subGoals!.map((sg, j) => (
                       <div key={sg.id} className="flex items-start gap-2 px-3 py-2">
