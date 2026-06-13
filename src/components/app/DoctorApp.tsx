@@ -90,7 +90,8 @@ type SheetKey =
   | "addNote"
   | "team"
   | "patientChatList"
-  | "patientChat";
+  | "patientChat"
+  | "firstNote";
 
 const DOCTOR_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
