@@ -473,27 +473,52 @@ export const NumberedGoals = ({
   const [goals, setGoals] = useState<NumberedGoal[]>(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [draftDim, setDraftDim] = useState<NumberedGoal["dim"]>("activity");
+  const [draftPeriod, setDraftPeriod] = useState<NumberedGoal["period"]>("4 周");
+  const [draftMeasure, setDraftMeasure] = useState("");
   const [adding, setAdding] = useState(false);
   const [newDraft, setNewDraft] = useState("");
+  const [newDim, setNewDim] = useState<NumberedGoal["dim"]>("activity");
+  const [newPeriod, setNewPeriod] = useState<NumberedGoal["period"]>("4 周");
+  const [newMeasure, setNewMeasure] = useState("");
   const [openMap, setOpenMap] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(initial.map(g => [g.id, !!(g.subGoals && g.subGoals.length)]))
   );
   const toggle = (id: string) => setOpenMap(m => ({ ...m, [id]: !(m[id] ?? false) }));
 
+  const PERIODS: NumberedGoal["period"][] = ["1 周", "2 周", "4 周", "8 周"];
+  const DIMS: NumberedGoal["dim"][] = ["function", "activity", "participation"];
+
   const remove = (id: string) => { setGoals(goals.filter(g => g.id !== id)); toast.success("目标已删除"); };
-  const startEdit = (g: NumberedGoal) => { setEditingId(g.id); setDraft(g.text); };
+  const startEdit = (g: NumberedGoal) => {
+    setEditingId(g.id);
+    setDraft(g.text);
+    setDraftDim(g.dim);
+    setDraftPeriod(g.period);
+    setDraftMeasure(g.measure || "");
+  };
   const saveEdit = () => {
     if (!editingId) return;
-    setGoals(goals.map(g => g.id === editingId ? { ...g, text: draft.trim() || g.text } : g));
+    setGoals(goals.map(g => g.id === editingId ? {
+      ...g,
+      text: draft.trim() || g.text,
+      dim: draftDim,
+      period: draftPeriod,
+      measure: draftMeasure.trim() || undefined,
+    } : g));
     setEditingId(null);
     toast.success("目标已更新");
   };
   const addGoal = () => {
     if (!newDraft.trim()) return;
     const id = `ng${Date.now()}`;
-    setGoals([...goals, { id, dim: "activity", period: "4 周", source: "医师", text: newDraft.trim() }]);
+    setGoals([...goals, {
+      id, dim: newDim, period: newPeriod, source: "医师",
+      text: newDraft.trim(),
+      measure: newMeasure.trim() || undefined,
+    }]);
     setOpenMap(m => ({ ...m, [id]: false }));
-    setNewDraft(""); setAdding(false);
+    setNewDraft(""); setNewMeasure(""); setNewDim("activity"); setNewPeriod("4 周"); setAdding(false);
     toast.success("已新增目标");
   };
 
