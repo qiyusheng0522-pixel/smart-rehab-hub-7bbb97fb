@@ -1350,7 +1350,7 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
       {tab === "clinical" && <ClinicalPanel aiBottom={aiClinicalConclusion} />}
       {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={ROLE_REHAB_CONCLUSIONS} aiBottom={aiRehabConclusion} />}
 
-      {tab === "goal" && <NumberedGoals accent="doctor" />}
+      {tab === "goal" && <NumberedGoals accent="doctor" coarse />}
 
       {viewing && (<ScaleDetail scale={viewing} onClose={() => setViewing(null)} />)}
     </div>
