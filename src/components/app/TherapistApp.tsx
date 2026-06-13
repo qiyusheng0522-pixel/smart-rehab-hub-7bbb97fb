@@ -996,6 +996,11 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
                         </span>
                       </div>
                       <div className="text-[12px] text-foreground/90 mt-1 leading-relaxed">{g.text}</div>
+                      {g.measure && (
+                        <div className="mt-1.5 inline-flex items-center gap-1 text-[10.5px] bg-secondary-soft text-secondary px-2 py-0.5 rounded font-semibold">
+                          <span className="opacity-70">衡量指标</span>· {g.measure}
+                        </div>
+                      )}
                     </div>
                   </div>
 
