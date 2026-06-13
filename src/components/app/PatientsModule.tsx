@@ -1440,16 +1440,6 @@ export const FirstNoteSheet = ({ patient, accent }: { patient: Patient | null; a
         </div>
       </div>
 
-      {/* AI 生成说明 */}
-      <AICard title="系统自动生成首程">
-        <div className="text-[12px] leading-relaxed">
-          已基于「入院记录 + 医患共同填写问诊单 + 检验/检查报告 + 首次评估」自动汇总。
-          下方仅展示<span className="text-destructive font-semibold">异常数据</span>与关键结论，完整首程（含正常项、原始量表、影像/检验明细）已发送至您的工作邮箱。
-        </div>
-        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Mail className="w-3.5 h-3.5" /> liyz@jsph.org.cn · 已于 2 分钟前发送
-        </div>
-      </AICard>
 
       {/* 主诉 + 现病史摘要 */}
       <SectionTitle title="主诉 / 现病史 · 摘要" />
