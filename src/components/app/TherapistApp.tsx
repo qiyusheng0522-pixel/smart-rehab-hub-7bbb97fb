@@ -955,12 +955,12 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
             <div className="text-sm font-bold">{patient || "李 强 · 男 42 · 床307"}</div>
             <div className="text-[11px] text-muted-foreground mt-0.5">脊髓损伤 · 入院第 28 天 · 主管医师：李志远</div>
           </div>
-          <span className="text-[10px] px-2 py-1 rounded-full bg-secondary-soft text-secondary font-semibold">ICF 康复目标</span>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-secondary-soft text-secondary font-semibold">ICF + SMART</span>
         </div>
       </div>
 
-      <AICard title="AI 基于 ICF 框架生成大目标（与医师端一致）">
-        从「身体功能 / 活动 / 参与」三个维度自动生成 4–8 周分阶段目标。治疗师可在每个大目标下添加可执行的子目标，或新增大目标回传医师。
+      <AICard title="治疗目标 · 基于 ICF + SMART 原则">
+        承接医师的 ICF 粗目标，按 <b>SMART</b>（具体 / 可衡量 / 可达成 / 相关 / 有时限）原则细化为治疗目标——每条含「衡量指标 + 周期 + 子目标」，可编辑或新增并回传医师。
       </AICard>
 
       {(Object.keys(ICF_DIM) as ICFDim[]).map((dim) => {
