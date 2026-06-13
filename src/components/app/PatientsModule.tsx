@@ -96,7 +96,7 @@ export const PATIENTS: Patient[] = [
       { author: "孙博士", time: "前日 16:20", text: "患者出院焦虑下降，家属支持充足。" },
     ],
     therapyRecords: [
-      { type: "PT", author: "王治疗师", time: "今日 09:00", text: "步行训练 40min · 独立步行 60m，无跌倒，步频 96 步/分。" },
+      { type: "PT", author: "王治疗师", time: "今日 09:00", text: "步行训练 30min · 独立步行 60m，无跌倒，步频 96 步/分。" },
       { type: "OT", author: "陈治疗师", time: "今日 10:30", text: "厨房 ADL 训练 30min · 可独立完成切配 + 烹饪。" },
       { type: "ST", author: "陈思雨", time: "昨日 15:00", text: "构音清晰度 92%，吞咽 EAT-10：2 分。" },
       { type: "PT", author: "王治疗师", time: "昨日 09:00", text: "上下楼梯训练 20min · 双足交替，扶手辅助。" },
