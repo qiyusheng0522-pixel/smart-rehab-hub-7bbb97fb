@@ -1021,12 +1021,45 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
                     <div className="mt-2 pl-3 border-l-2 border-border space-y-1.5">
                       {g.subs.map((s) => (
                         <div key={s.id} className="text-[11px] text-foreground/75 leading-relaxed">
-                          <span className="text-muted-foreground">└ </span>{s.text}
-                          <span className="text-[10px] text-muted-foreground ml-1.5">· {s.by}</span>
+                          {editSubId === s.id ? (
+                            <div className="flex gap-1.5 items-start">
+                              <textarea
+                                value={editSubDraft}
+                                onChange={(e) => setEditSubDraft(e.target.value)}
+                                className="flex-1 text-[11px] bg-background border border-border rounded-lg px-2 py-1 min-h-[44px]"
+                                autoFocus
+                              />
+                              <div className="flex flex-col gap-1">
+                                <button onClick={saveEditSub} className="text-[10px] gradient-therapist text-white rounded px-2 py-1 font-semibold">保存</button>
+                                <button onClick={() => setEditSubId(null)} className="text-[10px] text-muted-foreground border border-border rounded px-2 py-1">取消</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="group flex items-start gap-1">
+                              <span className="text-muted-foreground">└ </span>
+                              <span className="flex-1">{s.text}<span className="text-[10px] text-muted-foreground ml-1.5">· {s.by}</span></span>
+                              <button onClick={() => startEditSub(s.id, s.text)} className="text-[10px] text-secondary opacity-80 hover:opacity-100">编辑</button>
+                              <button onClick={() => removeSub(s.id)} className="text-[10px] text-destructive opacity-80 hover:opacity-100">删除</button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
                   )}
+
+                  {subFor === g.id ? (
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={subDraft}
+                        onChange={(e) => setSubDraft(e.target.value)}
+                        placeholder="输入 SMART 子目标，例如：PT 坐站转换 ×5/组，2 周内连续 5 次成功率 ≥ 90%"
+                        className="flex-1 text-[11px] bg-background border border-border rounded-lg px-2 py-1.5"
+                        autoFocus
+                      />
+                      <button onClick={() => addSub(g.id)} className="text-[11px] gradient-therapist text-white rounded-lg px-3 font-semibold">添加</button>
+                      <button onClick={() => setSubFor(null)} className="text-[11px] text-muted-foreground">取消</button>
+                    </div>
+                  ) : (
 
                   {subFor === g.id ? (
                     <div className="mt-2 flex gap-2">
