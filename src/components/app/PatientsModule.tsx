@@ -80,9 +80,9 @@ export const PATIENTS: Patient[] = [
     ],
     currentPlan: [
       { label: "医师 · 总体方案", value: "渐进强化 V2", hint: "李志远 · 第 2 周方案" },
-      { label: "PT · 物理治疗", value: "60 min × 5/周", hint: "步态 + 平衡 · 王雅琴" },
-      { label: "OT · 作业治疗", value: "45 min × 5/周", hint: "ADL + 厨房 · 陈治疗师" },
-      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨" },
+      { label: "PT · 物理治疗", value: "30 min × 5/周", hint: "步态 + 平衡 · 王雅琴（单次≤30min）" },
+      { label: "OT · 作业治疗", value: "30 min × 5/周", hint: "ADL + 厨房 · 陈治疗师（单次≤30min）" },
+      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨（单次≤30min）" },
       { label: "护理 · 康复护理", value: "q4h 体位 + 跌倒预防", hint: "赵静怡" },
     ],
   },
