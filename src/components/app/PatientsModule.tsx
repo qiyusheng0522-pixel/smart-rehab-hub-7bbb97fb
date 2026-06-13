@@ -568,7 +568,8 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
         </>
       )}
 
-      {(patient.needFirstAssess || patient.isNew) && (
+      {/* 首评核心评分：未评估患者展示「待评估」入口；已完成评估患者也保持与首评一致的展示 */}
+      {getPatientStage(patient) !== "待出院" && (
         <>
           <SectionTitle title="首次评估 · 核心评分" extra={<span className="text-[10px] text-muted-foreground">AI 辅助生成</span>} />
           <div className="grid grid-cols-2 gap-2">

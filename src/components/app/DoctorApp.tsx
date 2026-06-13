@@ -682,8 +682,9 @@ const DoctorHome = ({
           </div>
           <PendingTodoGrid
             items={[
-            { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
+              { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
               { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
+              { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-primary text-white", onClick: onGoChat },
               { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
             ]}
           />
@@ -1435,7 +1436,7 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
     <div className="p-4 space-y-3">
       <PatientHeader patient={patient} label="ICF 康复目标" />
       <AICard title="AI 基于 ICF 框架生成大目标">
-        从「身体功能 / 活动 / 参与」三个维度自动生成 4–8 周分阶段目标。医师可自定义补充大目标，治疗师可在每个大目标下添加可执行的子目标。
+        从「身体功能 / 活动 / 参与」三个维度自动生成 4–8 周分阶段目标。医师可自定义补充大目标，且首评确认后仍可多次编辑 / 删除目标，每次修改将同步治疗师；治疗师可在每个大目标下添加可执行的子目标。
       </AICard>
 
       {(Object.keys(ICF_DIM) as ICFDim[]).map((dim) => {
