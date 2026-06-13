@@ -399,6 +399,10 @@ export const DoctorApp = () => {
         <TeamManageSheet accent="doctor" />
       </PhoneSheet>
 
+      <PhoneSheet open={sheet === "firstNote"} onClose={close} title={`首程${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="doctor">
+        <FirstNoteSheet patient={pickedPatient} accent="doctor" />
+      </PhoneSheet>
+
       <TherapistPickerDialog
         open={therapistPickerOpen}
         onClose={() => setTherapistPickerOpen(false)}
