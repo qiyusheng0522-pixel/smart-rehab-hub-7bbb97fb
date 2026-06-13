@@ -343,6 +343,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
     "待出院": "bg-success-soft text-success",
     "院后": "bg-muted text-muted-foreground",
   };
+  const evalDone = !p.needFirstAssess && !p.returnedReassess;
   const pending: { key: PatientPendingKey; label: string; show: boolean }[] = [
     { key: "assess", label: "开始评估", show: !!p.needFirstAssess },
     { key: "plan", label: "待确认方案", show: !p.needFirstAssess && !!p.needPlanConfirm },
@@ -350,6 +351,8 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   ];
   // 仅当父级提供 onAction 时展示，且同一患者最多只展示一个待办按钮（首评 > 方案 > 医嘱）
   const pendingVisible = onAction ? pending.filter(x => x.show).slice(0, 1) : [];
+  // 已完成首次评估的患者：始终提供「查看首程」入口
+  const showFirstNote = !!onAction && evalDone;
   return (
     <div className="w-full bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99]">
       <button onClick={onClick} className="w-full text-left flex items-start gap-3">
