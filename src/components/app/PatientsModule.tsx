@@ -1039,14 +1039,13 @@ export interface TeamMeeting {
   patientName?: string;
   topic: string;
   time: string;
-  status: "进行中" | "待开始" | "已结束";
   participants: string[];
 }
 
 export const DEFAULT_MEETINGS: TeamMeeting[] = [
-  { id: "tm1", patientId: "p1", patientName: "张建国", topic: "V2 方案确认", time: "今日 10:30", status: "进行中", participants: ["李医师", "王治疗师", "陈治疗师", "赵护士", "孙博士"] },
-  { id: "tm2", patientId: "p2", patientName: "王秀英", topic: "首次评估复议", time: "今日 16:00", status: "待开始", participants: ["李医师", "王治疗师", "赵护士"] },
-  { id: "tm3", patientId: "p3", patientName: "李 强", topic: "出院条件评估", time: "明日 09:00", status: "待开始", participants: ["李医师", "王治疗师", "赵护士"] },
+  { id: "tm1", patientId: "p1", patientName: "张建国", topic: "V2 方案确认", time: "今日 10:30", participants: ["李医师", "王治疗师", "陈治疗师", "赵护士", "孙博士"] },
+  { id: "tm2", patientId: "p2", patientName: "王秀英", topic: "首次评估复议", time: "昨日 16:00", participants: ["李医师", "王治疗师", "赵护士"] },
+  { id: "tm3", patientId: "p3", patientName: "李 强", topic: "出院条件评估", time: "前日 09:00", participants: ["李医师", "王治疗师", "赵护士"] },
 ];
 
 export const TeamMeetingListSheet = ({
