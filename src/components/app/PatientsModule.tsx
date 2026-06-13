@@ -160,6 +160,11 @@ const accentText: Record<Accent, string> = {
   therapist: "text-role-therapist",
   nurse: "text-role-nurse",
 };
+const accentSoftBg: Record<Accent, string> = {
+  doctor: "bg-primary-soft",
+  therapist: "bg-secondary-soft",
+  nurse: "bg-warning-soft",
+};
 
 /* ============== 患者管理主页 ============== */
 export type PatientPendingKey = "assess" | "plan" | "rx" | "firstNote";
