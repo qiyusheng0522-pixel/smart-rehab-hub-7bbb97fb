@@ -355,7 +355,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   // 仅当父级提供 onAction 时展示，且同一患者最多只展示一个待办按钮（首评 > 方案 > 医嘱）
   const pendingVisible = onAction ? pending.filter(x => x.show).slice(0, 1) : [];
   // 已完成首次评估的患者：始终提供「查看首程」入口
-  const showFirstNote = !!onAction && evalDone;
+  const showFirstNote = !!onAction && evalDone && stage === "院前";
   return (
     <div className="w-full bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99]">
       <button onClick={onClick} className="w-full text-left flex items-start gap-3">
