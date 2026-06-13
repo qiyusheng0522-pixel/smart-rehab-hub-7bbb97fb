@@ -586,9 +586,10 @@ export const NumberedGoals = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dimMeta.cls}`}>{dimMeta.label}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>
+                  {!coarse && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>}
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${g.source === "AI" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"}`}>{g.source}</span>
-                  {hasSub && (
+                  {coarse && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/60 font-semibold">粗目标</span>}
+                  {!coarse && hasSub && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning-soft text-warning font-semibold">含 {g.subGoals!.length} 项子目标</span>
                   )}
                 </div>
