@@ -364,7 +364,16 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   // 每日小结仅在康复方案已确认后展示
   const showSummary = !!onSummary && planConfirmed;
   return (
-    <div className="w-full bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99]">
+    <div className="relative w-full bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99]">
+      {showFirstNote && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onAction?.("firstNote"); }}
+          className={`absolute top-3 right-3 z-10 text-[11px] px-2.5 py-1 rounded-full font-medium text-foreground/75 bg-muted hover:bg-muted/80 inline-flex items-center gap-1 active:scale-95 shadow-sm`}
+        >
+          <FileText className="w-3 h-3" />
+          查看首程
+        </button>
+      )}
       <button onClick={onClick} className="w-full text-left flex items-start gap-3">
         <div className={`w-11 h-11 rounded-xl ${accentBg[accent]} text-white flex items-center justify-center font-bold`}>{p.name[0]}</div>
         <div className="flex-1 min-w-0">
@@ -372,7 +381,6 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
             <div className="text-[13px] font-semibold">{p.name}</div>
             <span className="text-[10px] text-muted-foreground">床 {p.bed}</span>
             {p.isNew && <span className="text-[9px] px-1.5 py-0.5 rounded bg-warning text-white font-bold">NEW</span>}
-            
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{p.meta}</div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
@@ -382,9 +390,9 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
             {p.notes.length > 0 && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><StickyNote className="w-3 h-3" />{p.notes.length}</span>}
           </div>
         </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground self-center" />
+        {!showFirstNote && <ChevronRight className="w-4 h-4 text-muted-foreground self-center" />}
       </button>
-      {(pendingVisible.length > 0 || showFirstNote || showSummary) && (
+      {(pendingVisible.length > 0 || showSummary) && (
         <div className="mt-2.5 pt-2.5 border-t border-border/60 flex flex-wrap items-center gap-1.5">
           {pendingVisible.map((b) => (
             <button
@@ -398,15 +406,6 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
               <ChevronRight className="w-3 h-3 opacity-70" />
             </button>
           ))}
-          {showFirstNote && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onAction?.("firstNote"); }}
-              className={`text-[11.5px] px-3 py-1 rounded-full font-medium text-foreground/75 bg-muted hover:bg-muted/80 inline-flex items-center gap-1 active:scale-95`}
-            >
-              <FileText className="w-3 h-3" />
-              查看首程
-            </button>
-          )}
           {showSummary && (
             <button
               onClick={(e) => { e.stopPropagation(); onSummary(); }}
@@ -418,10 +417,10 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
           )}
         </div>
       )}
-
     </div>
   );
 };
+
 
 /* ============== 患者详情 Sheet ============== */
 export type PatientDetailAction = { key: string; label: string; icon?: any; onClick: () => void };
