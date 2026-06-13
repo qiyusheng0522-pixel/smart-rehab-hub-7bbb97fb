@@ -634,13 +634,17 @@ export const NumberedGoals = ({
                           <button key={d} onClick={() => setDraftDim(d)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftDim === d ? DIM_META[d].cls + " border-transparent" : "bg-card text-muted-foreground border-border"}`}>{DIM_META[d].label}</button>
                         ))}
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className="text-[10px] text-muted-foreground self-center">周期：</span>
-                        {PERIODS.map(p => (
-                          <button key={p} onClick={() => setDraftPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
-                        ))}
-                      </div>
-                      <input value={draftMeasure} onChange={(e) => setDraftMeasure(e.target.value)} placeholder="衡量指标（选填）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
+                      {!coarse && (
+                        <>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[10px] text-muted-foreground self-center">周期：</span>
+                            {PERIODS.map(p => (
+                              <button key={p} onClick={() => setDraftPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
+                            ))}
+                          </div>
+                          <input value={draftMeasure} onChange={(e) => setDraftMeasure(e.target.value)} placeholder="衡量指标（选填）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
+                        </>
+                      )}
                       <div className="flex gap-2">
                         <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
                         <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
