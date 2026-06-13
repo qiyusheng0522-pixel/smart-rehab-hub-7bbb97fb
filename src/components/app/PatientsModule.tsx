@@ -117,9 +117,9 @@ export const PATIENTS: Patient[] = [
     ],
     currentPlan: [
       { label: "医师 · 总体方案", value: "出院过渡 · 第 4 周", hint: "李志远" },
-      { label: "PT · 物理治疗", value: "60 min × 5/周", hint: "步态 + 楼梯 · 王雅琴" },
-      { label: "OT · 作业治疗", value: "45 min × 5/周", hint: "ADL + 厨房 · 陈治疗师" },
-      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨" },
+      { label: "PT · 物理治疗", value: "30 min × 5/周", hint: "步态 + 楼梯 · 王雅琴（单次≤30min）" },
+      { label: "OT · 作业治疗", value: "30 min × 5/周", hint: "ADL + 厨房 · 陈治疗师（单次≤30min）" },
+      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨（单次≤30min）" },
       { label: "护理 · 康复护理", value: "q6h 体位 + 皮肤护理", hint: "赵静怡" },
       { label: "心理 · 出院适应", value: "家属同伴支持", hint: "孙博士" },
     ],
