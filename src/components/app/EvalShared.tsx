@@ -473,27 +473,52 @@ export const NumberedGoals = ({
   const [goals, setGoals] = useState<NumberedGoal[]>(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [draftDim, setDraftDim] = useState<NumberedGoal["dim"]>("activity");
+  const [draftPeriod, setDraftPeriod] = useState<NumberedGoal["period"]>("4 周");
+  const [draftMeasure, setDraftMeasure] = useState("");
   const [adding, setAdding] = useState(false);
   const [newDraft, setNewDraft] = useState("");
+  const [newDim, setNewDim] = useState<NumberedGoal["dim"]>("activity");
+  const [newPeriod, setNewPeriod] = useState<NumberedGoal["period"]>("4 周");
+  const [newMeasure, setNewMeasure] = useState("");
   const [openMap, setOpenMap] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(initial.map(g => [g.id, !!(g.subGoals && g.subGoals.length)]))
   );
   const toggle = (id: string) => setOpenMap(m => ({ ...m, [id]: !(m[id] ?? false) }));
 
+  const PERIODS: NumberedGoal["period"][] = ["1 周", "2 周", "4 周", "8 周"];
+  const DIMS: NumberedGoal["dim"][] = ["function", "activity", "participation"];
+
   const remove = (id: string) => { setGoals(goals.filter(g => g.id !== id)); toast.success("目标已删除"); };
-  const startEdit = (g: NumberedGoal) => { setEditingId(g.id); setDraft(g.text); };
+  const startEdit = (g: NumberedGoal) => {
+    setEditingId(g.id);
+    setDraft(g.text);
+    setDraftDim(g.dim);
+    setDraftPeriod(g.period);
+    setDraftMeasure(g.measure || "");
+  };
   const saveEdit = () => {
     if (!editingId) return;
-    setGoals(goals.map(g => g.id === editingId ? { ...g, text: draft.trim() || g.text } : g));
+    setGoals(goals.map(g => g.id === editingId ? {
+      ...g,
+      text: draft.trim() || g.text,
+      dim: draftDim,
+      period: draftPeriod,
+      measure: draftMeasure.trim() || undefined,
+    } : g));
     setEditingId(null);
     toast.success("目标已更新");
   };
   const addGoal = () => {
     if (!newDraft.trim()) return;
     const id = `ng${Date.now()}`;
-    setGoals([...goals, { id, dim: "activity", period: "4 周", source: "医师", text: newDraft.trim() }]);
+    setGoals([...goals, {
+      id, dim: newDim, period: newPeriod, source: "医师",
+      text: newDraft.trim(),
+      measure: newMeasure.trim() || undefined,
+    }]);
     setOpenMap(m => ({ ...m, [id]: false }));
-    setNewDraft(""); setAdding(false);
+    setNewDraft(""); setNewMeasure(""); setNewDim("activity"); setNewPeriod("4 周"); setAdding(false);
     toast.success("已新增目标");
   };
 
@@ -520,12 +545,26 @@ export const NumberedGoals = ({
             />
             <VoiceMic onTranscript={(t) => setNewDraft((v) => (v ? v + " " : "") + t)} sample="改善左下肢平衡能力，2 周内 Berg ≥ 40。" />
           </div>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-[10px] text-muted-foreground self-center">ICF 维度：</span>
+            {DIMS.map(d => (
+              <button key={d} onClick={() => setNewDim(d)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${newDim === d ? DIM_META[d].cls + " border-transparent" : "bg-card text-muted-foreground border-border"}`}>{DIM_META[d].label}</button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-[10px] text-muted-foreground self-center">周期：</span>
+            {PERIODS.map(p => (
+              <button key={p} onClick={() => setNewPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${newPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
+            ))}
+          </div>
+          <input value={newMeasure} onChange={(e) => setNewMeasure(e.target.value)} placeholder="衡量指标（选填，如 Berg ≥ 40）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
           <div className="flex gap-2">
-            <button onClick={() => { setAdding(false); setNewDraft(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
+            <button onClick={() => { setAdding(false); setNewDraft(""); setNewMeasure(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
             <button onClick={addGoal} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
           </div>
         </div>
       )}
+
 
       {goals.map((g, idx) => {
         const dimMeta = DIM_META[g.dim];
@@ -581,6 +620,19 @@ export const NumberedGoals = ({
                         <textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="flex-1 text-[12px] bg-muted rounded-lg p-2 min-h-[60px]" autoFocus />
                         <VoiceMic onTranscript={(t) => setDraft((v) => (v ? v + " " : "") + t)} sample="将训练时间调整为每日 30 分钟。" />
                       </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="text-[10px] text-muted-foreground self-center">ICF 维度：</span>
+                        {DIMS.map(d => (
+                          <button key={d} onClick={() => setDraftDim(d)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftDim === d ? DIM_META[d].cls + " border-transparent" : "bg-card text-muted-foreground border-border"}`}>{DIM_META[d].label}</button>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="text-[10px] text-muted-foreground self-center">周期：</span>
+                        {PERIODS.map(p => (
+                          <button key={p} onClick={() => setDraftPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
+                        ))}
+                      </div>
+                      <input value={draftMeasure} onChange={(e) => setDraftMeasure(e.target.value)} placeholder="衡量指标（选填）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
                       <div className="flex gap-2">
                         <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
                         <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
