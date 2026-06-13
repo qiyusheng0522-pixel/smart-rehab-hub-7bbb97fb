@@ -1406,3 +1406,92 @@ export const NewMeetingSheet = ({
     </div>
   );
 };
+
+/* ============== 系统生成首程 Sheet ============== */
+export const FirstNoteSheet = ({ patient, accent }: { patient: Patient | null; accent: Accent }) => {
+  if (!patient) return null;
+  const abnormal: { label: string; value: string; ref: string; level: "high" | "warn" }[] = [
+    { label: "收缩压 BP", value: "168 mmHg", ref: "<140", level: "high" },
+    { label: "心率 HR", value: "112 bpm", ref: "60-100", level: "warn" },
+    { label: "血糖 (空腹)", value: "9.8 mmol/L", ref: "3.9-6.1", level: "high" },
+    { label: "LDL-C", value: "4.6 mmol/L", ref: "<2.6", level: "high" },
+    { label: "D-二聚体", value: "1.82 mg/L", ref: "<0.5", level: "high" },
+    { label: "NIHSS", value: "14 分", ref: "0-4 轻度", level: "high" },
+    { label: "Morse 跌倒", value: "55 分（高）", ref: "<45", level: "high" },
+    { label: "洼田吞咽", value: "3 级", ref: "1 级", level: "warn" },
+    { label: "MoCA 认知", value: "18 / 30", ref: "≥26", level: "warn" },
+  ];
+  return (
+    <div className="p-4 space-y-3">
+      {/* 顶部患者信息卡 */}
+      <div className={`rounded-2xl ${accentBg[accent]} p-4 text-white`}>
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center text-base font-bold">{patient.name[0]}</div>
+          <div className="flex-1">
+            <div className="text-[14px] font-bold">{patient.name} · 床 {patient.bed} · 住院号 1622220</div>
+            <div className="text-[11px] opacity-90 mt-0.5">{patient.meta}</div>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 font-semibold">首程</span>
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px]">
+          <div className="bg-white/15 rounded-xl py-1.5"><div className="opacity-80">入院</div><div className="font-semibold mt-0.5">2026-06-02</div></div>
+          <div className="bg-white/15 rounded-xl py-1.5"><div className="opacity-80">记录</div><div className="font-semibold mt-0.5">2026-06-03</div></div>
+          <div className="bg-white/15 rounded-xl py-1.5"><div className="opacity-80">主管</div><div className="font-semibold mt-0.5">李志远</div></div>
+        </div>
+      </div>
+
+      {/* AI 生成说明 */}
+      <AICard title="系统自动生成首程">
+        <div className="text-[12px] leading-relaxed">
+          已基于「入院记录 + 医患共同填写问诊单 + 检验/检查报告 + 首次评估」自动汇总。
+          下方仅展示<span className="text-destructive font-semibold">异常数据</span>与关键结论，完整首程（含正常项、原始量表、影像/检验明细）已发送至您的工作邮箱。
+        </div>
+        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Mail className="w-3.5 h-3.5" /> liyz@jsph.org.cn · 已于 2 分钟前发送
+        </div>
+      </AICard>
+
+      {/* 主诉 + 现病史摘要 */}
+      <SectionTitle title="主诉 / 现病史 · 摘要" />
+      <div className="bg-card rounded-2xl shadow-card p-3.5 text-[12px] leading-relaxed space-y-1.5">
+        <div><span className="font-semibold">主诉：</span>突发右侧肢体无力伴言语不清 3 天。</div>
+        <div><span className="font-semibold">现病史：</span>患者于 2026-05-30 晨起出现右侧肢体无力、言语含糊，急诊头颅 MRI 示<span className="text-destructive font-semibold">左侧基底节区急性脑梗死</span>，未行溶栓/取栓，转入我科继续康复治疗。</div>
+        <div><span className="font-semibold">既往史：</span>高血压 8 年（最高 180/100）、2 型糖尿病 5 年（HbA1c 8.2%）、吸烟 20 年。</div>
+      </div>
+
+      {/* 异常数据重点展示 */}
+      <SectionTitle title="异常数据 · 重点关注" extra={<span className="text-[10px] text-destructive font-semibold">{abnormal.length} 项异常</span>} />
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {abnormal.map((a, i) => (
+          <div key={i} className="flex items-center gap-3 p-3">
+            <AlertTriangle className={`w-4 h-4 ${a.level === "high" ? "text-destructive" : "text-warning"}`} />
+            <div className="flex-1 min-w-0">
+              <div className="text-[12px] font-semibold">{a.label}</div>
+              <div className="text-[10px] text-muted-foreground">参考：{a.ref}</div>
+            </div>
+            <div className={`text-[13px] font-bold ${a.level === "high" ? "text-destructive" : "text-warning"}`}>{a.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* AI 首程结论 */}
+      <AICard title="AI 首程结论与建议">
+        <div className="text-[12px] leading-relaxed whitespace-pre-line">
+{`1. 诊断：急性脑梗死（左基底节区） · 右侧偏瘫 · 表达性失语；高血压 3 级（极高危）、2 型糖尿病。
+2. 主要功能障碍：右上下肢肌力 2 级、轻度失语、吞咽 3 级、左侧空间忽略、跌倒/DVT 高风险。
+3. 建议方向：① 强化降压（目标 <140/90）+ 控糖；② 抗血小板 + 他汀强化；③ 早期床旁 PT/OT/ST；④ 跌倒/压疮/DVT/营养干预；⑤ 7 天后复评 NIHSS / Berg / FMA。`}
+        </div>
+      </AICard>
+
+      <button
+        onClick={() => toast.success("完整首程 PDF 已重新发送至工作邮箱")}
+        className={`w-full ${accentBg[accent]} text-white rounded-2xl py-3 text-[13px] font-semibold flex items-center justify-center gap-2 shadow-card`}
+      >
+        <Mail className="w-4 h-4" /> 将完整首程发送至邮箱
+      </button>
+      <div className="text-[10px] text-muted-foreground text-center pb-2">
+        完整数据包含：入院记录、医患问诊单、生命体征趋势、检验/影像、首次评估全量量表
+      </div>
+    </div>
+  );
+};
