@@ -1526,6 +1526,66 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
   );
 };
 
+/* ============== 康复方案 · 治疗项目（基于科室项目清单） ============== */
+const PLAN_GROUPS: { group: string; cls: string; items: { name: string; freq: string; by?: string; selected?: boolean }[] }[] = [
+  {
+    group: "物理治疗 PT",
+    cls: "bg-primary-soft text-primary",
+    items: [
+      { name: "手法治疗", freq: "30 min × 5/周", by: "王雅琴", selected: true },
+      { name: "站立训练", freq: "20 min × 5/周", by: "王雅琴", selected: true },
+      { name: "MotoMed", freq: "20 min × 3/周", by: "王雅琴", selected: true },
+      { name: "动态平衡运动控制", freq: "20 min × 3/周", by: "王雅琴", selected: true },
+      { name: "下肢康复机器人", freq: "30 min × 2/周", by: "王雅琴" },
+    ],
+  },
+  {
+    group: "作业治疗 OT",
+    cls: "bg-secondary-soft text-secondary",
+    items: [
+      { name: "导向性活动", freq: "30 min × 5/周", by: "陈治疗师", selected: true },
+      { name: "虚拟游戏", freq: "20 min × 3/周", by: "陈治疗师", selected: true },
+      { name: "上肢康复机器人", freq: "30 min × 3/周", by: "陈治疗师", selected: true },
+      { name: "E-link", freq: "20 min × 2/周", by: "陈治疗师" },
+      { name: "Fextable", freq: "20 min × 2/周", by: "陈治疗师" },
+      { name: "Dbox", freq: "15 min × 2/周", by: "陈治疗师" },
+      { name: "CCFES", freq: "20 min × 3/周", by: "陈治疗师", selected: true },
+    ],
+  },
+  {
+    group: "言语治疗 ST",
+    cls: "bg-warning-soft text-warning",
+    items: [
+      { name: "言语治疗", freq: "30 min × 3/周", by: "陈思雨", selected: true },
+      { name: "吞咽治疗", freq: "20 min × 5/周", by: "陈思雨", selected: true },
+      { name: "面部电刺激", freq: "15 min × 3/周", by: "陈思雨" },
+      { name: "吞咽电刺激", freq: "20 min × 3/周", by: "陈思雨", selected: true },
+      { name: "经颅直流电", freq: "20 min × 2/周", by: "陈思雨" },
+    ],
+  },
+  {
+    group: "物理因子治疗",
+    cls: "bg-ai/10 text-ai",
+    items: [
+      { name: "经颅磁刺激", freq: "20 min × 5/周", by: "理疗组", selected: true },
+      { name: "中医药透", freq: "20 min × 3/周", by: "理疗组" },
+      { name: "高频 / 高能激光", freq: "10 min × 3/周", by: "理疗组" },
+      { name: "磁热 / 冷疗", freq: "15 min × 3/周", by: "理疗组" },
+      { name: "紫外线 / 红外线", freq: "10 min × 3/周", by: "理疗组" },
+      { name: "超声波 / 冲击波", freq: "10 min × 3/周", by: "理疗组" },
+      { name: "神经肌肉电刺激", freq: "20 min × 5/周", by: "理疗组", selected: true },
+    ],
+  },
+  {
+    group: "心肺治疗",
+    cls: "bg-success-soft text-success",
+    items: [
+      { name: "呼吸治疗", freq: "15 min × 5/周", by: "呼吸治疗师", selected: true },
+      { name: "体外膈肌起搏", freq: "20 min × 3/周", by: "呼吸治疗师" },
+    ],
+  },
+];
+
 const PlanSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchMeeting?: () => void }) => (
   <div className="p-4 space-y-3">
     <PatientHeader patient={patient} label="康复方案" />
@@ -1545,21 +1605,42 @@ const PlanSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchMee
       </button>
     )}
     <AICard title="AI 生成的康复方案 V2">
-      基于本周评估更新方案：PT 强度 +20%、新增 OT 厨房训练、ST 维持原计划。
+      基于本周评估更新方案：PT 强度 +20%、新增 OT 厨房训练、ST 维持原计划。下方治疗项目来源于科室标准项目库。
     </AICard>
-    <SectionTitle title="方案明细" />
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      <FormRow label="PT 物理治疗" value="60 min × 5/周" hint="步态 + 平衡 + 力量" />
-      <FormRow label="OT 作业治疗" value="45 min × 5/周" hint="ADL + 厨房 + 书写" />
-      <FormRow label="ST 言语治疗" value="30 min × 3/周" hint="构音 + 吞咽" />
-      <FormRow label="物理因子" value="20 min × 5/周" hint="低频电刺激" />
-      <FormRow label="药物联动" value="维持" hint="详见护理端医嘱" />
+    <SectionTitle title="治疗项目明细" extra={<span className="text-[10px] text-muted-foreground">已勾选 = 本期纳入</span>} />
+    <div className="space-y-2">
+      {PLAN_GROUPS.map((g) => {
+        const picked = g.items.filter(i => i.selected);
+        return (
+          <div key={g.group} className="bg-card rounded-2xl shadow-card overflow-hidden">
+            <div className="px-3.5 py-2 flex items-center gap-2 border-b border-border/60">
+              <span className={`text-[11px] px-2 py-0.5 rounded font-semibold ${g.cls}`}>{g.group}</span>
+              <span className="text-[10px] text-muted-foreground">{picked.length} / {g.items.length} 项纳入</span>
+            </div>
+            <div className="divide-y divide-border/60">
+              {g.items.map((it) => (
+                <div key={it.name} className={`px-3.5 py-2 flex items-center gap-2 ${it.selected ? "" : "opacity-55"}`}>
+                  <div className={`w-4 h-4 rounded ${it.selected ? "gradient-doctor" : "bg-muted"} flex items-center justify-center shrink-0`}>
+                    {it.selected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] font-semibold text-foreground/90 truncate">{it.name}</div>
+                    {it.by && <div className="text-[10px] text-muted-foreground">{it.by}</div>}
+                  </div>
+                  <span className="text-[11px] text-foreground/70 shrink-0">{it.freq}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
     <AICard title="AI 方案差异提醒">
       与上版相比：训练总时长 +25%，建议会议关注患者耐受度与疲劳指数。
     </AICard>
   </div>
 );
+
 
 const RxSheet = ({ patient }: { patient?: string }) => (
   <RxDetail patient={patient} accent="doctor" />

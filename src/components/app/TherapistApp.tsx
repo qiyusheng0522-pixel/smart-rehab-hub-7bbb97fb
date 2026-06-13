@@ -932,6 +932,8 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
   const [draft, setDraft] = useState("");
   const [subFor, setSubFor] = useState<string | null>(null);
   const [subDraft, setSubDraft] = useState("");
+  const [editSubId, setEditSubId] = useState<string | null>(null);
+  const [editSubDraft, setEditSubDraft] = useState("");
 
   const addGoal = (dim: ICFDim) => {
     if (!draft.trim()) return;
@@ -944,6 +946,17 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
     setGoals(goals.map((g) => g.id === goalId ? { ...g, subs: [...g.subs, { id: `s${Date.now()}`, text: subDraft.trim(), by: "治疗师 王雅琴" }] } : g));
     setSubDraft(""); setSubFor(null);
     toast.success("已新增子目标");
+  };
+  const startEditSub = (sid: string, text: string) => { setEditSubId(sid); setEditSubDraft(text); };
+  const saveEditSub = () => {
+    if (!editSubId) return;
+    setGoals(goals.map(g => ({ ...g, subs: g.subs.map(s => s.id === editSubId ? { ...s, text: editSubDraft.trim() || s.text } : s) })));
+    setEditSubId(null);
+    toast.success("子目标已更新");
+  };
+  const removeSub = (sid: string) => {
+    setGoals(goals.map(g => ({ ...g, subs: g.subs.filter(s => s.id !== sid) })));
+    toast.success("子目标已删除");
   };
 
   return (
@@ -959,8 +972,8 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
         </div>
       </div>
 
-      <AICard title="治疗目标 · 基于 ICF + SMART 原则">
-        承接医师的 ICF 粗目标，按 <b>SMART</b>（具体 / 可衡量 / 可达成 / 相关 / 有时限）原则细化为治疗目标——每条含「衡量指标 + 周期 + 子目标」，可编辑或新增并回传医师。
+      <AICard title="治疗目标 · 基于医师 ICF 粗目标拆解 SMART 子目标">
+        承接医师端 ICF 粗目标，按 <b>SMART</b>（具体 / 可衡量 / 可达成 / 相关 / 有时限）原则在每条大目标下拆解可执行的子目标。子目标支持<b>新增 / 编辑 / 删除</b>，调整后自动同步医师与团队。
       </AICard>
 
       {(Object.keys(ICF_DIM) as ICFDim[]).map((dim) => {
@@ -1008,8 +1021,27 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
                     <div className="mt-2 pl-3 border-l-2 border-border space-y-1.5">
                       {g.subs.map((s) => (
                         <div key={s.id} className="text-[11px] text-foreground/75 leading-relaxed">
-                          <span className="text-muted-foreground">└ </span>{s.text}
-                          <span className="text-[10px] text-muted-foreground ml-1.5">· {s.by}</span>
+                          {editSubId === s.id ? (
+                            <div className="flex gap-1.5 items-start">
+                              <textarea
+                                value={editSubDraft}
+                                onChange={(e) => setEditSubDraft(e.target.value)}
+                                className="flex-1 text-[11px] bg-background border border-border rounded-lg px-2 py-1 min-h-[44px]"
+                                autoFocus
+                              />
+                              <div className="flex flex-col gap-1">
+                                <button onClick={saveEditSub} className="text-[10px] gradient-therapist text-white rounded px-2 py-1 font-semibold">保存</button>
+                                <button onClick={() => setEditSubId(null)} className="text-[10px] text-muted-foreground border border-border rounded px-2 py-1">取消</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="group flex items-start gap-1">
+                              <span className="text-muted-foreground">└ </span>
+                              <span className="flex-1">{s.text}<span className="text-[10px] text-muted-foreground ml-1.5">· {s.by}</span></span>
+                              <button onClick={() => startEditSub(s.id, s.text)} className="text-[10px] text-secondary opacity-80 hover:opacity-100">编辑</button>
+                              <button onClick={() => removeSub(s.id)} className="text-[10px] text-destructive opacity-80 hover:opacity-100">删除</button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1020,7 +1052,7 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
                       <input
                         value={subDraft}
                         onChange={(e) => setSubDraft(e.target.value)}
-                        placeholder="输入子目标，例如：PT 坐站转换 ×5/组"
+                        placeholder="输入 SMART 子目标，例如：PT 坐站转换 ×5/组，2 周内连续 5 次成功率 ≥ 90%"
                         className="flex-1 text-[11px] bg-background border border-border rounded-lg px-2 py-1.5"
                         autoFocus
                       />
