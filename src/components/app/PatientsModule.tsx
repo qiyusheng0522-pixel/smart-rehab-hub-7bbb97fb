@@ -352,6 +352,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
     "院后": "bg-muted text-muted-foreground",
   };
   const evalDone = !p.needFirstAssess && !p.returnedReassess;
+  const planConfirmed = !p.needPlanConfirm && !!p.currentPlan && p.currentPlan.length > 0;
   const pending: { key: PatientPendingKey; label: string; show: boolean }[] = [
     { key: "assess", label: "开始评估", show: !!p.needFirstAssess },
     { key: "rx", label: "待确认医嘱", show: !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
@@ -360,6 +361,8 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   const pendingVisible = onAction ? pending.filter(x => x.show).slice(0, 1) : [];
   // 已完成首次评估的患者：始终提供「查看首程」入口
   const showFirstNote = !!onAction && evalDone && stage === "院前";
+  // 每日小结仅在康复方案已确认后展示
+  const showSummary = !!onSummary && planConfirmed;
   return (
     <div className="w-full bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99]">
       <button onClick={onClick} className="w-full text-left flex items-start gap-3">
