@@ -112,7 +112,7 @@ const QUEUES: Record<QueueKey, TodoItem[]> = {
   exec: [
     { id: "e1", patient: "李 强 · 男 42", meta: "OT · ADL 训练", detail: "厨房活动训练 25min · B-201", time: "14:00", urgency: "high" },
     { id: "e2", patient: "陈丽华 · 女 65", meta: "ST · 吞咽训练", detail: "B-205 · 30 min", time: "15:30", urgency: "medium" },
-    { id: "e3", patient: "刘伟明 · 男 38", meta: "PT · 平衡训练", detail: "A-301 · 45 min", time: "16:30", urgency: "medium" },
+    { id: "e3", patient: "刘伟明 · 男 38", meta: "PT · 平衡训练", detail: "A-301 · 30 min", time: "16:30", urgency: "medium" },
   ],
 };
 

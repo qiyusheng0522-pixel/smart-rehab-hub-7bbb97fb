@@ -80,9 +80,9 @@ export const PATIENTS: Patient[] = [
     ],
     currentPlan: [
       { label: "医师 · 总体方案", value: "渐进强化 V2", hint: "李志远 · 第 2 周方案" },
-      { label: "PT · 物理治疗", value: "60 min × 5/周", hint: "步态 + 平衡 · 王雅琴" },
-      { label: "OT · 作业治疗", value: "45 min × 5/周", hint: "ADL + 厨房 · 陈治疗师" },
-      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨" },
+      { label: "PT · 物理治疗", value: "30 min × 5/周", hint: "步态 + 平衡 · 王雅琴（单次≤30min）" },
+      { label: "OT · 作业治疗", value: "30 min × 5/周", hint: "ADL + 厨房 · 陈治疗师（单次≤30min）" },
+      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨（单次≤30min）" },
       { label: "护理 · 康复护理", value: "q4h 体位 + 跌倒预防", hint: "赵静怡" },
     ],
   },
@@ -96,7 +96,7 @@ export const PATIENTS: Patient[] = [
       { author: "孙博士", time: "前日 16:20", text: "患者出院焦虑下降，家属支持充足。" },
     ],
     therapyRecords: [
-      { type: "PT", author: "王治疗师", time: "今日 09:00", text: "步行训练 40min · 独立步行 60m，无跌倒，步频 96 步/分。" },
+      { type: "PT", author: "王治疗师", time: "今日 09:00", text: "步行训练 30min · 独立步行 60m，无跌倒，步频 96 步/分。" },
       { type: "OT", author: "陈治疗师", time: "今日 10:30", text: "厨房 ADL 训练 30min · 可独立完成切配 + 烹饪。" },
       { type: "ST", author: "陈思雨", time: "昨日 15:00", text: "构音清晰度 92%，吞咽 EAT-10：2 分。" },
       { type: "PT", author: "王治疗师", time: "昨日 09:00", text: "上下楼梯训练 20min · 双足交替，扶手辅助。" },
@@ -117,9 +117,9 @@ export const PATIENTS: Patient[] = [
     ],
     currentPlan: [
       { label: "医师 · 总体方案", value: "出院过渡 · 第 4 周", hint: "李志远" },
-      { label: "PT · 物理治疗", value: "60 min × 5/周", hint: "步态 + 楼梯 · 王雅琴" },
-      { label: "OT · 作业治疗", value: "45 min × 5/周", hint: "ADL + 厨房 · 陈治疗师" },
-      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨" },
+      { label: "PT · 物理治疗", value: "30 min × 5/周", hint: "步态 + 楼梯 · 王雅琴（单次≤30min）" },
+      { label: "OT · 作业治疗", value: "30 min × 5/周", hint: "ADL + 厨房 · 陈治疗师（单次≤30min）" },
+      { label: "ST · 言语治疗", value: "30 min × 3/周", hint: "构音 · 陈思雨（单次≤30min）" },
       { label: "护理 · 康复护理", value: "q6h 体位 + 皮肤护理", hint: "赵静怡" },
       { label: "心理 · 出院适应", value: "家属同伴支持", hint: "孙博士" },
     ],
@@ -485,9 +485,9 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
 
           <SectionTitle title="医嘱 · 康复医嘱" extra={<span className="text-[10px] text-muted-foreground">康复医学科签发</span>} />
           <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-            <FormRow label="PT 物理治疗" value="60 min × 5/周" hint="步态 + 平衡 + 力量" />
-            <FormRow label="OT 作业治疗" value="45 min × 5/周" hint="ADL + 厨房" />
-            <FormRow label="ST 言语治疗" value="30 min × 3/周" hint="构音 + 吞咽" />
+            <FormRow label="PT 物理治疗" value="30 min × 5/周" hint="步态 + 平衡 + 力量（单次≤30min）" />
+            <FormRow label="OT 作业治疗" value="30 min × 5/周" hint="ADL + 厨房（单次≤30min）" />
+            <FormRow label="ST 言语治疗" value="30 min × 3/周" hint="构音 + 吞咽（单次≤30min）" />
             <FormRow label="物理因子" value="低频电刺激 20 min × 5/周" hint="左下肢" />
             <FormRow label="辅具" value="AFO 1 副 · 四脚拐 1 支" hint="日间步行佩戴" />
             <FormRow label="居家自训" value="床边坐起 + 踝泵 + 站立训练" hint="每日 30 min" />
@@ -995,7 +995,7 @@ export const IMChatSheet = ({
 
 export const DEFAULT_MEETING_MSGS: ChatMessage[] = [
   { id: "1", author: "李志远", role: "康复医师", text: "各位老师下午好，我们来确认一下张建国的 V2 方案。本周 FMA 提升 8 分。", time: "10:31" },
-  { id: "2", author: "王雅琴", role: "PT 治疗师", text: "下肢力量训练完成度很好，建议把每日 PT 时长从 50 → 60 分钟。", time: "10:32" },
+  { id: "2", author: "王雅琴", role: "PT 治疗师", text: "下肢力量训练完成度很好，建议把 PT 频次从 4 次/周 → 5 次/周（单次仍 30 分钟）。", time: "10:32" },
   { id: "3", author: "陈思雨", role: "ST 治疗师", text: "构音训练保持原节奏，吞咽功能稳定，暂不调整。", time: "10:33" },
   { id: "4", author: "赵静怡", role: "护理", text: "夜间血压偶有波动，建议加强观察 q4h。", time: "10:34" },
   { id: "5", author: "孙博士", role: "心理", text: "情绪稳定，配合度高，可继续家属同伴支持模式。", time: "10:35" },
