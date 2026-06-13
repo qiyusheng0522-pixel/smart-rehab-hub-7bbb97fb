@@ -1409,8 +1409,6 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
   const [goals, setGoals] = useState<Goal[]>(DEFAULT_GOALS);
   const [adding, setAdding] = useState<ICFDim | null>(null);
   const [draft, setDraft] = useState("");
-  const [subFor, setSubFor] = useState<string | null>(null);
-  const [subDraft, setSubDraft] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
 
@@ -1418,13 +1416,7 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
     if (!draft.trim()) return;
     setGoals([...goals, { id: `g${Date.now()}`, dim, period: "4 周", source: "医师", text: draft.trim(), subs: [] }]);
     setDraft(""); setAdding(null);
-    toast.success("已新增大目标");
-  };
-  const addSub = (goalId: string) => {
-    if (!subDraft.trim()) return;
-    setGoals(goals.map((g) => g.id === goalId ? { ...g, subs: [...g.subs, { id: `s${Date.now()}`, text: subDraft.trim(), by: "医师 李敏" }] } : g));
-    setSubDraft(""); setSubFor(null);
-    toast.success("已新增子目标");
+    toast.success("已新增粗目标");
   };
   const startEdit = (g: Goal) => { setEditingId(g.id); setEditDraft(g.text); };
   const saveEdit = () => {
