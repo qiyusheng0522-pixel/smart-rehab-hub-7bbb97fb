@@ -1350,7 +1350,7 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
       {tab === "clinical" && <ClinicalPanel aiBottom={aiClinicalConclusion} />}
       {tab === "rehab" && <RehabPanel scaleSlot={scalesBlock} conclusions={ROLE_REHAB_CONCLUSIONS} aiBottom={aiRehabConclusion} />}
 
-      {tab === "goal" && <NumberedGoals accent="doctor" />}
+      {tab === "goal" && <NumberedGoals accent="doctor" coarse />}
 
       {viewing && (<ScaleDetail scale={viewing} onClose={() => setViewing(null)} />)}
     </div>
@@ -1409,8 +1409,6 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
   const [goals, setGoals] = useState<Goal[]>(DEFAULT_GOALS);
   const [adding, setAdding] = useState<ICFDim | null>(null);
   const [draft, setDraft] = useState("");
-  const [subFor, setSubFor] = useState<string | null>(null);
-  const [subDraft, setSubDraft] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
 
@@ -1418,13 +1416,7 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
     if (!draft.trim()) return;
     setGoals([...goals, { id: `g${Date.now()}`, dim, period: "4 周", source: "医师", text: draft.trim(), subs: [] }]);
     setDraft(""); setAdding(null);
-    toast.success("已新增大目标");
-  };
-  const addSub = (goalId: string) => {
-    if (!subDraft.trim()) return;
-    setGoals(goals.map((g) => g.id === goalId ? { ...g, subs: [...g.subs, { id: `s${Date.now()}`, text: subDraft.trim(), by: "医师 李敏" }] } : g));
-    setSubDraft(""); setSubFor(null);
-    toast.success("已新增子目标");
+    toast.success("已新增粗目标");
   };
   const startEdit = (g: Goal) => { setEditingId(g.id); setEditDraft(g.text); };
   const saveEdit = () => {
@@ -1438,8 +1430,8 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
   return (
     <div className="p-4 space-y-3">
       <PatientHeader patient={patient} label="ICF 康复目标" />
-      <AICard title="AI 基于 ICF 框架生成大目标">
-        从「身体功能 / 活动 / 参与」三个维度自动生成 4–8 周分阶段目标。医师可自定义补充大目标，且首评确认后仍可多次编辑 / 删除目标，每次修改将同步治疗师；治疗师可在每个大目标下添加可执行的子目标。
+      <AICard title="ICF 框架 · 医师粗目标">
+        医师端基于 ICF（身体功能 / 活动 / 参与）三个维度设定<b>粗目标（大方向）</b>，不涉及周期与衡量指标，具体的 SMART 拆解（具体 / 可衡量 / 可达成 / 相关 / 有时限）由治疗师在治疗目标中完成。粗目标可多次编辑/删除，并自动同步治疗师。
       </AICard>
 
       {(Object.keys(ICF_DIM) as ICFDim[]).map((dim) => {
@@ -1469,10 +1461,10 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
                   <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${g.source === "AI" ? "bg-ai/10 text-ai" : g.source === "医师" ? "bg-primary-soft text-primary" : "bg-secondary-soft text-secondary"}`}>
                           {g.source}
                         </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/60 font-semibold">粗目标</span>
                       </div>
                       {editingId === g.id ? (
                         <div className="mt-1.5 space-y-2">
@@ -1503,24 +1495,6 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
                         </div>
                       ))}
                     </div>
-                  )}
-
-                  {subFor === g.id ? (
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        value={subDraft}
-                        onChange={(e) => setSubDraft(e.target.value)}
-                        placeholder="输入子目标，例如：PT 坐站转换 ×5/组"
-                        className="flex-1 text-[11px] bg-background border border-border rounded-lg px-2 py-1.5"
-                        autoFocus
-                      />
-                      <button onClick={() => addSub(g.id)} className="text-[11px] gradient-doctor text-white rounded-lg px-3 font-semibold">添加</button>
-                      <button onClick={() => setSubFor(null)} className="text-[11px] text-muted-foreground">取消</button>
-                    </div>
-                  ) : (
-                    <button onClick={() => { setSubFor(g.id); setSubDraft(""); }} className="mt-2 text-[11px] text-secondary font-semibold flex items-center gap-1">
-                      <Plus className="w-3 h-3" />添加子目标
-                    </button>
                   )}
                 </div>
               ))}

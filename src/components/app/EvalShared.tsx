@@ -462,11 +462,14 @@ export const NumberedGoals = ({
   accent = "doctor",
   initial = DEFAULT_NUMBERED_GOALS,
   readOnly = false,
+  coarse = false,
 }: {
   accent?: "doctor" | "therapist" | "nurse";
   initial?: NumberedGoal[];
   /** 只读模式 · 隐藏新增 / 编辑 / 删除按钮（如护士端） */
   readOnly?: boolean;
+  /** 粗目标模式 · 医师端使用：仅 ICF 维度 + 大目标文本，隐藏周期/衡量指标/子目标 */
+  coarse?: boolean;
 }) => {
   const grad = accent === "therapist" ? "gradient-therapist" : accent === "nurse" ? "gradient-nurse" : "gradient-doctor";
   const accentText = accent === "therapist" ? "text-secondary" : accent === "nurse" ? "text-role-nurse" : "text-primary";
@@ -551,13 +554,17 @@ export const NumberedGoals = ({
               <button key={d} onClick={() => setNewDim(d)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${newDim === d ? DIM_META[d].cls + " border-transparent" : "bg-card text-muted-foreground border-border"}`}>{DIM_META[d].label}</button>
             ))}
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <span className="text-[10px] text-muted-foreground self-center">周期：</span>
-            {PERIODS.map(p => (
-              <button key={p} onClick={() => setNewPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${newPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
-            ))}
-          </div>
-          <input value={newMeasure} onChange={(e) => setNewMeasure(e.target.value)} placeholder="衡量指标（选填，如 Berg ≥ 40）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
+          {!coarse && (
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-[10px] text-muted-foreground self-center">周期：</span>
+                {PERIODS.map(p => (
+                  <button key={p} onClick={() => setNewPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${newPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
+                ))}
+              </div>
+              <input value={newMeasure} onChange={(e) => setNewMeasure(e.target.value)} placeholder="衡量指标（选填，如 Berg ≥ 40）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
+            </>
+          )}
           <div className="flex gap-2">
             <button onClick={() => { setAdding(false); setNewDraft(""); setNewMeasure(""); }} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
             <button onClick={addGoal} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>
@@ -583,9 +590,10 @@ export const NumberedGoals = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${dimMeta.cls}`}>{dimMeta.label}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>
+                  {!coarse && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/70 font-semibold">{g.period}</span>}
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${g.source === "AI" ? "bg-ai/10 text-ai" : "bg-primary-soft text-primary"}`}>{g.source}</span>
-                  {hasSub && (
+                  {coarse && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground/60 font-semibold">粗目标</span>}
+                  {!coarse && hasSub && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning-soft text-warning font-semibold">含 {g.subGoals!.length} 项子目标</span>
                   )}
                 </div>
@@ -596,10 +604,10 @@ export const NumberedGoals = ({
 
             {open && (
               <div className="px-3.5 pb-3.5 -mt-1 space-y-2">
-                {g.measure && (
+                {!coarse && g.measure && (
                   <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">衡量指标：{g.measure}</div>
                 )}
-                {hasSub && (
+                {!coarse && hasSub && (
                   <div className="bg-muted/30 rounded-xl divide-y divide-border/60">
                     {g.subGoals!.map((sg, j) => (
                       <div key={sg.id} className="flex items-start gap-2 px-3 py-2">
@@ -626,13 +634,17 @@ export const NumberedGoals = ({
                           <button key={d} onClick={() => setDraftDim(d)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftDim === d ? DIM_META[d].cls + " border-transparent" : "bg-card text-muted-foreground border-border"}`}>{DIM_META[d].label}</button>
                         ))}
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className="text-[10px] text-muted-foreground self-center">周期：</span>
-                        {PERIODS.map(p => (
-                          <button key={p} onClick={() => setDraftPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
-                        ))}
-                      </div>
-                      <input value={draftMeasure} onChange={(e) => setDraftMeasure(e.target.value)} placeholder="衡量指标（选填）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
+                      {!coarse && (
+                        <>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[10px] text-muted-foreground self-center">周期：</span>
+                            {PERIODS.map(p => (
+                              <button key={p} onClick={() => setDraftPeriod(p)} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${draftPeriod === p ? `${grad} text-white border-transparent` : "bg-card text-muted-foreground border-border"}`}>{p}</button>
+                            ))}
+                          </div>
+                          <input value={draftMeasure} onChange={(e) => setDraftMeasure(e.target.value)} placeholder="衡量指标（选填）" className="w-full text-[12px] bg-muted rounded-lg p-2" />
+                        </>
+                      )}
                       <div className="flex gap-2">
                         <button onClick={() => setEditingId(null)} className="flex-1 text-[11px] border border-border rounded-lg py-1.5">取消</button>
                         <button onClick={saveEdit} className={`flex-1 text-[11px] ${grad} text-white rounded-lg py-1.5 font-semibold`}>保存</button>

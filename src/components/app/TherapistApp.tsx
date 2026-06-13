@@ -882,7 +882,7 @@ const ConfirmAssessSheet = ({ patient }: { patient?: string }) => {
   );
 };
 
-/* ============== ICF 康复目标（与医师端一致，含子目标示例） ============== */
+/* ============== ICF + SMART 治疗目标（治疗师端，含可衡量指标与子目标） ============== */
 type ICFDim = "function" | "activity" | "participation";
 type Goal = {
   id: string;
@@ -890,6 +890,7 @@ type Goal = {
   text: string;
   period: "1 周" | "2 周" | "4 周" | "8 周";
   source: "AI" | "医师" | "治疗师";
+  measure?: string;
   subs: { id: string; text: string; by: string }[];
 };
 
@@ -900,25 +901,25 @@ const ICF_DIM: Record<ICFDim, { label: string; desc: string; cls: string }> = {
 };
 
 const DEFAULT_GOALS: Goal[] = [
-  { id: "g1", dim: "function", period: "4 周", source: "医师", text: "右上下肢肌力由 2 级提升至 3+ 级，痉挛 MAS ≤ 1+", subs: [
+  { id: "g1", dim: "function", period: "4 周", source: "医师", text: "右上下肢肌力由 2 级提升至 3+ 级，痉挛 MAS ≤ 1+", measure: "MMT ≥ 3+ · MAS ≤ 1+", subs: [
     { id: "g1s1", text: "PT：右下肢直腿抬高 ×10/组 ×3 组，渐进抗阻", by: "PT 王雅琴" },
     { id: "g1s2", text: "PT：腘绳肌牵伸 30s ×3，每日 2 次", by: "PT 王雅琴" },
     { id: "g1s3", text: "OT：右上肢 Bobath 抑制性手法 + 主动伸展训练", by: "OT 林思" },
   ] },
-  { id: "g2", dim: "function", period: "4 周", source: "AI", text: "MoCA 由 18 提升至 ≥ 24，左侧空间忽略明显改善", subs: [
+  { id: "g2", dim: "function", period: "4 周", source: "AI", text: "MoCA 由 18 提升至 ≥ 24，左侧空间忽略明显改善", measure: "MoCA ≥ 24", subs: [
     { id: "g2s1", text: "ST：左侧视觉扫描训练 15min/次 ×2/日", by: "ST 周敏" },
     { id: "g2s2", text: "OT：分类卡片 + 数字消除任务（含左侧目标）", by: "OT 林思" },
   ] },
-  { id: "g3", dim: "activity", period: "2 周", source: "医师", text: "床椅转移独立完成，助行器辅助步行 30m", subs: [
+  { id: "g3", dim: "activity", period: "2 周", source: "医师", text: "床椅转移独立完成，助行器辅助步行 30m", measure: "Berg ≥ 40 · 步行 ≥ 30m", subs: [
     { id: "g3s1", text: "PT：坐站转换连续 5 次 / 不借助上肢", by: "PT 王雅琴" },
     { id: "g3s2", text: "PT：平行杠内步行 20m ×2 组，步态对称性 ≥ 80%", by: "PT 王雅琴" },
     { id: "g3s3", text: "OT：床→轮椅独立转移成功率 ≥ 90%", by: "OT 林思" },
   ] },
-  { id: "g4", dim: "activity", period: "4 周", source: "AI", text: "独立步行 ≥ 50m（FAC ≥ 3），Barthel ≥ 75", subs: [
+  { id: "g4", dim: "activity", period: "4 周", source: "AI", text: "独立步行 ≥ 50m（FAC ≥ 3），Barthel ≥ 75", measure: "FAC ≥ 3 · Barthel ≥ 75", subs: [
     { id: "g4s1", text: "PT：助行器步行 50m，休息 ≤ 1 次", by: "PT 王雅琴" },
     { id: "g4s2", text: "OT：穿衣 / 进食独立完成（Barthel 单项 ≥ 8）", by: "OT 林思" },
   ] },
-  { id: "g5", dim: "participation", period: "8 周", source: "AI", text: "回归家庭：可独立完成进食、如厕、穿衣，参与家庭对话", subs: [
+  { id: "g5", dim: "participation", period: "8 周", source: "AI", text: "回归家庭：可独立完成进食、如厕、穿衣，参与家庭对话", measure: "独立完成 ADL 6 项", subs: [
     { id: "g5s1", text: "ST：日常对话 5 轮以上，言语清晰度 ≥ 80%", by: "ST 周敏" },
     { id: "g5s2", text: "OT：模拟厨房活动 25min（取物 / 倒水 / 整理）", by: "OT 林思" },
   ] },
@@ -954,12 +955,12 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
             <div className="text-sm font-bold">{patient || "李 强 · 男 42 · 床307"}</div>
             <div className="text-[11px] text-muted-foreground mt-0.5">脊髓损伤 · 入院第 28 天 · 主管医师：李志远</div>
           </div>
-          <span className="text-[10px] px-2 py-1 rounded-full bg-secondary-soft text-secondary font-semibold">ICF 康复目标</span>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-secondary-soft text-secondary font-semibold">ICF + SMART</span>
         </div>
       </div>
 
-      <AICard title="AI 基于 ICF 框架生成大目标（与医师端一致）">
-        从「身体功能 / 活动 / 参与」三个维度自动生成 4–8 周分阶段目标。治疗师可在每个大目标下添加可执行的子目标，或新增大目标回传医师。
+      <AICard title="治疗目标 · 基于 ICF + SMART 原则">
+        承接医师的 ICF 粗目标，按 <b>SMART</b>（具体 / 可衡量 / 可达成 / 相关 / 有时限）原则细化为治疗目标——每条含「衡量指标 + 周期 + 子目标」，可编辑或新增并回传医师。
       </AICard>
 
       {(Object.keys(ICF_DIM) as ICFDim[]).map((dim) => {
@@ -995,6 +996,11 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
                         </span>
                       </div>
                       <div className="text-[12px] text-foreground/90 mt-1 leading-relaxed">{g.text}</div>
+                      {g.measure && (
+                        <div className="mt-1.5 inline-flex items-center gap-1 text-[10.5px] bg-secondary-soft text-secondary px-2 py-0.5 rounded font-semibold">
+                          <span className="opacity-70">衡量指标</span>· {g.measure}
+                        </div>
+                      )}
                     </div>
                   </div>
 

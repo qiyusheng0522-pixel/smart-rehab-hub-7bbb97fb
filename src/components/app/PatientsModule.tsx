@@ -160,6 +160,11 @@ const accentText: Record<Accent, string> = {
   therapist: "text-role-therapist",
   nurse: "text-role-nurse",
 };
+const accentSoftBg: Record<Accent, string> = {
+  doctor: "bg-primary-soft",
+  therapist: "bg-secondary-soft",
+  nurse: "bg-warning-soft",
+};
 
 /* ============== 患者管理主页 ============== */
 export type PatientPendingKey = "assess" | "plan" | "rx" | "firstNote";
@@ -383,32 +388,34 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
               key={b.key}
               onClick={(e) => { e.stopPropagation(); onAction?.(b.key); }}
               disabled={!onAction}
-              className={`text-[12px] px-3.5 py-1.5 rounded-full font-bold ${accentBg[accent]} text-white shadow-card flex items-center gap-1 active:scale-95 disabled:opacity-60 ring-2 ring-current/20`}
+              className={`text-[11.5px] px-3 py-1 rounded-full font-semibold ${accentSoftBg[accent]} ${accentText[accent]} inline-flex items-center gap-1 active:scale-95 disabled:opacity-60`}
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <span className={`w-1.5 h-1.5 rounded-full ${accentBg[accent]}`} />
               {b.label}
+              <ChevronRight className="w-3 h-3 opacity-70" />
             </button>
           ))}
           {showFirstNote && (
             <button
               onClick={(e) => { e.stopPropagation(); onAction?.("firstNote"); }}
-              className={`text-[12px] px-3.5 py-1.5 rounded-full font-semibold border-2 ${accentText[accent]} bg-card flex items-center gap-1 active:scale-95`}
-              style={{ borderColor: "currentColor" }}
+              className={`text-[11.5px] px-3 py-1 rounded-full font-medium text-foreground/75 bg-muted hover:bg-muted/80 inline-flex items-center gap-1 active:scale-95`}
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-3 h-3" />
               查看首程
             </button>
           )}
           {onSummary && (
             <button
               onClick={(e) => { e.stopPropagation(); onSummary(); }}
-              className={`ml-auto text-[11px] px-3 py-1 rounded-full font-semibold ${accentBg[accent]} text-white shadow-card`}
+              className={`ml-auto text-[11.5px] px-3 py-1 rounded-full font-medium ${accentText[accent]} bg-transparent hover:bg-muted/60 inline-flex items-center gap-1`}
             >
               每日小结
+              <ChevronRight className="w-3 h-3 opacity-70" />
             </button>
           )}
         </div>
       )}
+
     </div>
   );
 };
