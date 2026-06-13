@@ -10,6 +10,7 @@ import {
   AddNoteSheet,
   TeamManageSheet,
   IMChatSheet,
+  FirstNoteSheet,
   MeetingSummarySheet,
   TeamMeetingListSheet,
   NewMeetingSheet,
@@ -89,7 +90,8 @@ type SheetKey =
   | "addNote"
   | "team"
   | "patientChatList"
-  | "patientChat";
+  | "patientChat"
+  | "firstNote";
 
 const DOCTOR_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
@@ -167,6 +169,7 @@ export const DoctorApp = () => {
             setPickedPatient({ ...p, notes: patientNotes[p.id] ?? p.notes });
             if (key === "assess") setSheet("assess");
             else if (key === "plan") setSheet("plan");
+            else if (key === "firstNote") setSheet("firstNote");
             else setSheet("rx");
           }}
         />
@@ -394,6 +397,10 @@ export const DoctorApp = () => {
 
       <PhoneSheet open={sheet === "team"} onClose={close} title="团队管理" accent="doctor">
         <TeamManageSheet accent="doctor" />
+      </PhoneSheet>
+
+      <PhoneSheet open={sheet === "firstNote"} onClose={close} title={`首程${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="doctor">
+        <FirstNoteSheet patient={pickedPatient} accent="doctor" />
       </PhoneSheet>
 
       <TherapistPickerDialog
