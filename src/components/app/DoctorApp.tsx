@@ -10,6 +10,7 @@ import {
   AddNoteSheet,
   TeamManageSheet,
   IMChatSheet,
+  MeetingSummarySheet,
   TeamMeetingListSheet,
   NewMeetingSheet,
   PatientChatListSheet,
