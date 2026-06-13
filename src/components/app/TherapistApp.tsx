@@ -972,8 +972,8 @@ const GoalAdjustSheet = ({ patient }: { patient?: string }) => {
         </div>
       </div>
 
-      <AICard title="治疗目标 · 基于 ICF + SMART 原则">
-        承接医师的 ICF 粗目标，按 <b>SMART</b>（具体 / 可衡量 / 可达成 / 相关 / 有时限）原则细化为治疗目标——每条含「衡量指标 + 周期 + 子目标」，可编辑或新增并回传医师。
+      <AICard title="治疗目标 · 基于医师 ICF 粗目标拆解 SMART 子目标">
+        承接医师端 ICF 粗目标，按 <b>SMART</b>（具体 / 可衡量 / 可达成 / 相关 / 有时限）原则在每条大目标下拆解可执行的子目标。子目标支持<b>新增 / 编辑 / 删除</b>，调整后自动同步医师与团队。
       </AICard>
 
       {(Object.keys(ICF_DIM) as ICFDim[]).map((dim) => {
