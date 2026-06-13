@@ -1438,8 +1438,8 @@ const GoalSheet = ({ patient }: { patient?: string }) => {
   return (
     <div className="p-4 space-y-3">
       <PatientHeader patient={patient} label="ICF 康复目标" />
-      <AICard title="AI 基于 ICF 框架生成大目标">
-        从「身体功能 / 活动 / 参与」三个维度自动生成 4–8 周分阶段目标。医师可自定义补充大目标，且首评确认后仍可多次编辑 / 删除目标，每次修改将同步治疗师；治疗师可在每个大目标下添加可执行的子目标。
+      <AICard title="ICF 框架 · 医师粗目标">
+        医师端基于 ICF（身体功能 / 活动 / 参与）三个维度设定<b>粗目标（大方向）</b>，不涉及周期与衡量指标，具体的 SMART 拆解（具体 / 可衡量 / 可达成 / 相关 / 有时限）由治疗师在治疗目标中完成。粗目标可多次编辑/删除，并自动同步治疗师。
       </AICard>
 
       {(Object.keys(ICF_DIM) as ICFDim[]).map((dim) => {
