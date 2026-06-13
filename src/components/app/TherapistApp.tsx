@@ -382,12 +382,15 @@ export const TherapistApp = () => {
 /* ============== 治疗师首页 ============== */
 const TherapistHome = ({
   role,
-  onOpenQueue,
   onGoPatients,
-  onGoRx,
-  onUploadDaily,
-  onOpenMed,
   onOpenSchedule,
+  onGoRx,
+  meetings,
+  onOpenFirstAssess,
+  onOpenSummary,
+  onOpenPatientChat,
+  onPickMeeting,
+  onOpenDischarge,
 }: {
   role: "therapist" | "lead";
   onOpenQueue: (k: QueueKey) => void;
@@ -396,14 +399,95 @@ const TherapistHome = ({
   onUploadDaily: () => void;
   onOpenMed: () => void;
   onOpenSchedule: () => void;
+  meetings: TeamMeeting[];
+  onOpenFirstAssess: (p: Patient) => void;
+  onOpenSummary: (p: Patient) => void;
+  onOpenPatientChat: (p: Patient) => void;
+  onPickMeeting: (m: TeamMeeting) => void;
+  onOpenDischarge: (p: Patient) => void;
 }) => {
-  const allTodos: { patient: string; meta: string; time?: string; urgency: "high" | "medium" | "low"; k: QueueKey }[] = [
-    ...QUEUES.confirmAssess.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency ?? "medium", k: "confirmAssess" as QueueKey })),
-    ...QUEUES.goal.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency ?? "medium", k: "goal" as QueueKey })),
-    ...QUEUES.rx.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency ?? "medium", k: "rx" as QueueKey })),
-    ...QUEUES.exec.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency ?? "medium", k: "exec" as QueueKey })),
-  ].sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.urgency] - { high: 0, medium: 1, low: 2 }[b.urgency]));
-  const tagShort: Record<QueueKey, string> = { confirmAssess: "评估", goal: "目标", rx: "医嘱", exec: "执行" };
+  type TodoKind = "firstAssess" | "summary" | "chat" | "meeting" | "discharge";
+  type TodoRow = {
+    kind: TodoKind;
+    title: string;
+    meta: string;
+    time?: string;
+    urgency: "high" | "medium" | "low";
+    onOpen: () => void;
+  };
+
+  const firstAssessRows: TodoRow[] = PATIENTS.filter(p => p.needFirstAssess).map(p => ({
+    kind: "firstAssess",
+    title: `${p.name} · 床${p.bed}`,
+    meta: `${p.condition} · ${p.meta.split(" · ")[0] ?? ""}`,
+    urgency: p.returnedReassess ? "high" : "medium",
+    onOpen: () => onOpenFirstAssess(p),
+  }));
+
+  const summaryRows: TodoRow[] = PATIENTS.filter(
+    p => !p.needPlanConfirm && !!p.currentPlan && p.currentPlan.length > 0,
+  ).slice(0, 3).map(p => ({
+    kind: "summary",
+    title: `${p.name} · 床${p.bed}`,
+    meta: `${p.condition} · 入院第 ${p.admitDays} 天`,
+    time: "今日",
+    urgency: "medium",
+    onOpen: () => onOpenSummary(p),
+  }));
+
+  const chatRows: TodoRow[] = DEFAULT_PATIENT_THREADS.filter(t => t.unread > 0).map(t => {
+    const p = PATIENTS.find(x => x.id === t.patientId);
+    return {
+      kind: "chat" as const,
+      title: p ? `${p.name} · 床${p.bed}` : "患者沟通",
+      meta: t.lastMsg,
+      time: t.time,
+      urgency: (t.unread >= 2 ? "high" : "medium") as "high" | "medium",
+      onOpen: () => { if (p) onOpenPatientChat(p); },
+    };
+  });
+
+  const meetingRows: TodoRow[] = meetings.slice(0, 3).map(m => ({
+    kind: "meeting",
+    title: `${m.patientName ?? "团队"} · ${m.topic}`,
+    meta: `${m.participants.length} 人 · ${m.participants.slice(0, 3).join(" / ")}`,
+    time: m.time,
+    urgency: "low",
+    onOpen: () => onPickMeeting(m),
+  }));
+
+  const dischargeRows: TodoRow[] = PATIENTS.filter(p => getPatientStage(p) === "待出院").map(p => ({
+    kind: "discharge",
+    title: `${p.name} · 床${p.bed}`,
+    meta: `${p.condition} · 入院第 ${p.admitDays} 天`,
+    urgency: "high",
+    onOpen: () => onOpenDischarge(p),
+  }));
+
+  const order: TodoKind[] = ["firstAssess", "summary", "chat", "meeting", "discharge"];
+  const urank = { high: 0, medium: 1, low: 2 } as const;
+  const allTodos: TodoRow[] = [
+    ...firstAssessRows,
+    ...summaryRows,
+    ...chatRows,
+    ...meetingRows,
+    ...dischargeRows,
+  ].sort((a, b) => urank[a.urgency] - urank[b.urgency] || order.indexOf(a.kind) - order.indexOf(b.kind));
+
+  const tagShort: Record<TodoKind, string> = {
+    firstAssess: "首次评估",
+    summary: "每日小结",
+    chat: "患者沟通",
+    meeting: "团队会议",
+    discharge: "出院评估",
+  };
+  const tagColor: Record<TodoKind, string> = {
+    firstAssess: "bg-warning/15 text-warning",
+    summary: "bg-secondary/10 text-secondary",
+    chat: "bg-primary/10 text-primary",
+    meeting: "bg-ai-soft text-ai",
+    discharge: "bg-destructive/10 text-destructive",
+  };
   return (
     <div className="pb-4">
       <div className="bg-background px-5 pt-6 pb-2">
@@ -440,9 +524,9 @@ const TherapistHome = ({
         </div>
         <PendingTodoGrid
           items={[
-            { label: "待首次评估", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-            { label: "待确认方案", count: QUEUES.rx.length, icon: FileText, iconClass: "bg-secondary text-white", onClick: onGoRx },
-            { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
+            { label: "待首次评估", count: firstAssessRows.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
+            { label: "待确认方案", count: PATIENTS.filter(p => p.needPlanConfirm || p.needRxConfirm).length, icon: FileText, iconClass: "bg-secondary text-white", onClick: onGoRx },
+            { label: "待出院评估", count: dischargeRows.length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
           ]}
         />
       </div>
@@ -454,11 +538,6 @@ const TherapistHome = ({
         </div>
         <div className="bg-card rounded-2xl shadow-card border border-border/40 divide-y divide-border/60 overflow-hidden">
           {allTodos.map((t, idx) => {
-            const tagColor =
-              t.k === "confirmAssess" ? "bg-warning/15 text-warning" :
-              t.k === "goal" ? "bg-primary/10 text-primary" :
-              t.k === "rx" ? "bg-secondary/10 text-secondary" :
-              "bg-success/10 text-success";
             const uColor =
               t.urgency === "high" ? "bg-destructive/10 text-destructive" :
               t.urgency === "medium" ? "bg-warning/15 text-warning" :
@@ -466,8 +545,8 @@ const TherapistHome = ({
             const uLabel = t.urgency === "high" ? "紧急" : t.urgency === "medium" ? "重要" : "常规";
             return (
               <button
-                key={`${t.k}-${idx}`}
-                onClick={() => onOpenQueue(t.k)}
+                key={`${t.kind}-${idx}`}
+                onClick={t.onOpen}
                 className="w-full text-left px-3 py-2.5 flex items-center gap-2 active:bg-muted/40"
               >
                 <div className="w-7 h-7 rounded-lg bg-muted text-foreground/70 flex items-center justify-center text-[11px] font-bold shrink-0">
@@ -475,9 +554,9 @@ const TherapistHome = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${tagColor}`}>{tagShort[t.k]}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${tagColor[t.kind]}`}>{tagShort[t.kind]}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${uColor}`}>{uLabel}</span>
-                    <span className="text-[12px] font-semibold truncate">{t.patient}</span>
+                    <span className="text-[12px] font-semibold truncate">{t.title}</span>
                   </div>
                   <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
                     {t.meta}{t.time ? ` · ${t.time}` : ""}
