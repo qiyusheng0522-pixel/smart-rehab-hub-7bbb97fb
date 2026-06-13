@@ -1397,7 +1397,6 @@ export const NewMeetingSheet = ({
             patientName: p.name,
             topic,
             time,
-            status: "待开始",
             participants: ["李医师", "王治疗师", "赵护士"],
           });
         }}
