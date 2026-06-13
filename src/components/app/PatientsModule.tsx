@@ -1073,6 +1073,78 @@ export const TeamMeetingListSheet = ({
   </div>
 );
 
+/* ============== 团队会议 · 仅会议总结视图 ============== */
+export const MeetingSummarySheet = ({
+  accent,
+  meeting,
+  fallbackPatient,
+  onClose,
+}: {
+  accent: Accent;
+  meeting: TeamMeeting | null;
+  fallbackPatient?: string;
+  onClose?: () => void;
+}) => {
+  const title = meeting?.patientName ?? fallbackPatient ?? "张建国";
+  const topic = meeting?.topic ?? "V2 方案确认";
+  const time = meeting?.time ?? "今日 10:30";
+  const participants = meeting?.participants ?? ["李医师", "王治疗师", "陈治疗师", "赵护士", "孙博士"];
+  const summary = [
+    "1. 患者 FMA 提升 8 分，整体康复进度符合预期。",
+    "2. 一致同意将 PT 训练强度上调 20%，新增 OT 厨房训练。",
+    "3. ST 维持原计划，下周复评后再决定是否调整。",
+    "4. 出院评估：再观察 1 周，待 Barthel ≥ 75 启动二级方案。",
+  ];
+  const decisions = [
+    { who: "PT · 王雅琴", text: "频次 4 → 5 次/周（单次仍 30 分钟）" },
+    { who: "OT · 陈治疗师", text: "新增厨房 ADL 训练 30 min × 3/周" },
+    { who: "ST · 陈思雨", text: "维持原方案，下周复评再调整" },
+    { who: "护理 · 赵静怡", text: "夜间血压 q4h 观察 3 天" },
+  ];
+  return (
+    <div className="flex flex-col h-full">
+      <div className={`${accentBg[accent]} text-white px-4 py-3`}>
+        <div className="flex items-center gap-2">
+          {onClose && (
+            <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/20 backdrop-blur flex items-center justify-center -ml-1">
+              <ChevronRight className="w-4 h-4 rotate-180" />
+            </button>
+          )}
+          <div className="flex-1">
+            <div className="text-sm font-bold">团队会议 · {title}</div>
+            <div className="text-[11px] opacity-90 mt-0.5">{topic} · {time} · {participants.length} 人</div>
+          </div>
+        </div>
+        <div className="flex gap-1 mt-2 overflow-x-auto scrollbar-hide">
+          {participants.map(p => (
+            <span key={p} className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 backdrop-blur whitespace-nowrap">{p}</span>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-muted/30 p-4 space-y-3">
+        <AICard title="AI 会议纪要">
+          <ul className="space-y-1.5 text-[12px] leading-relaxed">
+            {summary.map((s, i) => <li key={i}>{s}</li>)}
+          </ul>
+        </AICard>
+
+        <SectionTitle title="关键决议" extra={<span className="text-[10px] text-muted-foreground">已同步首评 / 方案 / 医嘱</span>} />
+        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+          {decisions.map((d, i) => (
+            <FormRow key={i} label={d.who} value={d.text} />
+          ))}
+        </div>
+
+        <div className="bg-success-soft border border-success/30 rounded-2xl p-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />
+          <div className="text-[11px] text-success">会议总结已由康复医师确认 · 自动归档至病历</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ============== 患者沟通：会话列表 + 单会话 ============== */
 export interface PatientChatThread {
   patientId: string;
