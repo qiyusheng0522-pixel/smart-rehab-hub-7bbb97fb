@@ -274,15 +274,10 @@ export const DoctorApp = () => {
       </PhoneSheet>
 
       <PhoneSheet open={sheet === "meeting"} onClose={() => setSheet(activeMeeting ? "meetingList" : null)} title="团队会议" accent="doctor" flush hideHeader>
-        <IMChatSheet
+        <MeetingSummarySheet
           accent="doctor"
-          title={`团队会议 · ${activeMeeting?.patientName ?? (activePatient ? activePatient.split(" ")[0] : "张建国")}`}
-          subtitle={activeMeeting?.topic ?? "V2 方案确认"}
-          participants={activeMeeting?.participants ?? ["李医师", "王治疗师", "陈治疗师", "赵护士", "孙博士"]}
-          initialMessages={DEFAULT_MEETING_MSGS}
-          onAISummary={() => {}}
-          enablePatientReminder
-          enablePlanConfirm
+          meeting={activeMeeting}
+          fallbackPatient={activePatient ? activePatient.split(" ")[0] : undefined}
           onClose={() => setSheet(activeMeeting ? "meetingList" : null)}
         />
       </PhoneSheet>
