@@ -159,7 +159,7 @@ const accentText: Record<Accent, string> = {
 };
 
 /* ============== 患者管理主页 ============== */
-export type PatientPendingKey = "assess" | "plan" | "rx";
+export type PatientPendingKey = "assess" | "plan" | "rx" | "firstNote";
 
 export const PatientsPage = ({
   accent,
