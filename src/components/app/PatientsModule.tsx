@@ -1595,19 +1595,63 @@ export const NewMeetingSheet = ({
 };
 
 /* ============== 系统生成首程 Sheet ============== */
+type AbnormalItem = { label: string; value: string; ref: string; level: "high" | "warn" };
+const DEFAULT_ABNORMAL: AbnormalItem[] = [
+  { label: "收缩压 BP", value: "168 mmHg", ref: "<140", level: "high" },
+  { label: "心率 HR", value: "112 bpm", ref: "60-100", level: "warn" },
+  { label: "血糖 (空腹)", value: "9.8 mmol/L", ref: "3.9-6.1", level: "high" },
+  { label: "LDL-C", value: "4.6 mmol/L", ref: "<2.6", level: "high" },
+  { label: "D-二聚体", value: "1.82 mg/L", ref: "<0.5", level: "high" },
+  { label: "NIHSS", value: "14 分", ref: "0-4 轻度", level: "high" },
+  { label: "Morse 跌倒", value: "55 分（高）", ref: "<45", level: "high" },
+  { label: "洼田吞咽", value: "3 级", ref: "1 级", level: "warn" },
+  { label: "MoCA 认知", value: "18 / 30", ref: "≥26", level: "warn" },
+];
+/** 康复评估中的异常指标 · 用作「新增」候选 */
+const REHAB_ABNORMAL_CANDIDATES: AbnormalItem[] = [
+  { label: "Berg 平衡量表", value: "32 / 56", ref: "≥45", level: "high" },
+  { label: "FAC 步行能力", value: "2 级", ref: "≥4 级", level: "high" },
+  { label: "6MWT 6 分钟步行", value: "120 m", ref: "≥300", level: "high" },
+  { label: "FMA-UE 上肢运动", value: "24 / 66", ref: "≥50", level: "high" },
+  { label: "MBI / Barthel", value: "45 / 100", ref: "≥75", level: "warn" },
+  { label: "ARAT 上肢动作", value: "23 / 57", ref: "≥45", level: "warn" },
+  { label: "WAB 失语商 AQ", value: "59.0", ref: "≥93.8", level: "high" },
+  { label: "SSA 吞咽功能", value: "28 / 46", ref: "≤18", level: "warn" },
+  { label: "Frenchay 构音", value: "中度异常", ref: "正常", level: "warn" },
+  { label: "MMSE 认知", value: "23 / 30", ref: "≥27", level: "warn" },
+  { label: "九孔插板（患侧）", value: "62 s", ref: "<30 s", level: "warn" },
+];
+
 export const FirstNoteSheet = ({ patient, accent }: { patient: Patient | null; accent: Accent }) => {
   if (!patient) return null;
-  const abnormal: { label: string; value: string; ref: string; level: "high" | "warn" }[] = [
-    { label: "收缩压 BP", value: "168 mmHg", ref: "<140", level: "high" },
-    { label: "心率 HR", value: "112 bpm", ref: "60-100", level: "warn" },
-    { label: "血糖 (空腹)", value: "9.8 mmol/L", ref: "3.9-6.1", level: "high" },
-    { label: "LDL-C", value: "4.6 mmol/L", ref: "<2.6", level: "high" },
-    { label: "D-二聚体", value: "1.82 mg/L", ref: "<0.5", level: "high" },
-    { label: "NIHSS", value: "14 分", ref: "0-4 轻度", level: "high" },
-    { label: "Morse 跌倒", value: "55 分（高）", ref: "<45", level: "high" },
-    { label: "洼田吞咽", value: "3 级", ref: "1 级", level: "warn" },
-    { label: "MoCA 认知", value: "18 / 30", ref: "≥26", level: "warn" },
-  ];
+  const [abnormal, setAbnormal] = useState<AbnormalItem[]>(DEFAULT_ABNORMAL);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [picked, setPicked] = useState<Set<number>>(new Set());
+
+  const updateItem = (i: number, patch: Partial<AbnormalItem>) =>
+    setAbnormal(prev => prev.map((a, idx) => idx === i ? { ...a, ...patch } : a));
+  const removeItem = (i: number) => setAbnormal(prev => prev.filter((_, idx) => idx !== i));
+  const togglePick = (i: number) => setPicked(prev => {
+    const n = new Set(prev); n.has(i) ? n.delete(i) : n.add(i); return n;
+  });
+  const confirmAdd = () => {
+    const exists = new Set(abnormal.map(a => a.label));
+    const additions = Array.from(picked)
+      .map(i => REHAB_ABNORMAL_CANDIDATES[i])
+      .filter(c => !exists.has(c.label));
+    if (additions.length === 0) {
+      const blank: AbnormalItem = { label: "自定义指标", value: "", ref: "", level: "warn" };
+      setAbnormal(prev => [...prev, blank]);
+      setEditing(abnormal.length);
+    } else {
+      setAbnormal(prev => [...prev, ...additions]);
+      toast.success(`已添加 ${additions.length} 项异常指标`);
+    }
+    setPicked(new Set());
+    setPickerOpen(false);
+  };
+
   return (
     <div className="p-4 space-y-3">
       {/* 顶部患者信息卡 */}
@@ -1636,19 +1680,89 @@ export const FirstNoteSheet = ({ patient, accent }: { patient: Patient | null; a
         <div><span className="font-semibold">既往史：</span>高血压 8 年（最高 180/100）、2 型糖尿病 5 年（HbA1c 8.2%）、吸烟 20 年。</div>
       </div>
 
-      {/* 异常数据重点展示 */}
-      <SectionTitle title="异常数据 · 重点关注" extra={<span className="text-[10px] text-destructive font-semibold">{abnormal.length} 项异常</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        {abnormal.map((a, i) => (
-          <div key={i} className="flex items-center gap-3 p-3">
-            <AlertTriangle className={`w-4 h-4 ${a.level === "high" ? "text-destructive" : "text-warning"}`} />
-            <div className="flex-1 min-w-0">
-              <div className="text-[12px] font-semibold">{a.label}</div>
-              <div className="text-[10px] text-muted-foreground">参考：{a.ref}</div>
-            </div>
-            <div className={`text-[13px] font-bold ${a.level === "high" ? "text-destructive" : "text-warning"}`}>{a.value}</div>
+      {/* 异常数据重点展示 · 可编辑 */}
+      <SectionTitle
+        title="异常数据 · 重点关注"
+        extra={
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-destructive font-semibold">{abnormal.length} 项异常</span>
+            <button
+              onClick={() => setPickerOpen(true)}
+              className={`text-[11px] ${accentText[accent]} font-semibold flex items-center gap-0.5`}
+            >
+              <Plus className="w-3 h-3" />新增
+            </button>
           </div>
-        ))}
+        }
+      />
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {abnormal.map((a, i) => {
+          const isEdit = editing === i;
+          return (
+            <div key={i} className="flex items-center gap-2 p-3">
+              <AlertTriangle className={`w-4 h-4 flex-shrink-0 ${a.level === "high" ? "text-destructive" : "text-warning"}`} />
+              <div className="flex-1 min-w-0 space-y-1">
+                {isEdit ? (
+                  <>
+                    <input
+                      value={a.label}
+                      onChange={e => updateItem(i, { label: e.target.value })}
+                      placeholder="指标名称"
+                      className="w-full text-[12px] font-semibold bg-muted rounded px-2 py-1 outline-none"
+                    />
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        value={a.ref}
+                        onChange={e => updateItem(i, { ref: e.target.value })}
+                        placeholder="参考范围"
+                        className="flex-1 text-[10px] bg-muted rounded px-2 py-1 outline-none"
+                      />
+                      <select
+                        value={a.level}
+                        onChange={e => updateItem(i, { level: e.target.value as "high" | "warn" })}
+                        className="text-[10px] bg-muted rounded px-1.5 py-1 outline-none"
+                      >
+                        <option value="high">高危</option>
+                        <option value="warn">预警</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[12px] font-semibold truncate">{a.label}</div>
+                    <div className="text-[10px] text-muted-foreground">参考：{a.ref || "—"}</div>
+                  </>
+                )}
+              </div>
+              {isEdit ? (
+                <input
+                  value={a.value}
+                  onChange={e => updateItem(i, { value: e.target.value })}
+                  placeholder="数值"
+                  className={`w-20 text-right text-[12px] font-bold bg-muted rounded px-2 py-1 outline-none ${a.level === "high" ? "text-destructive" : "text-warning"}`}
+                />
+              ) : (
+                <div className={`text-[13px] font-bold ${a.level === "high" ? "text-destructive" : "text-warning"}`}>{a.value || "—"}</div>
+              )}
+              <button
+                onClick={() => setEditing(isEdit ? null : i)}
+                className={`text-[10px] px-1.5 py-0.5 rounded border ${isEdit ? "border-success/40 text-success" : "border-border text-muted-foreground"}`}
+              >
+                {isEdit ? "完成" : <Edit3Icon className="w-3 h-3" />}
+              </button>
+              <button
+                onClick={() => { removeItem(i); if (editing === i) setEditing(null); }}
+                className="text-[10px] px-1.5 py-0.5 rounded border border-destructive/30 text-destructive"
+                aria-label="删除"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          );
+        })}
+        {abnormal.length === 0 && (
+          <div className="p-4 text-center text-[11px] text-muted-foreground">暂无异常数据，点击右上「新增」可从康复评估中添加</div>
+        )}
       </div>
 
       {/* AI 首程结论 */}
