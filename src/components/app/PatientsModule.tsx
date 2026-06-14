@@ -1374,9 +1374,6 @@ export const PatientChatListSheet = ({
   const totalUnread = DEFAULT_PATIENT_THREADS.reduce((s, t) => s + t.unread, 0);
   return (
     <div className="p-4 space-y-3">
-      <AICard title={`患者沟通 · 未读 ${totalUnread}`}>
-        AI 已对所有患者会话进行情绪与紧急度分析，标红为需优先回复。
-      </AICard>
       <SectionTitle title={`会话列表 · ${DEFAULT_PATIENT_THREADS.length}`} />
       <div className="space-y-2">
         {DEFAULT_PATIENT_THREADS.map(t => {
