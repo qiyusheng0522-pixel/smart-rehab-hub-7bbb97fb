@@ -1429,28 +1429,140 @@ const TEAM_SCHEDULE: { therapist: string; cert: string; items: { time: string; p
 const typeColor = (t: "PT" | "OT" | "ST") =>
   t === "PT" ? "bg-primary/10 text-primary" : t === "OT" ? "bg-secondary-soft text-secondary" : "bg-success-soft text-success";
 
+type ScheduleItem = { time: string; patient: string; bed: string; type: "PT" | "OT" | "ST"; room: string; duration: string };
+
+const TherapistSelfSchedule = () => {
+  const [items, setItems] = useState<ScheduleItem[]>(MY_SCHEDULE);
+  const [editing, setEditing] = useState<number | null>(null);
+
+  const update = (i: number, patch: Partial<ScheduleItem>) =>
+    setItems(prev => prev.map((s, idx) => idx === i ? { ...s, ...patch } : s));
+  const remove = (i: number) => {
+    setItems(prev => prev.filter((_, idx) => idx !== i));
+    if (editing === i) setEditing(null);
+    toast.success("已删除该排班");
+  };
+  const add = () => {
+    const next: ScheduleItem = { time: "17:00", patient: "新患者", bed: "—", type: "PT", room: "A-301", duration: "30 min" };
+    setItems(prev => {
+      const arr = [...prev, next];
+      arr.sort((a, b) => a.time.localeCompare(b.time));
+      return arr;
+    });
+    setEditing(items.length);
+    toast("已新增排班 · 可立即编辑");
+  };
+
+  const sorted = [...items].sort((a, b) => a.time.localeCompare(b.time));
+
+  return (
+    <div className="p-4 space-y-3">
+      <AICard title="今日排班 · 支持自定义修改">
+        共 {items.length} 项治疗 · 可对每项排班修改时间 / 治疗类型 / 训练室 / 时长，或新增、删除排班。
+      </AICard>
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {sorted.map((s) => {
+          const i = items.indexOf(s);
+          const isEdit = editing === i;
+          return (
+            <div key={i} className="px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                {isEdit ? (
+                  <input
+                    value={s.time}
+                    onChange={(e) => update(i, { time: e.target.value })}
+                    className="w-14 text-[12px] font-bold bg-muted rounded px-1.5 py-1 outline-none"
+                  />
+                ) : (
+                  <div className="text-[12px] font-bold w-14 text-foreground">{s.time}</div>
+                )}
+                {isEdit ? (
+                  <select
+                    value={s.type}
+                    onChange={(e) => update(i, { type: e.target.value as "PT" | "OT" | "ST" })}
+                    className={`text-[10px] font-semibold rounded px-1.5 py-1 outline-none ${typeColor(s.type)}`}
+                  >
+                    <option value="PT">PT</option>
+                    <option value="OT">OT</option>
+                    <option value="ST">ST</option>
+                  </select>
+                ) : (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${typeColor(s.type)}`}>{s.type}</span>
+                )}
+                <div className="flex-1 min-w-0">
+                  {isEdit ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        value={s.patient}
+                        onChange={(e) => update(i, { patient: e.target.value })}
+                        placeholder="患者"
+                        className="flex-1 min-w-0 text-[12px] font-semibold bg-muted rounded px-1.5 py-1 outline-none"
+                      />
+                      <input
+                        value={s.bed}
+                        onChange={(e) => update(i, { bed: e.target.value })}
+                        placeholder="床号"
+                        className="w-14 text-[11px] bg-muted rounded px-1.5 py-1 outline-none"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-[12px] font-semibold truncate">
+                      {s.patient} <span className="text-muted-foreground font-normal">· 床 {s.bed}</span>
+                    </div>
+                  )}
+                  {isEdit ? (
+                    <div className="flex items-center gap-1 mt-1">
+                      <input
+                        value={s.room}
+                        onChange={(e) => update(i, { room: e.target.value })}
+                        placeholder="训练室"
+                        className="flex-1 min-w-0 text-[10px] bg-muted rounded px-1.5 py-1 outline-none"
+                      />
+                      <input
+                        value={s.duration}
+                        onChange={(e) => update(i, { duration: e.target.value })}
+                        placeholder="时长"
+                        className="w-20 text-[10px] bg-muted rounded px-1.5 py-1 outline-none"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{s.room} · {s.duration}</div>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setEditing(isEdit ? null : i); if (isEdit) toast.success("排班已更新"); }}
+                  className={`text-[10px] px-2 py-1 rounded border ${isEdit ? "border-success/40 text-success" : "border-border text-muted-foreground"}`}
+                >
+                  {isEdit ? "完成" : "编辑"}
+                </button>
+                <button
+                  onClick={() => remove(i)}
+                  className="text-[10px] px-1.5 py-1 rounded border border-destructive/30 text-destructive"
+                  aria-label="删除"
+                >
+                  删除
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {items.length === 0 && (
+          <div className="p-6 text-center text-[11px] text-muted-foreground">暂无排班，点击下方「新增排班」</div>
+        )}
+      </div>
+      <button
+        onClick={add}
+        className="w-full gradient-therapist text-white rounded-2xl py-3 text-[13px] font-semibold flex items-center justify-center gap-2 shadow-card"
+      >
+        <Plus className="w-4 h-4" /> 新增排班
+      </button>
+    </div>
+  );
+};
+
 const ScheduleView = ({ role }: { role: "therapist" | "lead" }) => {
   if (role === "therapist") {
-    return (
-      <div className="p-4 space-y-3">
-        <AICard title="今日排班 · AI 已优化训练室占用">
-          共 {MY_SCHEDULE.length} 项治疗 · 时间段 09:00 - 16:30。点击单项可查看患者档案。
-        </AICard>
-        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-          {MY_SCHEDULE.map((s, i) => (
-            <div key={i} className="px-4 py-3 flex items-center gap-3">
-              <div className="text-[12px] font-bold w-12 text-foreground">{s.time}</div>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${typeColor(s.type)}`}>{s.type}</span>
-              <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-semibold truncate">{s.patient} <span className="text-muted-foreground font-normal">· 床 {s.bed}</span></div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">{s.room} · {s.duration}</div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <TherapistSelfSchedule />;
   }
   // 治疗师长视图：横向时间 × 纵向人员的矩阵表
   const SLOTS = ["09:00", "09:30", "10:00", "10:30", "11:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:30"];
