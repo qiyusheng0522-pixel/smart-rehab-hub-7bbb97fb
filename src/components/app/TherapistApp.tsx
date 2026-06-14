@@ -367,7 +367,6 @@ export const TherapistApp = () => {
           participants={activeMeeting?.participants ?? ["李医师", "王治疗师", "陈治疗师", "赵护士"]}
           initialMessages={DEFAULT_MEETING_MSGS}
           onAISummary={() => {}}
-          enablePatientReminder
           onClose={() => setSheet("meetingList")}
         />
       </PhoneSheet>
