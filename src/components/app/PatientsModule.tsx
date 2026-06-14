@@ -1783,6 +1783,54 @@ export const FirstNoteSheet = ({ patient, accent }: { patient: Patient | null; a
       <div className="text-[10px] text-muted-foreground text-center pb-2">
         完整数据包含：入院记录、医患问诊单、生命体征趋势、检验/影像、首次评估全量量表
       </div>
+
+      <AlertDialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <AlertDialogContent className="max-w-[360px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-[14px]">
+              <Sparkles className="w-4 h-4 text-ai" /> 从康复评估中选择异常指标
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[11px]">
+              以下为康复评估量表自动识别的异常指标，可勾选追加至首程「异常数据」。未选择则新增空白行手动填写。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="max-h-[280px] overflow-y-auto -mx-2 px-2 space-y-1.5">
+            {REHAB_ABNORMAL_CANDIDATES.map((c, i) => {
+              const existed = abnormal.some(a => a.label === c.label);
+              const sel = picked.has(i);
+              return (
+                <button
+                  key={i}
+                  disabled={existed}
+                  onClick={() => togglePick(i)}
+                  className={`w-full text-left flex items-center gap-2 p-2 rounded-xl border transition-colors ${
+                    existed ? "border-border bg-muted/40 opacity-50 cursor-not-allowed" :
+                    sel ? "border-secondary bg-secondary-soft" : "border-border bg-card"
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${sel ? "bg-secondary border-secondary" : "border-border"}`}>
+                    {sel && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] font-semibold flex items-center gap-1.5">
+                      {c.label}
+                      {existed && <span className="text-[9px] text-muted-foreground">（已添加）</span>}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">参考：{c.ref}</div>
+                  </div>
+                  <span className={`text-[11px] font-bold ${c.level === "high" ? "text-destructive" : "text-warning"}`}>{c.value}</span>
+                </button>
+              );
+            })}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="text-[12px]">取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmAdd} className={`text-[12px] ${accentBg[accent]} text-white`}>
+              {picked.size > 0 ? `添加 ${picked.size} 项` : "新增空白行"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
