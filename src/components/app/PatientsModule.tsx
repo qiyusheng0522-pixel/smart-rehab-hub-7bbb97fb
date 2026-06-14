@@ -1000,11 +1000,16 @@ export const IMChatSheet = ({
               <Sparkles className="w-4 h-4 text-ai" /> 康复医生确认会议结论
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[12px]">
-              以下为 AI 自动生成的会议纪要，确认后将同步至 <b>首次评估 / 康复方案 / 康复医嘱</b>。请康复医生审核：
+              以下为 AI 自动生成的会议纪要，<b>支持二次编辑</b>，确认后将同步至 <b>首次评估 / 康复方案 / 康复医嘱</b>。
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="bg-ai-soft border border-ai/20 rounded-xl p-3 text-[12px] whitespace-pre-line max-h-[200px] overflow-y-auto">
-            {pendingSummary}
+          <textarea
+            value={pendingSummary ?? ""}
+            onChange={(e) => setPendingSummary(e.target.value)}
+            className="w-full bg-ai-soft border border-ai/20 rounded-xl p-3 text-[12px] leading-relaxed whitespace-pre-line min-h-[200px] max-h-[280px] outline-none focus:ring-2 focus:ring-ai/30"
+          />
+          <div className="text-[10px] text-muted-foreground -mt-1 flex items-center gap-1">
+            <Edit3Icon className="w-3 h-3" /> 可直接修改纪要内容后再确认
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-[12px]">暂不更新</AlertDialogCancel>
