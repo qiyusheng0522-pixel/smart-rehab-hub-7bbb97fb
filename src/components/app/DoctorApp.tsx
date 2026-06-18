@@ -72,6 +72,8 @@ import {
   RotateCcw,
   X,
   Camera,
+  Mic,
+  Minus,
 } from "lucide-react";
 
 type SheetKey =
