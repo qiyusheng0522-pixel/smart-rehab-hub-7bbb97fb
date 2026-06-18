@@ -1287,19 +1287,14 @@ const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) 
             const kind = detectInputKind(it.value).kind;
             return (
               <div key={i} className="px-3 py-3 flex flex-col gap-2">
-                <div className="flex items-start gap-2">
-                  <input
-                    value={it.label}
-                    onChange={(e) => update(i, "label", e.target.value)}
-                    className="flex-1 min-w-0 text-[12px] leading-snug bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-0.5"
-                  />
-                  <button onClick={() => removeItem(i)} className="text-destructive p-0.5 shrink-0 -mt-0.5">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <input
+                  value={it.label}
+                  onChange={(e) => update(i, "label", e.target.value)}
+                  className="w-full text-[12px] leading-snug bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-0.5"
+                />
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   {kind === "option" && (
-                    <span className="text-[10px] text-muted-foreground">评分</span>
+                    <span className="text-[10px] text-muted-foreground">单击选中 · 双击取消</span>
                   )}
                   {kind !== "option" && <span />}
                   <div className="shrink-0">
@@ -1310,6 +1305,7 @@ const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) 
             );
           })}
         </div>
+
 
         <SectionTitle
           title="备注"
