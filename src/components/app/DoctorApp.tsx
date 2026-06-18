@@ -1121,18 +1121,18 @@ const SmartScaleInput = ({ value, onChange }: { value: string; onChange: (v: str
     );
   }
   if (k.kind === "option") {
-    // FMA 评分：0 不能 / 1 部分 / 2 完全
+    // FMA 评分：0 不能 / 1 部分 / 2 完全；单击选中，双击/再次单击同项取消
     const presets = [
       { score: 0, label: "不能", full: "不能完成", color: "rose" },
       { score: 1, label: "部分", full: "部分完成", color: "amber" },
       { score: 2, label: "完全", full: "完全完成", color: "emerald" },
     ];
-    const activeColor = presets[k.idx]?.color ?? "muted";
     const ringMap: Record<string, string> = {
       rose: "bg-rose-500 text-white",
       amber: "bg-amber-500 text-white",
       emerald: "bg-emerald-500 text-white",
     };
+    const clear = () => onChange(`?/${k.max}`);
     return (
       <div className="inline-flex items-center bg-muted/60 rounded-full p-0.5 gap-0.5">
         {presets.slice(0, k.max + 1).map((p) => {
@@ -1140,7 +1140,9 @@ const SmartScaleInput = ({ value, onChange }: { value: string; onChange: (v: str
           return (
             <button
               key={p.score}
-              onClick={() => onChange(`${p.score} ${p.full}`)}
+              onClick={() => (active ? clear() : onChange(`${p.score} ${p.full}`))}
+              onDoubleClick={clear}
+              title={active ? "再次单击或双击取消" : p.full}
               className={`flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-semibold transition-all ${
                 active ? ringMap[p.color] + " shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
@@ -1152,20 +1154,37 @@ const SmartScaleInput = ({ value, onChange }: { value: string; onChange: (v: str
             </button>
           );
         })}
-        <span className="sr-only">{activeColor}</span>
       </div>
     );
   }
   if (k.kind === "number") {
     return <Stepper value={k.num} min={0} max={100} onChange={(n) => onChange(String(n))} />;
   }
-  // text + 语音
+  // text + 语音；长按输入框清空
+  const longPress = (() => {
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const start = () => {
+      t = setTimeout(() => {
+        onChange("");
+        toast.success("已清空");
+      }, 650);
+    };
+    const cancel = () => {
+      if (t) {
+        clearTimeout(t);
+        t = null;
+      }
+    };
+    return { onMouseDown: start, onMouseUp: cancel, onMouseLeave: cancel, onTouchStart: start, onTouchEnd: cancel };
+  })();
   return (
     <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="填写内容"
+        placeholder="填写内容（长按清空）"
+        title="长按可清空"
+        {...longPress}
         className="flex-1 min-w-0 max-w-[180px] text-[12px] bg-muted rounded px-2 py-1 text-right"
       />
       <button
