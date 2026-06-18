@@ -1456,7 +1456,7 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
       id: "s-20260321",
       date: "2026/03/21",
       title: "再次评估",
-      docScales: DOCTOR_SCALES.filter((s) => ["fma-full", "vas-full", "nihss", "mrs", "moca"].includes(s.key)).map((s) => ({ ...s, status: "AI 已预填" })),
+      docScales: DOCTOR_SCALES.filter((s) => ["fma-full", "vas-full", "nihss", "mrs", "moca"].includes(s.key)).map((s) => ({ ...s, status: "AI 已预填" as ScaleStatus })),
       extraScales: THERAPIST_SCALE_LIB.filter((s) => ["fma", "mbi", "berg"].includes(s.key)),
     },
     {
