@@ -354,21 +354,18 @@ export const DoctorApp = () => {
                 const stage = getPatientStage(pickedPatient);
                 const noteAct = { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") };
                 let acts: any[] = [];
-                if (stage === "院前") {
-                  if (pickedPatient.needFirstAssess) acts.push({ key: "assess", label: "开始评估", icon: ClipboardCheck, onClick: () => setSheet("assess") });
-                  else acts.push({ key: "assess", label: "查看评估", icon: ClipboardCheck, onClick: () => setSheet("assess") });
-                  if (!pickedPatient.needPlanConfirm) acts.push({ key: "plan", label: "查看方案", icon: FileText, onClick: () => setSheet("plan") });
-                  if (!pickedPatient.needRxConfirm) acts.push({ key: "rx", label: "查看医嘱", icon: Sparkles, onClick: () => setSheet("rx") });
-                } else if (stage === "待出院") {
+                if (stage === "待出院") {
                   // 待出院：仅查看详情 + 备注，无其他操作
                   acts = [];
-                } else if (stage === "院中") {
-                  acts = [
-                    { key: "assess", label: "查看评估", icon: ClipboardCheck, onClick: () => setSheet("assess") },
-                    { key: "plan", label: "查看方案", icon: FileText, onClick: () => setSheet("plan") },
-                    { key: "rx", label: "查看医嘱", icon: Sparkles, onClick: () => setSheet("rx") },
-                    { key: "discharge-plan", label: "计划出院", icon: LogOut, onClick: () => setDischargePlanOpen(true) },
-                  ];
+                } else {
+                  // 院前 / 院中 统一展示：首评 / 方案 / 医嘱
+                  const assessLabel = pickedPatient.needFirstAssess ? "首次评估" : "查看评估";
+                  acts.push({ key: "assess", label: assessLabel, icon: ClipboardCheck, onClick: () => setSheet("assess") });
+                  acts.push({ key: "plan", label: pickedPatient.needPlanConfirm ? "确认方案" : "查看方案", icon: FileText, onClick: () => setSheet("plan") });
+                  acts.push({ key: "rx", label: pickedPatient.needRxConfirm ? "确认医嘱" : "查看医嘱", icon: Sparkles, onClick: () => setSheet("rx") });
+                  if (stage === "院中") {
+                    acts.push({ key: "discharge-plan", label: "计划出院", icon: LogOut, onClick: () => setDischargePlanOpen(true) });
+                  }
                 }
                 acts.push(noteAct);
                 return <PatientActionsBar accent="doctor" actions={acts} />;
