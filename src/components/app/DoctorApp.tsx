@@ -1449,96 +1449,185 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<EvalTabKey>("clinical");
 
-  const [docScales, setDocScales] = useState<Scale[]>(DOCTOR_SCALES);
-  const [extraScales, setExtraScales] = useState<Scale[]>(THERAPIST_SCALE_LIB.filter((s) => s.status !== "待填写"));
-  const [showLib, setShowLib] = useState(false);
+  // 每次评估为一个 session，按时间倒序展示（风琴）
+  type AssessSession = { id: string; date: string; title: string; docScales: Scale[]; extraScales: Scale[] };
+  const initialSessions: AssessSession[] = [
+    {
+      id: "s-20260321",
+      date: "2026/03/21",
+      title: "再次评估",
+      docScales: DOCTOR_SCALES.filter((s) => ["fma-full", "vas-full", "nihss", "mrs", "moca"].includes(s.key)).map((s) => ({ ...s, status: "AI 已预填" })),
+      extraScales: THERAPIST_SCALE_LIB.filter((s) => ["fma", "mbi", "berg"].includes(s.key)),
+    },
+    {
+      id: "s-20260221",
+      date: "2026/02/21",
+      title: "首次评估",
+      docScales: DOCTOR_SCALES,
+      extraScales: THERAPIST_SCALE_LIB.filter((s) => s.status !== "待填写"),
+    },
+  ];
+  const [sessions, setSessions] = useState<AssessSession[]>(initialSessions);
+  const [openSession, setOpenSession] = useState<string>(initialSessions[0].id);
+  const [showLib, setShowLib] = useState<string | null>(null); // session id with library open
   const [libRole, setLibRole] = useState<ScaleRole | "ALL">("ALL");
   const [viewing, setViewing] = useState<Scale | null>(null);
 
-  const addScale = (s: Scale) => {
-    if (extraScales.find((x) => x.key === s.key)) { toast("该量表已添加"); return; }
-    setExtraScales([...extraScales, s]);
+  const updateSession = (id: string, patch: Partial<AssessSession>) =>
+    setSessions((arr) => arr.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  const addScale = (sid: string, s: Scale) => {
+    const ss = sessions.find((x) => x.id === sid);
+    if (!ss) return;
+    if (ss.extraScales.find((x) => x.key === s.key)) { toast("该量表已添加"); return; }
+    updateSession(sid, { extraScales: [...ss.extraScales, s] });
     toast.success(`已加入「${s.name}」`);
   };
-  const removeScale = (k: string) => setExtraScales(extraScales.filter((x) => x.key !== k));
-  const viewScale = (s: Scale) => setViewing(s);
+  const removeExtra = (sid: string, k: string) => {
+    const ss = sessions.find((x) => x.id === sid);
+    if (!ss) return;
+    updateSession(sid, { extraScales: ss.extraScales.filter((x) => x.key !== k) });
+  };
+  const removeDoc = (sid: string, k: string) => {
+    const ss = sessions.find((x) => x.id === sid);
+    if (!ss) return;
+    updateSession(sid, { docScales: ss.docScales.filter((x) => x.key !== k) });
+  };
+
+  const addNewSession = () => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const date = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
+    const id = `s-${now.getTime()}`;
+    const ns: AssessSession = { id, date, title: "再次评估", docScales: [], extraScales: [] };
+    setSessions([ns, ...sessions]);
+    setOpenSession(id);
+    toast.success("已新增评估记录，请添加量表");
+  };
 
   const libList = THERAPIST_SCALE_LIB.filter((s) => libRole === "ALL" || s.role === libRole);
-  const completedCount = [...docScales, ...extraScales].filter((s) => s.status !== "待填写").length;
-  const totalCount = docScales.length + extraScales.length;
+  const latest = sessions[0];
+  const completedCount = [...latest.docScales, ...latest.extraScales].filter((s) => s.status !== "待填写").length;
+  const totalCount = latest.docScales.length + latest.extraScales.length;
 
   const scalesBlock = (
     <>
-      <SectionTitle title={`医师评估量表 · ${docScales.length}`} extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount}</span>} />
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        {docScales.map((s) => (
-          <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => setDocScales(docScales.filter((x) => x.key !== s.key))} />
-        ))}
-      </div>
-
       <SectionTitle
-        title={`补充评估量表 · ${extraScales.length}`}
-        extra={<button onClick={() => setShowLib(!showLib)} className="text-[11px] font-semibold text-primary flex items-center gap-1"><Plus className="w-3 h-3" />{showLib ? "收起量表库" : "从量表库添加"}</button>}
+        title={`评估记录 · ${sessions.length}`}
+        extra={
+          <button onClick={addNewSession} className="text-[11px] font-semibold text-primary flex items-center gap-1">
+            <Plus className="w-3 h-3" />再次评估
+          </button>
+        }
       />
-      {extraScales.length > 0 ? (
-        <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-          {extraScales.map((s) => (
-            <ScaleRow key={s.key} s={s} onView={() => viewScale(s)} onRemove={() => removeScale(s.key)} />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-muted/40 rounded-2xl p-4 text-[11px] text-muted-foreground text-center">
-          暂未添加治疗师量表，可点击「从量表库添加」补充 PT / OT / ST 量表
-        </div>
-      )}
+      <div className="text-[10px] text-muted-foreground -mt-1 px-1">最近一次（{latest.date}）已完成 {completedCount}/{totalCount}</div>
 
-      {showLib && (
-        <div className="bg-card rounded-2xl shadow-card overflow-hidden">
-          <div className="px-4 pt-3 pb-2 border-b border-border/60">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[12px] font-semibold flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />治疗师量表库</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">含 PT / OT / ST 共 {THERAPIST_SCALE_LIB.length} 份</div>
-              </div>
-              <button onClick={() => setShowLib(false)} className="text-[11px] text-muted-foreground">关闭</button>
-            </div>
-            <div className="mt-2 flex gap-1 bg-muted rounded-full p-1 w-fit">
-              {(["ALL", "PT", "OT", "ST"] as const).map((r) => {
-                const active = libRole === r;
-                return (
-                  <button key={r} onClick={() => setLibRole(r)} className={`text-[11px] px-3 py-1 rounded-full font-semibold ${active ? "gradient-doctor text-white" : "text-foreground/70"}`}>
-                    {r === "ALL" ? "全部" : r}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div className="max-h-[280px] overflow-y-auto divide-y divide-border/60">
-            {libList.map((s) => {
-              const added = !!extraScales.find((x) => x.key === s.key);
-              const role = ROLE_BADGE[s.role];
-              return (
-                <button key={s.key} onClick={() => !added && addScale(s)} className="w-full px-4 py-2.5 flex items-start gap-2 text-left active:bg-muted/40">
+      <Accordion type="single" collapsible value={openSession} onValueChange={(v) => setOpenSession(v)} className="space-y-2">
+        {sessions.map((ss, idx) => {
+          const total = ss.docScales.length + ss.extraScales.length;
+          const done = [...ss.docScales, ...ss.extraScales].filter((s) => s.status !== "待填写").length;
+          const libOpen = showLib === ss.id;
+          return (
+            <AccordionItem key={ss.id} value={ss.id} className="bg-card rounded-2xl shadow-card border-0 overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                <div className="flex-1 flex items-center gap-2 text-left">
+                  <div className="w-9 h-9 rounded-xl gradient-doctor text-white flex items-center justify-center text-[10px] font-bold leading-tight text-center">
+                    {ss.date.slice(5)}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[12px] font-semibold">{s.name}</span>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}{s.direction ? `-${s.direction}方向` : ""}</span>
-                      {s.recommended && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />推荐</span>)}
+                      <span className="text-[13px] font-semibold">{ss.title}</span>
+                      {idx === 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary-soft text-primary font-semibold">最新</span>}
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{s.brief}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">{ss.date} · 已完成 {done}/{total} 份</div>
                   </div>
-                  <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${added ? "bg-success-soft text-success" : "gradient-doctor text-white"}`}>
-                    {added ? "已添加" : "+ 添加"}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                <div className="px-4 pt-1 pb-3 space-y-3 border-t border-border/60">
+                  <div>
+                    <div className="text-[11px] font-semibold text-foreground/70 mt-2 mb-1.5">医师评估量表 · {ss.docScales.length}</div>
+                    {ss.docScales.length > 0 ? (
+                      <div className="bg-muted/40 rounded-xl divide-y divide-border/60 overflow-hidden">
+                        {ss.docScales.map((s) => (
+                          <ScaleRow key={s.key} s={s} onView={() => setViewing(s)} onRemove={() => removeDoc(ss.id, s.key)} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-muted/40 rounded-xl p-3 text-[11px] text-muted-foreground text-center">暂无医师量表</div>
+                    )}
+                  </div>
 
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="text-[11px] font-semibold text-foreground/70">补充评估量表 · {ss.extraScales.length}</div>
+                      <button onClick={() => setShowLib(libOpen ? null : ss.id)} className="text-[11px] font-semibold text-primary flex items-center gap-1">
+                        <Plus className="w-3 h-3" />{libOpen ? "收起量表库" : "从量表库添加"}
+                      </button>
+                    </div>
+                    {ss.extraScales.length > 0 ? (
+                      <div className="bg-muted/40 rounded-xl divide-y divide-border/60 overflow-hidden">
+                        {ss.extraScales.map((s) => (
+                          <ScaleRow key={s.key} s={s} onView={() => setViewing(s)} onRemove={() => removeExtra(ss.id, s.key)} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-muted/40 rounded-xl p-3 text-[11px] text-muted-foreground text-center">
+                        暂未添加治疗师量表
+                      </div>
+                    )}
+
+                    {libOpen && (
+                      <div className="mt-2 bg-background rounded-xl border border-border/60 overflow-hidden">
+                        <div className="px-3 pt-2.5 pb-2 border-b border-border/60">
+                          <div className="flex items-center justify-between">
+                            <div className="text-[12px] font-semibold flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />治疗师量表库</div>
+                            <button onClick={() => setShowLib(null)} className="text-[11px] text-muted-foreground">关闭</button>
+                          </div>
+                          <div className="mt-2 flex gap-1 bg-muted rounded-full p-1 w-fit">
+                            {(["ALL", "PT", "OT", "ST"] as const).map((r) => {
+                              const active = libRole === r;
+                              return (
+                                <button key={r} onClick={() => setLibRole(r)} className={`text-[11px] px-3 py-1 rounded-full font-semibold ${active ? "gradient-doctor text-white" : "text-foreground/70"}`}>
+                                  {r === "ALL" ? "全部" : r}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div className="max-h-[260px] overflow-y-auto divide-y divide-border/60">
+                          {libList.map((s) => {
+                            const added = !!ss.extraScales.find((x) => x.key === s.key);
+                            const role = ROLE_BADGE[s.role];
+                            return (
+                              <button key={s.key} onClick={() => !added && addScale(ss.id, s)} className="w-full px-3 py-2 flex items-start gap-2 text-left active:bg-muted/40">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[12px] font-semibold">{s.name}</span>
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}{s.direction ? `-${s.direction}方向` : ""}</span>
+                                    {s.recommended && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />推荐</span>)}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground mt-0.5">{s.brief}</div>
+                                </div>
+                                <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${added ? "bg-success-soft text-success" : "gradient-doctor text-white"}`}>
+                                  {added ? "已添加" : "+ 添加"}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
     </>
   );
+
 
   const aiRehabConclusion = (
     <AICard
