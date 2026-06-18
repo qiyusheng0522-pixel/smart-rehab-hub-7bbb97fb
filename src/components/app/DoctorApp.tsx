@@ -1244,33 +1244,58 @@ const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) 
           }
         />
         <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-          {items.map((it, i) => (
-            <div key={i} className="px-3 py-2.5 flex items-center gap-2">
-              <input
-                value={it.label}
-                onChange={(e) => update(i, "label", e.target.value)}
-                className="flex-1 min-w-0 text-[12px] bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-1"
-              />
-              <input
-                value={it.value}
-                onChange={(e) => update(i, "value", e.target.value)}
-                placeholder="评分"
-                className="w-24 text-[12px] bg-muted rounded px-2 py-1 text-right"
-              />
-              <button onClick={() => removeItem(i)} className="text-[10px] text-destructive p-1">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
+          {items.map((it, i) => {
+            const kind = detectInputKind(it.value).kind;
+            const isText = kind === "text";
+            return (
+              <div key={i} className={`px-3 py-2.5 gap-2 ${isText ? "flex flex-col" : "flex items-center"}`}>
+                <div className={`flex items-center gap-2 ${isText ? "w-full" : "flex-1 min-w-0"}`}>
+                  <input
+                    value={it.label}
+                    onChange={(e) => update(i, "label", e.target.value)}
+                    className="flex-1 min-w-0 text-[12px] bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-1"
+                  />
+                  <button onClick={() => removeItem(i)} className="text-[10px] text-destructive p-1 shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className={isText ? "w-full flex" : "shrink-0"}>
+                  <SmartScaleInput value={it.value} onChange={(v) => update(i, "value", v)} />
+                </div>
+                {kind === "option" && (
+                  <div className="text-[10px] text-muted-foreground italic shrink-0 max-w-[120px] truncate hidden sm:block">
+                    {(detectInputKind(it.value) as { desc?: string }).desc}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        <SectionTitle title="备注" />
+        <SectionTitle
+          title="备注"
+          extra={
+            <button
+              onClick={() => {
+                toast.loading("语音识别中…", { id: "asr-note" });
+                setTimeout(() => {
+                  setNote((note ? note + " " : "") + "（语音录入）患者配合良好，整体状态平稳。");
+                  toast.success("已识别", { id: "asr-note" });
+                }, 1200);
+              }}
+              className="text-[11px] text-primary font-semibold flex items-center gap-0.5"
+            >
+              <Mic className="w-3 h-3" />语音输入
+            </button>
+          }
+        />
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="补充说明、配合度、特殊情况..."
+          placeholder="补充说明、配合度、特殊情况...（支持点击右上角语音输入）"
           className="w-full text-[12px] bg-card rounded-2xl shadow-card p-3 min-h-[80px] resize-none"
         />
+
       </div>
 
       <div className="absolute left-0 right-0 bottom-0 bg-card/95 backdrop-blur-xl border-t border-border/60 px-4 py-3 pb-6 flex gap-2">
