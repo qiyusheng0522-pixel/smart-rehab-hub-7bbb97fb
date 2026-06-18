@@ -72,6 +72,8 @@ import {
   RotateCcw,
   X,
   Camera,
+  Mic,
+  Minus,
 } from "lucide-react";
 
 type SheetKey =
@@ -1044,6 +1046,132 @@ const SCALE_ITEM_TEMPLATES: Record<string, { label: string; value: string }[]> =
   ],
 };
 
+/* ===== 量表条目智能输入：根据 value 推断类型，提供分段/步进/语音等不同交互 ===== */
+type ScaleInputKind =
+  | { kind: "fraction"; num: number; denom: number }
+  | { kind: "score"; num: number; max: number; suffix: string }
+  | { kind: "option"; idx: number; max: number; desc: string }
+  | { kind: "number"; num: number }
+  | { kind: "text" };
+
+const detectInputKind = (value: string): ScaleInputKind => {
+  const v = (value ?? "").trim();
+  let m: RegExpMatchArray | null;
+  // 分数：3/5、50 / 100 分
+  m = v.match(/^(\d+)\s*\/\s*(\d+)\b/);
+  if (m) return { kind: "fraction", num: +m[1], denom: +m[2] };
+  // 分制：5 分 · 高危  或  3 分
+  m = v.match(/^(\d+)\s*分\b(.*)$/);
+  if (m) return { kind: "score", num: +m[1], max: 100, suffix: m[2]?.trim() ?? "" };
+  // 选项制：0/1/2 + 说明（如 "1 部分完成"、"2 能引起反射活动"）
+  m = v.match(/^([0-3])\s+(\S.*)$/);
+  if (m) return { kind: "option", idx: +m[1], max: 2, desc: m[2] };
+  // 纯数字
+  if (/^\d+$/.test(v)) return { kind: "number", num: +v };
+  return { kind: "text" };
+};
+
+const Stepper = ({ value, min, max, onChange, suffix }: { value: number; min: number; max: number; onChange: (n: number) => void; suffix?: string }) => (
+  <div className="flex items-center gap-1.5 bg-muted rounded-lg px-1.5 py-0.5">
+    <button onClick={() => onChange(Math.max(min, value - 1))} className="w-6 h-6 rounded-md bg-card shadow-sm flex items-center justify-center active:scale-95">
+      <Minus className="w-3 h-3" />
+    </button>
+    <input
+      type="number"
+      value={value}
+      onChange={(e) => {
+        const n = parseInt(e.target.value || "0", 10);
+        onChange(Math.max(min, Math.min(max, isNaN(n) ? 0 : n)));
+      }}
+      className="w-9 bg-transparent text-center text-[12px] font-semibold outline-none"
+    />
+    {suffix && <span className="text-[10px] text-muted-foreground">{suffix}</span>}
+    <button onClick={() => onChange(Math.min(max, value + 1))} className="w-6 h-6 rounded-md bg-card shadow-sm flex items-center justify-center active:scale-95">
+      <Plus className="w-3 h-3" />
+    </button>
+  </div>
+);
+
+const SmartScaleInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
+  const k = detectInputKind(value);
+  const [listening, setListening] = useState(false);
+
+  if (k.kind === "fraction") {
+    return (
+      <div className="flex items-center gap-1">
+        <input
+          type="number"
+          value={k.num}
+          onChange={(e) => {
+            const n = Math.max(0, Math.min(k.denom, parseInt(e.target.value || "0", 10) || 0));
+            onChange(`${n}/${k.denom}`);
+          }}
+          className="w-10 bg-muted rounded px-1 py-1 text-right text-[12px] font-semibold"
+        />
+        <span className="text-[11px] text-muted-foreground">/ {k.denom}</span>
+      </div>
+    );
+  }
+  if (k.kind === "score") {
+    return (
+      <div className="flex items-center gap-1">
+        <Stepper value={k.num} min={0} max={k.max} onChange={(n) => onChange(`${n} 分${k.suffix ? " " + k.suffix : ""}`)} suffix="分" />
+      </div>
+    );
+  }
+  if (k.kind === "option") {
+    return (
+      <div className="flex items-center gap-1">
+        {Array.from({ length: k.max + 1 }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => onChange(`${i} ${k.desc}`)}
+            className={`w-6 h-6 rounded-md text-[11px] font-bold transition-colors ${
+              i === k.idx ? "bg-primary text-white shadow-sm" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {i}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  if (k.kind === "number") {
+    return <Stepper value={k.num} min={0} max={100} onChange={(n) => onChange(String(n))} />;
+  }
+  // text + 语音
+  return (
+    <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="填写内容"
+        className="flex-1 min-w-0 max-w-[180px] text-[12px] bg-muted rounded px-2 py-1 text-right"
+      />
+      <button
+        onClick={() => {
+          if (listening) return;
+          setListening(true);
+          toast.loading("语音识别中…", { id: "asr" });
+          setTimeout(() => {
+            setListening(false);
+            const stub = "（语音录入）患者配合良好，活动稍受限";
+            onChange(value ? `${value} ${stub}` : stub);
+            toast.success("已识别", { id: "asr" });
+          }, 1200);
+        }}
+        className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
+          listening ? "bg-destructive text-white animate-pulse" : "bg-primary-soft text-primary"
+        }`}
+        title="语音输入"
+      >
+        <Mic className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+};
+
+
 const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) => {
   const initial = SCALE_ITEM_TEMPLATES[scale.key] ?? [
     { label: "条目 1", value: "" },
@@ -1116,33 +1244,58 @@ const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) 
           }
         />
         <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-          {items.map((it, i) => (
-            <div key={i} className="px-3 py-2.5 flex items-center gap-2">
-              <input
-                value={it.label}
-                onChange={(e) => update(i, "label", e.target.value)}
-                className="flex-1 min-w-0 text-[12px] bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-1"
-              />
-              <input
-                value={it.value}
-                onChange={(e) => update(i, "value", e.target.value)}
-                placeholder="评分"
-                className="w-24 text-[12px] bg-muted rounded px-2 py-1 text-right"
-              />
-              <button onClick={() => removeItem(i)} className="text-[10px] text-destructive p-1">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
+          {items.map((it, i) => {
+            const kind = detectInputKind(it.value).kind;
+            const isText = kind === "text";
+            return (
+              <div key={i} className={`px-3 py-2.5 gap-2 ${isText ? "flex flex-col" : "flex items-center"}`}>
+                <div className={`flex items-center gap-2 ${isText ? "w-full" : "flex-1 min-w-0"}`}>
+                  <input
+                    value={it.label}
+                    onChange={(e) => update(i, "label", e.target.value)}
+                    className="flex-1 min-w-0 text-[12px] bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-1"
+                  />
+                  <button onClick={() => removeItem(i)} className="text-[10px] text-destructive p-1 shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className={isText ? "w-full flex" : "shrink-0"}>
+                  <SmartScaleInput value={it.value} onChange={(v) => update(i, "value", v)} />
+                </div>
+                {kind === "option" && (
+                  <div className="text-[10px] text-muted-foreground italic shrink-0 max-w-[120px] truncate hidden sm:block">
+                    {(detectInputKind(it.value) as { desc?: string }).desc}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        <SectionTitle title="备注" />
+        <SectionTitle
+          title="备注"
+          extra={
+            <button
+              onClick={() => {
+                toast.loading("语音识别中…", { id: "asr-note" });
+                setTimeout(() => {
+                  setNote((note ? note + " " : "") + "（语音录入）患者配合良好，整体状态平稳。");
+                  toast.success("已识别", { id: "asr-note" });
+                }, 1200);
+              }}
+              className="text-[11px] text-primary font-semibold flex items-center gap-0.5"
+            >
+              <Mic className="w-3 h-3" />语音输入
+            </button>
+          }
+        />
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="补充说明、配合度、特殊情况..."
+          placeholder="补充说明、配合度、特殊情况...（支持点击右上角语音输入）"
           className="w-full text-[12px] bg-card rounded-2xl shadow-card p-3 min-h-[80px] resize-none"
         />
+
       </div>
 
       <div className="absolute left-0 right-0 bottom-0 bg-card/95 backdrop-blur-xl border-t border-border/60 px-4 py-3 pb-6 flex gap-2">
