@@ -814,6 +814,8 @@ type Scale = {
 
 // AI 基于该患者（急性缺血性卒中、中度 NIHSS、右侧偏瘫）优先推荐的医师量表
 const DOCTOR_SCALES: Scale[] = [
+  { key: "fma-full", name: "简化 Fugl-Meyer 运动功能评测", role: "doctor", brief: "上肢 33 项 + 下肢 17 项 · 共 100 分", result: "上肢 32 / 下肢 18 · 共 50 分", status: "AI 已预填", recommended: true, direction: "神经" },
+  { key: "vas-full", name: "VAS 视觉模拟疼痛评分", role: "doctor", brief: "0–10 分疼痛自评 · 划线法", result: "3 分 · 轻微疼痛", status: "AI 已预填", recommended: true },
   { key: "nihss", name: "NIHSS 卒中量表", role: "doctor", brief: "急性卒中严重程度", result: "14 分 · 中度", status: "AI 已预填", recommended: true, direction: "神经" },
   { key: "mrs", name: "mRS 改良 Rankin", role: "doctor", brief: "残疾程度 / 日常生活能力", result: "4 级 · 中重度残疾", status: "AI 已预填", recommended: true, direction: "神经" },
   { key: "morse", name: "Morse 跌倒风险", role: "doctor", brief: "跌倒分层", result: "高 55 分", status: "AI 已预填", recommended: true },
