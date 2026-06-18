@@ -1120,25 +1120,38 @@ const SmartScaleInput = ({ value, onChange }: { value: string; onChange: (v: str
     );
   }
   if (k.kind === "option") {
-    // FMA 评分约定：0 不能完成 / 1 部分完成 / 2 完全完成
+    // FMA 评分：0 不能 / 1 部分 / 2 完全
     const presets = [
-      { label: "不能", full: "不能完成", cls: "bg-rose-100 text-rose-600 border-rose-200", active: "bg-rose-500 text-white border-rose-500" },
-      { label: "部分", full: "部分完成", cls: "bg-amber-100 text-amber-600 border-amber-200", active: "bg-amber-500 text-white border-amber-500" },
-      { label: "完成", full: "完全完成", cls: "bg-emerald-100 text-emerald-600 border-emerald-200", active: "bg-emerald-500 text-white border-emerald-500" },
+      { score: 0, label: "不能", full: "不能完成", color: "rose" },
+      { score: 1, label: "部分", full: "部分完成", color: "amber" },
+      { score: 2, label: "完全", full: "完全完成", color: "emerald" },
     ];
+    const activeColor = presets[k.idx]?.color ?? "muted";
+    const ringMap: Record<string, string> = {
+      rose: "bg-rose-500 text-white",
+      amber: "bg-amber-500 text-white",
+      emerald: "bg-emerald-500 text-white",
+    };
     return (
-      <div className="flex items-center gap-1">
-        {presets.slice(0, k.max + 1).map((p, i) => (
-          <button
-            key={i}
-            onClick={() => onChange(`${i} ${p.full}`)}
-            className={`px-2 h-7 rounded-md text-[11px] font-semibold border transition-all ${
-              i === k.idx ? p.active + " shadow-sm" : p.cls
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
+      <div className="inline-flex items-center bg-muted/60 rounded-full p-0.5 gap-0.5">
+        {presets.slice(0, k.max + 1).map((p) => {
+          const active = p.score === k.idx;
+          return (
+            <button
+              key={p.score}
+              onClick={() => onChange(`${p.score} ${p.full}`)}
+              className={`flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-semibold transition-all ${
+                active ? ringMap[p.color] + " shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span className={`inline-flex w-4 h-4 items-center justify-center rounded-full text-[10px] font-bold ${
+                active ? "bg-white/25" : "bg-card border border-border"
+              }`}>{p.score}</span>
+              <span>{p.label}</span>
+            </button>
+          );
+        })}
+        <span className="sr-only">{activeColor}</span>
       </div>
     );
   }
