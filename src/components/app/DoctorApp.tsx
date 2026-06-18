@@ -1120,17 +1120,23 @@ const SmartScaleInput = ({ value, onChange }: { value: string; onChange: (v: str
     );
   }
   if (k.kind === "option") {
+    // FMA 评分约定：0 不能完成 / 1 部分完成 / 2 完全完成
+    const presets = [
+      { label: "不能", full: "不能完成", cls: "bg-rose-100 text-rose-600 border-rose-200", active: "bg-rose-500 text-white border-rose-500" },
+      { label: "部分", full: "部分完成", cls: "bg-amber-100 text-amber-600 border-amber-200", active: "bg-amber-500 text-white border-amber-500" },
+      { label: "完成", full: "完全完成", cls: "bg-emerald-100 text-emerald-600 border-emerald-200", active: "bg-emerald-500 text-white border-emerald-500" },
+    ];
     return (
       <div className="flex items-center gap-1">
-        {Array.from({ length: k.max + 1 }).map((_, i) => (
+        {presets.slice(0, k.max + 1).map((p, i) => (
           <button
             key={i}
-            onClick={() => onChange(`${i} ${k.desc}`)}
-            className={`w-6 h-6 rounded-md text-[11px] font-bold transition-colors ${
-              i === k.idx ? "bg-primary text-white shadow-sm" : "bg-muted text-muted-foreground"
+            onClick={() => onChange(`${i} ${p.full}`)}
+            className={`px-2 h-7 rounded-md text-[11px] font-semibold border transition-all ${
+              i === k.idx ? p.active + " shadow-sm" : p.cls
             }`}
           >
-            {i}
+            {p.label}
           </button>
         ))}
       </div>
