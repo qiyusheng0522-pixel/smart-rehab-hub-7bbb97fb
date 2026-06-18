@@ -1055,6 +1055,9 @@ type ScaleInputKind =
 const detectInputKind = (value: string): ScaleInputKind => {
   const v = (value ?? "").trim();
   let m: RegExpMatchArray | null;
+  // 未评的选项制（双击取消后保留入口）：?/2
+  m = v.match(/^\?\s*\/\s*(\d+)$/);
+  if (m) return { kind: "option", idx: -1, max: +m[1], desc: "" };
   // 分数：3/5、50 / 100 分
   m = v.match(/^(\d+)\s*\/\s*(\d+)\b/);
   if (m) return { kind: "fraction", num: +m[1], denom: +m[2] };
