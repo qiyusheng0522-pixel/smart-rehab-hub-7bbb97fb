@@ -1265,27 +1265,27 @@ const ScaleDetail = ({ scale, onClose }: { scale: Scale; onClose: () => void }) 
         <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
           {items.map((it, i) => {
             const kind = detectInputKind(it.value).kind;
-            const isText = kind === "text";
             return (
-              <div key={i} className={`px-3 py-2.5 gap-2 ${isText ? "flex flex-col" : "flex items-center"}`}>
-                <div className={`flex items-center gap-2 ${isText ? "w-full" : "flex-1 min-w-0"}`}>
+              <div key={i} className="px-3 py-3 flex flex-col gap-2">
+                <div className="flex items-start gap-2">
                   <input
                     value={it.label}
                     onChange={(e) => update(i, "label", e.target.value)}
-                    className="flex-1 min-w-0 text-[12px] bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-1"
+                    className="flex-1 min-w-0 text-[12px] leading-snug bg-transparent border-b border-transparent focus:border-primary/40 outline-none py-0.5"
                   />
-                  <button onClick={() => removeItem(i)} className="text-[10px] text-destructive p-1 shrink-0">
+                  <button onClick={() => removeItem(i)} className="text-destructive p-0.5 shrink-0 -mt-0.5">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className={isText ? "w-full flex" : "shrink-0"}>
-                  <SmartScaleInput value={it.value} onChange={(v) => update(i, "value", v)} />
-                </div>
-                {kind === "option" && (
-                  <div className="text-[10px] text-muted-foreground italic shrink-0 max-w-[120px] truncate hidden sm:block">
-                    {(detectInputKind(it.value) as { desc?: string }).desc}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  {kind === "option" && (
+                    <span className="text-[10px] text-muted-foreground">评分</span>
+                  )}
+                  {kind !== "option" && <span />}
+                  <div className="shrink-0">
+                    <SmartScaleInput value={it.value} onChange={(v) => update(i, "value", v)} />
                   </div>
-                )}
+                </div>
               </div>
             );
           })}
