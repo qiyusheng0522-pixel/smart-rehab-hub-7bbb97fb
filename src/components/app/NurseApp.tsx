@@ -260,7 +260,7 @@ export const NurseApp = () => {
       <PhoneSheet open={sheet === "confirmAssess"} onClose={close} title={`首次评估${activePatient ? " · " + activePatient : ""}`} accent="nurse"
         footer={<div className="flex gap-3">
           <button onClick={() => { setActiveMeeting(null); setSheet("meeting"); }} className="flex-1 border border-primary/60 text-primary bg-card rounded-full py-3 text-sm font-semibold">团队会议评估</button>
-          <button onClick={() => { toast.success("首次评估已确认 · 已同步医师 / 治疗师"); if (intake.step === 3) setIntake({ ...intake, step: 4 }); close(); }} className="flex-1 gradient-nurse text-white rounded-full py-3 text-sm font-semibold shadow-card">确认首次评估</button>
+          <button onClick={() => { toast.success("首次评估已确认 · 已同步医师 / 治疗师"); close(); }} className="flex-1 gradient-nurse text-white rounded-full py-3 text-sm font-semibold shadow-card">确认首次评估</button>
         </div>}>
         <NurseFirstAssessSheet patient={activePatient} />
       </PhoneSheet>
