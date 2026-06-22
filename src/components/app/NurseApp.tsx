@@ -458,6 +458,88 @@ export const NurseApp = () => {
   );
 };
 
+/* ============== 入院工作流：步骤按钮 / 扫单 / 床位 ============== */
+type IntakeState = { name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 };
+
+const IntakeStep = ({
+  n, icon: Icon, label, active, done, disabled, onClick,
+}: { n: number; icon: typeof BedDouble; label: string; active?: boolean; done?: boolean; disabled?: boolean; onClick: () => void }) => {
+  const tone = done
+    ? "border-success bg-success/10 text-success"
+    : active
+    ? "border-role-nurse bg-rose-50 text-role-nurse"
+    : disabled
+    ? "border-border bg-muted/40 text-muted-foreground"
+    : "border-border bg-card text-foreground/70";
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-xl border-2 px-2 py-2.5 flex flex-col items-center gap-1 transition-all active:scale-[0.98] disabled:cursor-not-allowed ${tone}`}
+    >
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] font-bold opacity-80">{done ? "✓" : n}</span>
+        <Icon className="w-4 h-4" />
+      </div>
+      <span className="text-[11px] font-semibold">{label}</span>
+    </button>
+  );
+};
+
+const IntakeScanSheet = ({ intake, onChange }: { intake: IntakeState; onChange: (v: IntakeState) => void }) => (
+  <div className="p-4 space-y-3">
+    <div className="rounded-2xl gradient-nurse text-white p-5">
+      <div className="text-xs opacity-80">扫描入院单</div>
+      <div className="text-lg font-bold mt-1">对准入院单二维码 / 条码</div>
+      <div className="text-[11px] opacity-90 mt-1">支持纸质入院单、HIS 二维码</div>
+    </div>
+    <div className="bg-card rounded-2xl shadow-card border-2 border-dashed border-role-nurse/40 h-40 flex flex-col items-center justify-center text-muted-foreground gap-2">
+      <ScanLine className="w-10 h-10 text-role-nurse animate-pulse" />
+      <span className="text-[12px]">取景框</span>
+    </div>
+    <AICard title="AI 识别结果（可编辑）">扫描完成后将自动填充以下字段，可手动修改。</AICard>
+    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+      <FormRow label="姓名" value={<input value={intake.name} onChange={e => onChange({ ...intake, name: e.target.value })} placeholder="王秀英" className="w-28 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+      <FormRow label="性别" value={<input value={intake.sex} onChange={e => onChange({ ...intake, sex: e.target.value })} placeholder="女" className="w-16 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+      <FormRow label="年龄" value={<input value={intake.age} onChange={e => onChange({ ...intake, age: e.target.value })} placeholder="68" className="w-16 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+      <FormRow label="入院诊断" value={<input value={intake.diagnosis} onChange={e => onChange({ ...intake, diagnosis: e.target.value })} placeholder="髋关节置换术后" className="w-40 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+      <FormRow label="入院单号" value={<input value={intake.admitNo} onChange={e => onChange({ ...intake, admitNo: e.target.value })} placeholder="RY-..." className="w-36 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+    </div>
+  </div>
+);
+
+const IntakeBedSheet = ({ intake, onChange }: { intake: IntakeState; onChange: (v: IntakeState) => void }) => {
+  const beds = ["302", "305", "307", "311", "312", "315", "316", "318"];
+  return (
+    <div className="p-4 space-y-3">
+      <div className="bg-card rounded-2xl shadow-card p-4">
+        <div className="text-[11px] text-muted-foreground">新入院患者</div>
+        <div className="text-sm font-bold mt-0.5">{intake.name || "—"} · {intake.sex} {intake.age && `${intake.age}岁`}</div>
+        <div className="text-[11px] text-muted-foreground mt-1">{intake.diagnosis || "—"}</div>
+      </div>
+      <AICard title="AI 床位推荐">根据病区、性别、护理等级，推荐 305 床（同房间均为术后患者）。</AICard>
+      <SectionTitle title="选择床位" extra={<span className="text-[10px] text-muted-foreground">空床 {beds.length}</span>} />
+      <div className="grid grid-cols-4 gap-2">
+        {beds.map(b => {
+          const active = intake.bed === b;
+          return (
+            <button
+              key={b}
+              onClick={() => onChange({ ...intake, bed: b })}
+              className={`rounded-xl border-2 py-2.5 text-sm font-bold ${active ? "border-role-nurse bg-rose-50 text-role-nurse" : "border-border bg-card text-foreground/70"}`}
+            >{b}</button>
+          );
+        })}
+      </div>
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        <FormRow label="床位号" value={<input value={intake.bed} onChange={e => onChange({ ...intake, bed: e.target.value })} placeholder="如 305" className="w-20 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+        <FormRow label="病区" value="康复二区 ▾" />
+        <FormRow label="护理等级" value="二级护理 ▾" />
+      </div>
+    </div>
+  );
+};
+
 /* ============== 工作台首页：根据康复处方生成的不同患者待办列 ============== */
 const NurseHome = ({
   onOpenQueue,
