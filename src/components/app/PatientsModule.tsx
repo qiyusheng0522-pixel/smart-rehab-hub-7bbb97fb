@@ -356,8 +356,8 @@ export const PatientsPage = ({
   );
 };
 
-const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; accent: Accent; onClick: () => void; onSummary?: () => void; onAction?: (key: PatientPendingKey) => void }) => {
-  const stage = getPatientStage(p, accent);
+const PatientCard = ({ p, accent, community, onClick, onSummary, onAction }: { p: Patient; accent: Accent; community?: boolean; onClick: () => void; onSummary?: () => void; onAction?: (key: PatientPendingKey) => void }) => {
+  const stage = getPatientStage(p, accent, community);
   const stageMap: Record<PatientStage, string> = {
     "院前": "bg-warning/15 text-warning",
     "院中": "bg-primary/10 text-primary",
