@@ -84,41 +84,14 @@ type SheetKey =
   | "intakeScan"
   | "intakeBed";
 
-type QueueKey = "med" | "vitals" | "inject" | "obs" | "execTask" | "confirmAssess";
+type QueueKey = "confirmAssess";
 
 const QUEUE_TITLE: Record<QueueKey, string> = {
-  med: "待执行给药",
-  vitals: "待测生命体征",
-  inject: "待执行注射",
-  obs: "待病情观察",
-  execTask: "待执行护理任务",
   confirmAssess: "待首次评估",
 };
 
 // 根据康复处方生成的待办（按患者维度）
 const QUEUES: Record<QueueKey, TodoItem[]> = {
-  med: [
-    { id: "m1", patient: "303 张建国", meta: "阿司匹林 100mg · IV", detail: "处方关联：脑卒中后偏瘫", time: "14:00", urgency: "high" },
-    { id: "m2", patient: "310 陈丽华", meta: "多奈哌齐 5mg · po", detail: "处方关联：认知障碍", time: "15:30", urgency: "medium" },
-    { id: "m3", patient: "305 王秀英", meta: "塞来昔布 200mg · po", detail: "处方关联：髋关节术后", time: "16:00", urgency: "medium" },
-    { id: "m4", patient: "307 李 强", meta: "巴氯芬 10mg · po", detail: "处方关联：脊髓损伤", time: "21:00", urgency: "low" },
-  ],
-  vitals: [
-    { id: "v1", patient: "305 王秀英", meta: "血压 + 心率", detail: "VS q4h · 第 3 次", time: "14:30", urgency: "medium" },
-    { id: "v2", patient: "303 张建国", meta: "血压 + 心率 + 血氧", detail: "VS q6h", time: "15:00", urgency: "medium" },
-  ],
-  inject: [
-    { id: "in1", patient: "305 王秀英", meta: "低分子肝素 0.4ml ih", detail: "腹部皮下", time: "14:35", urgency: "medium" },
-  ],
-  obs: [
-    { id: "o1", patient: "303 张建国", meta: "夜间血压波动", detail: "AI 提示加强观察", urgency: "high" },
-    { id: "o2", patient: "307 李 强", meta: "压疮高风险监测", detail: "Braden 14 分", urgency: "medium" },
-  ],
-  execTask: [
-    { id: "et1", patient: "312 刘伟明", meta: "伤口换药", detail: "术后第 5 天", time: "16:00", urgency: "high" },
-    { id: "et2", patient: "303 张建国", meta: "翻身 + 拍背", detail: "q2h", time: "15:00", urgency: "medium" },
-    { id: "et3", patient: "307 李 强", meta: "导尿管护理", detail: "每日清洁", time: "17:00", urgency: "medium" },
-  ],
   confirmAssess: [
     { id: "ca1", patient: "305 王秀英", meta: "髋关节置换术后", detail: "护理首评 · 一般情况 / ADL / 风险评估", urgency: "high" },
     { id: "ca2", patient: "311 周建华", meta: "脑梗死恢复期", detail: "护理首评 · 跌倒 / 压疮 / VTE / 营养", urgency: "medium" },
