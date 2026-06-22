@@ -137,7 +137,7 @@ export const PATIENTS: Patient[] = [
   ] },
   { id: "p10", name: "孙慧敏", bed: "", meta: "女 62 · 腰椎间盘突出术后 · 今日入院 RY-20260622-007", status: "新患者", condition: "腰椎间盘突出", admitDays: 0, needFirstAssess: true, shared: ["赵护士"], notes: [], isNew: true },
   { id: "p11", name: "刘文博", bed: "", meta: "男 58 · 右膝 ACL 重建术后 · 今日入院 RY-20260622-009", status: "新患者", condition: "膝关节术后", admitDays: 0, needFirstAssess: true, shared: ["赵护士"], notes: [], isNew: true },
-  { id: "p12", name: "郑雪婷", bed: "", meta: "女 45 · 颈椎病术后 · 今日入院 RY-20260622-010", status: "新患者", condition: "颈椎病", admitDays: 0, needFirstAssess: true, shared: ["李医师", "赵护士"], notes: [], isNew: true },
+  { id: "p12", name: "郑雪婷", bed: "", meta: "女 45 · 颈椎病术后 · 今日入院 RY-20260622-010", status: "新患者", condition: "颈椎病", admitDays: 0, needFirstAssess: true, shared: ["赵护士"], notes: [], isNew: true },
 ];
 
 export const NEW_PATIENT_COUNT = PATIENTS.filter(p => p.isNew).length;
@@ -145,11 +145,15 @@ export const FIRST_ASSESS_COUNT = PATIENTS.filter(p => p.needFirstAssess).length
 export const RETURNED_REASSESS_COUNT = PATIENTS.filter(p => p.returnedReassess).length;
 export const ALL_CONDITIONS = Array.from(new Set(PATIENTS.map(p => p.condition)));
 
-/** 根据状态推导患者所处阶段 */
-export const getPatientStage = (p: Patient): PatientStage => {
+/** 根据状态推导患者所处阶段。护士端：未填床位号即为院前；其他角色：按待办标志判定。 */
+export const getPatientStage = (p: Patient, accent?: Accent): PatientStage => {
   if (p.status === "已出院") return "院后";
   if (p.status === "待出院") return "待出院";
-  if (!p.bed || !String(p.bed).trim()) return "院前";
+  if (accent === "nurse") {
+    if (!p.bed || !String(p.bed).trim()) return "院前";
+    return "院中";
+  }
+  if (p.needFirstAssess || p.returnedReassess || p.needPlanConfirm || p.needRxConfirm) return "院前";
   return "院中";
 };
 
