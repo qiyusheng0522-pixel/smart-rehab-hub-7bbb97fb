@@ -165,9 +165,14 @@ export const NurseApp = () => {
   const [activeMeeting, setActiveMeeting] = useState<TeamMeeting | null>(null);
   const [activeFollowUp, setActiveFollowUp] = useState<FollowUpPatient | null>(null);
   const [patientsFilter, setPatientsFilter] = useState<import("@/components/app/PatientsModule").PatientFilter>("all");
-  const [intake, setIntake] = useState<{ name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 }>({
+  const [intake, setIntake] = useState<IntakeState>({
     name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1,
   });
+  const [pendingBed, setPendingBed] = useState<IntakeRecord[]>([
+    { id: "pb-demo", name: "孙慧敏", sex: "女", age: "62", diagnosis: "腰椎间盘突出术后", admitNo: "RY-20260622-007", bed: "" },
+  ]);
+  const [pendingAssess, setPendingAssess] = useState<IntakeRecord[]>([]);
+  const [bedTargetId, setBedTargetId] = useState<string | null>(null);
   const goPatients = (filter: import("@/components/app/PatientsModule").PatientFilter = "all") => {
     setPatientsFilter(filter);
     setTab("patients");
