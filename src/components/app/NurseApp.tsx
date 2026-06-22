@@ -479,15 +479,68 @@ const NurseHome = ({
         </div>
       </div>
 
+      {/* 新患者入院工作流 */}
       <div className="px-4 mt-3">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-[13px] font-bold text-foreground">新患者入院流程</span>
+          <span className="text-[10px] text-muted-foreground">扫单 → 床位 → 首评 → 护理日志</span>
+        </div>
+        <div className="bg-card rounded-2xl shadow-card border border-border/40 p-3 space-y-2.5">
+          {/* 摘要 */}
+          {(intake.name || intake.bed) && (
+            <div className="rounded-xl bg-rose-50/60 border border-role-nurse/20 px-3 py-2 text-[11px] text-foreground/80 flex items-center gap-2">
+              <BedDouble className="w-3.5 h-3.5 text-role-nurse" />
+              <span className="font-semibold">{intake.name || "待录入"}</span>
+              {intake.sex && <span>· {intake.sex}{intake.age && ` ${intake.age}`}</span>}
+              {intake.bed && <span>· 床 {intake.bed}</span>}
+              {intake.diagnosis && <span className="truncate">· {intake.diagnosis}</span>}
+            </div>
+          )}
+          <div className="grid grid-cols-3 gap-2">
+            <IntakeStep
+              n={1}
+              icon={ScanLine}
+              label="扫入院单"
+              active={intake.step === 1}
+              done={intake.step > 1}
+              onClick={onScanIntake}
+            />
+            <IntakeStep
+              n={2}
+              icon={BedDouble}
+              label="填床位号"
+              active={intake.step === 2}
+              done={intake.step > 2}
+              disabled={intake.step < 2}
+              onClick={onFillBed}
+            />
+            <IntakeStep
+              n={3}
+              icon={ClipboardCheck}
+              label="首次评估"
+              active={intake.step === 3}
+              done={intake.step > 3}
+              disabled={intake.step < 3}
+              onClick={onIntakeAssess}
+            />
+          </div>
+          <button
+            onClick={onOpenDailyNote}
+            disabled={intake.step < 4}
+            className="w-full rounded-xl border border-role-nurse/30 bg-rose-50/40 text-role-nurse px-3 py-2.5 text-[12.5px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:bg-muted/40 disabled:text-muted-foreground disabled:border-border"
+          >
+            <NotebookPen className="w-4 h-4" />
+            {intake.step >= 4 ? "记录每日护理日志" : "完成首评后开始每日护理日志"}
+          </button>
+        </div>
+      </div>
+
+      <div className="px-4 mt-4">
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-[13px] font-bold text-foreground">今日待处理</span>
         </div>
         <PendingTodoGrid
           items={[
-            { label: "待首次评估", count: QUEUES.confirmAssess.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-            { label: "待护理", count: QUEUES.execTask.length, icon: HeartPulse, iconClass: "bg-success text-white", onClick: () => onOpenQueue("execTask") },
-            { label: "待记录", count: QUEUES.vitals.length, icon: Activity, iconClass: "bg-primary text-white", onClick: () => onOpenQueue("vitals") },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },
             { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-secondary text-white", onClick: onOpenChat },
             { label: "待随访", count: FOLLOW_UPS.filter(f => f.status === "pending").length, icon: Stethoscope, iconClass: "bg-role-nurse text-white", onClick: onOpenFollowUpList },
