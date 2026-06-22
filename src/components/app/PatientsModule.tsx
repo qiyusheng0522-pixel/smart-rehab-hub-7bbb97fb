@@ -208,7 +208,7 @@ export const PatientsPage = ({
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "待首次评估") return !!p.needFirstAssess;
-    return getPatientStage(p) === statusFilter;
+    return getPatientStage(p, accent) === statusFilter;
   };
   const matchAdmit = (p: Patient) => {
     if (admitRange === "all") return true;
@@ -230,10 +230,10 @@ export const PatientsPage = ({
   });
 
 
-  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p) === s).length;
+  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent) === s).length;
   const filterChips: { key: PatientFilter; label: string; count: number }[] = [
     { key: "all", label: "全部", count: PATIENTS.length },
-    { key: "院前", label: "院前", count: stageCount("院前") },
+    ...(accent === "doctor" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
     { key: "院中", label: "院中", count: stageCount("院中") },
     { key: "待出院", label: "待出院", count: stageCount("待出院") },
     { key: "院后", label: "院后", count: stageCount("院后") },
@@ -346,7 +346,7 @@ export const PatientsPage = ({
 };
 
 const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; accent: Accent; onClick: () => void; onSummary?: () => void; onAction?: (key: PatientPendingKey) => void }) => {
-  const stage = getPatientStage(p);
+  const stage = getPatientStage(p, accent);
   const stageMap: Record<PatientStage, string> = {
     "院前": "bg-warning/15 text-warning",
     "院中": "bg-primary/10 text-primary",
