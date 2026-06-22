@@ -181,12 +181,14 @@ export const PatientsPage = ({
   onSummary,
   onAction,
   initialFilter = "all",
+  community = false,
 }: {
   accent: Accent;
   onPick: (p: Patient) => void;
   onSummary?: (p: Patient) => void;
   onAction?: (key: PatientPendingKey, p: Patient) => void;
   initialFilter?: PatientFilter;
+  community?: boolean;
 }) => {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<PatientFilter>(initialFilter);
