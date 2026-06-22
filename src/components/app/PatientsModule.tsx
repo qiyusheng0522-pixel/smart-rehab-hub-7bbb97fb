@@ -1364,7 +1364,7 @@ export interface PatientChatThread {
 export const DEFAULT_PATIENT_THREADS: PatientChatThread[] = [
   { patientId: "p1", lastMsg: "医生今晚我可以下床走几步吗？", time: "14:32", unread: 2 },
   { patientId: "p2", lastMsg: "夜间疼痛比昨天好多了，谢谢", time: "12:08", unread: 0 },
-  { patientId: "p3", lastMsg: "出院外社区怎么衔接？", time: "昨日", unread: 1 },
+  { patientId: "p3", lastMsg: "出院后社区怎么衔接？", time: "昨日", unread: 1 },
   { patientId: "p5", lastMsg: "首次评估什么时候安排？", time: "昨日", unread: 3 },
 ];
 
