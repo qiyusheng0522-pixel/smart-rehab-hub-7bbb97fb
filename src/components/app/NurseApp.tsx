@@ -214,7 +214,7 @@ export const NurseApp = () => {
       )}
       {tab === "me" && <Me onOpenTeam={() => open("team")} />}
 
-      {(["med", "vitals", "inject", "obs", "execTask", "confirmAssess"] as QueueKey[]).map((k) => (
+      {(["confirmAssess"] as QueueKey[]).map((k) => (
         <PhoneSheet key={k} open={queue === k} onClose={closeQueue} title={QUEUE_TITLE[k]} accent="nurse">
           <TodoQueueList accent="nurse" items={QUEUES[k]} onPick={(item) => pickFromQueue(item, queueToSheet[k])} />
         </PhoneSheet>
