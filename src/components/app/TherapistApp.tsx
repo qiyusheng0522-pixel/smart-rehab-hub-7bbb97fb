@@ -84,7 +84,8 @@ type SheetKey =
   | "newMeeting"
   | "meeting"
   | "uploadDaily"
-  | "firstAssess";
+  | "firstAssess"
+  | "dischargeAssess";
 
 type TherapistType = "PT" | "OT" | "ST";
 
@@ -299,6 +300,7 @@ export const TherapistApp = () => {
               actions={
                 getPatientStage(pickedPatient) === "待出院"
                   ? [
+                      { key: "dischargeAssess", label: "出院评估", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("dischargeAssess"); } },
                       { key: "discharge", label: "确认出院", icon: LogOut, onClick: () => { toast.success(`已确认「${pickedPatient.name}」出院`); close(); } },
                       { key: "transfer", label: "转社区", icon: HomeIcon, onClick: () => { toast.success(`已将「${pickedPatient.name}」转至社区康复`); close(); } },
                       { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
@@ -309,7 +311,9 @@ export const TherapistApp = () => {
                       { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
                     ]
                   : [
-                      { key: "summary", label: "每日小结", icon: ClipboardList, onClick: () => { setActivePatient(pickedPatient ? `${pickedPatient.name} · 床${pickedPatient.bed}` : ""); setSheet("summary"); } },
+                      { key: "firstAssess", label: "首次评估", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("firstAssess"); } },
+                      { key: "rx", label: "康复医嘱", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("rx"); } },
+                      { key: "record", label: "康复记录", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("uploadDaily"); } },
                       { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
                     ]
               }
