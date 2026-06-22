@@ -278,8 +278,8 @@ export const TherapistApp = () => {
         <ExecSheet />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "summary"} onClose={close} title={`每日小结${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="therapist"
-        footer={<PrimaryBtn variant="therapist" onClick={() => { toast.success("小结已写入该患者档案"); close(); }}>提交小结</PrimaryBtn>}>
+      <PhoneSheet open={sheet === "summary"} onClose={close} title={`康复记录${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="therapist"
+        footer={<PrimaryBtn variant="therapist" onClick={() => { toast.success("康复记录已写入该患者档案"); close(); }}>提交康复记录</PrimaryBtn>}>
         <SummarySheet patient={activePatient} />
       </PhoneSheet>
 
