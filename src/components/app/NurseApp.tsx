@@ -50,13 +50,7 @@ import {
 import { toast } from "sonner";
 import { MeStats } from "@/components/app/MeStats";
 
-import {
-  EvalTabs,
-  EvalTabKey,
-  RehabPanel,
-  NumberedGoals,
-  ALL_REHAB_CONCLUSIONS,
-} from "@/components/app/EvalShared";
+// (护理首评已切换为 V-VST / NRS2002 量表，不再使用 EvalShared 的 Tabs/RehabPanel)
 
 const NURSE_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
