@@ -465,6 +465,7 @@ export const NurseApp = () => {
 
 /* ============== 入院工作流：步骤按钮 / 扫单 / 床位 ============== */
 type IntakeState = { name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 };
+type IntakeRecord = { id: string; name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string };
 
 const IntakeStep = ({
   n, icon: Icon, label, active, done, disabled, onClick,
