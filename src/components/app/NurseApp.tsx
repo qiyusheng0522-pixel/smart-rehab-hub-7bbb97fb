@@ -573,10 +573,11 @@ const NurseHome = ({
   onOpenChat,
   onOpenFollowUpList,
   onOpenFollowUp,
-  intake,
+  pendingBed,
+  pendingAssessCount,
   onScanIntake,
   onFillBed,
-  onIntakeAssess,
+  onOpenAssessQueue,
 }: {
   onOpenQueue: (k: QueueKey) => void;
   onGoPatients: (filter?: import("@/components/app/PatientsModule").PatientFilter) => void;
@@ -585,10 +586,11 @@ const NurseHome = ({
   onOpenChat: () => void;
   onOpenFollowUpList: () => void;
   onOpenFollowUp: (p: FollowUpPatient) => void;
-  intake: { name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 };
+  pendingBed: IntakeRecord[];
+  pendingAssessCount: number;
   onScanIntake: () => void;
-  onFillBed: () => void;
-  onIntakeAssess: () => void;
+  onFillBed: (rec: IntakeRecord) => void;
+  onOpenAssessQueue: () => void;
 }) => {
   const totalTodo = QUEUES.med.length + QUEUES.vitals.length + QUEUES.inject.length + QUEUES.obs.length + QUEUES.execTask.length;
   const allTodos: { patient: string; meta: string; time?: string; urgency: "high" | "medium" | "low"; k: QueueKey }[] = [
@@ -614,59 +616,43 @@ const NurseHome = ({
         </div>
       </div>
 
-      {/* 新患者入院工作流 */}
+      {/* 新患者入院：扫单 + 床位 */}
       <div className="px-4 mt-3">
         <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-[13px] font-bold text-foreground">新患者入院流程</span>
-          <span className="text-[10px] text-muted-foreground">扫单 → 床位 → 首评 → 护理日志</span>
+          <span className="text-[13px] font-bold text-foreground">新患者入院</span>
+          <span className="text-[10px] text-muted-foreground">扫入院单 · 可同时填床位号</span>
         </div>
         <div className="bg-card rounded-2xl shadow-card border border-border/40 p-3 space-y-2.5">
-          {/* 摘要 */}
-          {(intake.name || intake.bed) && (
-            <div className="rounded-xl bg-rose-50/60 border border-role-nurse/20 px-3 py-2 text-[11px] text-foreground/80 flex items-center gap-2">
-              <BedDouble className="w-3.5 h-3.5 text-role-nurse" />
-              <span className="font-semibold">{intake.name || "待录入"}</span>
-              {intake.sex && <span>· {intake.sex}{intake.age && ` ${intake.age}`}</span>}
-              {intake.bed && <span>· 床 {intake.bed}</span>}
-              {intake.diagnosis && <span className="truncate">· {intake.diagnosis}</span>}
+          <button
+            onClick={onScanIntake}
+            className="w-full rounded-xl gradient-nurse text-white px-3 py-3 text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-card"
+          >
+            <ScanLine className="w-4.5 h-4.5" />
+            扫入院单（可同时填床位号）
+          </button>
+          {pendingBed.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 px-1">
+                <BedDouble className="w-3 h-3 text-warning" />
+                <span className="text-[11px] font-semibold text-foreground/80">待填床位号</span>
+                <span className="text-[10px] text-muted-foreground">{pendingBed.length} 位患者</span>
+              </div>
+              {pendingBed.map(p => (
+                <div key={p.id} className="rounded-xl bg-warning/5 border border-warning/30 px-3 py-2 flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] font-semibold truncate">{p.name} · {p.sex} {p.age}岁</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{p.diagnosis} · {p.admitNo}</div>
+                  </div>
+                  <button
+                    onClick={() => onFillBed(p)}
+                    className="text-[11px] px-2.5 py-1.5 rounded-full bg-warning text-white font-semibold shrink-0 flex items-center gap-1"
+                  >
+                    <BedDouble className="w-3 h-3" /> 填床位号
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-          <div className="grid grid-cols-3 gap-2">
-            <IntakeStep
-              n={1}
-              icon={ScanLine}
-              label="扫入院单"
-              active={intake.step === 1}
-              done={intake.step > 1}
-              onClick={onScanIntake}
-            />
-            <IntakeStep
-              n={2}
-              icon={BedDouble}
-              label="填床位号"
-              active={intake.step === 2}
-              done={intake.step > 2}
-              disabled={intake.step < 2}
-              onClick={onFillBed}
-            />
-            <IntakeStep
-              n={3}
-              icon={ClipboardCheck}
-              label="首次评估"
-              active={intake.step === 3}
-              done={intake.step > 3}
-              disabled={intake.step < 3}
-              onClick={onIntakeAssess}
-            />
-          </div>
-          <button
-            onClick={onOpenDailyNote}
-            disabled={intake.step < 4}
-            className="w-full rounded-xl border border-role-nurse/30 bg-rose-50/40 text-role-nurse px-3 py-2.5 text-[12.5px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:bg-muted/40 disabled:text-muted-foreground disabled:border-border"
-          >
-            <NotebookPen className="w-4 h-4" />
-            {intake.step >= 4 ? "记录每日护理日志" : "完成首评后开始每日护理日志"}
-          </button>
         </div>
       </div>
 
@@ -676,6 +662,7 @@ const NurseHome = ({
         </div>
         <PendingTodoGrid
           items={[
+            { label: "待首次评估", count: pendingAssessCount, icon: ClipboardCheck, iconClass: "bg-role-nurse text-white", onClick: onOpenAssessQueue },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },
             { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-secondary text-white", onClick: onOpenChat },
             { label: "待随访", count: FOLLOW_UPS.filter(f => f.status === "pending").length, icon: Stethoscope, iconClass: "bg-role-nurse text-white", onClick: onOpenFollowUpList },
