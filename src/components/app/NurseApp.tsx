@@ -376,39 +376,47 @@ export const NurseApp = () => {
         accent="nurse"
         footer={
           pickedPatient ? (
-            pickedPatient.needFirstAssess ? (
-              <PatientActionsBar
-                accent="nurse"
-                actions={[
-                  {
-                    key: "assess",
-                    label: "确认首次评估",
-                    icon: ClipboardCheck,
-                    onClick: () => {
-                      setActivePatient(`${pickedPatient.bed} ${pickedPatient.name}`);
-                      setSheet("confirmAssess");
-                    },
+            <PatientActionsBar
+              accent="nurse"
+              actions={[
+                {
+                  key: "assess",
+                  label: "首次评估",
+                  icon: ClipboardCheck,
+                  onClick: () => {
+                    setActivePatient(`${pickedPatient.bed} ${pickedPatient.name}`);
+                    setSheet("confirmAssess");
                   },
-                  {
-                    key: "meeting",
-                    label: "团队会议评估",
-                    icon: Users,
-                    onClick: () => {
-                      setActiveMeeting(null);
-                      setSheet("meeting");
-                    },
+                },
+                {
+                  key: "bed",
+                  label: "填写床号",
+                  icon: BedDouble,
+                  onClick: () => {
+                    setBedTargetId(null);
+                    setIntake({
+                      name: pickedPatient.name,
+                      sex: "",
+                      age: "",
+                      diagnosis: pickedPatient.condition,
+                      admitNo: "",
+                      bed: pickedPatient.bed || "",
+                      step: 2,
+                    });
+                    setSheet("intakeBed");
                   },
-                ]}
-              />
-            ) : (
-              <PatientActionsBar
-                accent="nurse"
-                actions={[
-                  { key: "care", label: "护理记录", icon: ClipboardCheck, onClick: () => setSheet("dailyNote") },
-                  { key: "note", label: "备注", icon: Activity, onClick: () => setSheet("addNote") },
-                ]}
-              />
-            )
+                },
+                {
+                  key: "daily",
+                  label: "每日记录",
+                  icon: NotebookPen,
+                  onClick: () => {
+                    setActivePatient(`${pickedPatient.bed} ${pickedPatient.name}`);
+                    setSheet("dailyNote");
+                  },
+                },
+              ]}
+            />
           ) : undefined
         }
       >
