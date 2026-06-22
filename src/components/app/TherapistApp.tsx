@@ -278,8 +278,8 @@ export const TherapistApp = () => {
         <ExecSheet />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "summary"} onClose={close} title={`每日小结${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="therapist"
-        footer={<PrimaryBtn variant="therapist" onClick={() => { toast.success("小结已写入该患者档案"); close(); }}>提交小结</PrimaryBtn>}>
+      <PhoneSheet open={sheet === "summary"} onClose={close} title={`康复记录${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="therapist"
+        footer={<PrimaryBtn variant="therapist" onClick={() => { toast.success("康复记录已写入该患者档案"); close(); }}>提交康复记录</PrimaryBtn>}>
         <SummarySheet patient={activePatient} />
       </PhoneSheet>
 
@@ -318,7 +318,7 @@ export const TherapistApp = () => {
                   : [
                       { key: "firstAssess", label: "首次评估", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("firstAssess"); } },
                       { key: "rx", label: "康复医嘱", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("rx"); } },
-                      { key: "record", label: "康复记录", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("uploadDaily"); } },
+                      { key: "record", label: "康复记录", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("summary"); } },
                       { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
                     ]
               }
