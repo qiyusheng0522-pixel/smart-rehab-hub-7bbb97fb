@@ -208,6 +208,13 @@ export const NurseApp = () => {
           onOpenChat={() => setTab("chat")}
           onOpenFollowUpList={() => open("followUpList")}
           onOpenFollowUp={(p) => { setActiveFollowUp(p); open("followUp"); }}
+          intake={intake}
+          onScanIntake={() => open("intakeScan")}
+          onFillBed={() => open("intakeBed")}
+          onIntakeAssess={() => {
+            setActivePatient(`${intake.bed || "新患者"} ${intake.name || "王秀英"}`);
+            open("confirmAssess");
+          }}
         />
       )}
       {tab === "patients" && (
