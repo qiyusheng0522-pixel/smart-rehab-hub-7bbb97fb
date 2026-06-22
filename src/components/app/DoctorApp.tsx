@@ -76,6 +76,8 @@ import {
   Mic,
   Minus,
 } from "lucide-react";
+import { BookOpen, ClipboardList } from "lucide-react";
+import { EducationModule, FollowupModule } from "@/components/app/CommunityModules";
 
 type SheetKey =
   | null
