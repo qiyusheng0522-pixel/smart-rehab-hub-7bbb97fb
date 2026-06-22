@@ -265,33 +265,49 @@ export const NurseApp = () => {
         <NurseFirstAssessSheet patient={activePatient} />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "intakeScan"} onClose={close} title="扫描患者入院单" accent="nurse"
+      <PhoneSheet open={sheet === "intakeScan"} onClose={close} title="扫入院单" accent="nurse"
         footer={<PrimaryBtn variant="nurse" onClick={() => {
-          setIntake({
+          const filled: IntakeRecord = {
+            id: `ip-${Date.now()}`,
             name: intake.name || "王秀英",
             sex: intake.sex || "女",
             age: intake.age || "68",
             diagnosis: intake.diagnosis || "髋关节置换术后",
             admitNo: intake.admitNo || "RY-20260622-008",
-            bed: intake.bed,
-            step: 2,
-          });
-          toast.success("入院单已识别");
-          setSheet("intakeBed");
-        }}>识别并下一步：填床位号</PrimaryBtn>}>
+            bed: intake.bed.trim(),
+          };
+          if (filled.bed) {
+            setPendingAssess([filled, ...pendingAssess]);
+            toast.success(`${filled.name} · 床${filled.bed} 已加入待首次评估`);
+          } else {
+            setPendingBed([filled, ...pendingBed]);
+            toast.success(`${filled.name} 已加入待填床位号清单`);
+          }
+          setIntake({ name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1 });
+          close();
+        }}>{intake.bed.trim() ? "保存并加入待首次评估" : "保存（稍后填床位号）"}</PrimaryBtn>}>
         <IntakeScanSheet intake={intake} onChange={setIntake} />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "intakeBed"} onClose={close} title="分配床位" accent="nurse"
+      <PhoneSheet open={sheet === "intakeBed"} onClose={close} title="填床位号" accent="nurse"
         footer={<PrimaryBtn variant="nurse" onClick={() => {
-          if (!intake.bed) { toast.error("请填写床位号"); return; }
-          setIntake({ ...intake, step: 3 });
-          toast.success(`床位 ${intake.bed} 已分配`);
-          setActivePatient(`${intake.bed} ${intake.name || "患者"}`);
-          setSheet("confirmAssess");
-        }}>保存并下一步：首次评估</PrimaryBtn>}>
+          if (!intake.bed.trim()) { toast.error("请填写床位号"); return; }
+          if (bedTargetId) {
+            const target = pendingBed.find(p => p.id === bedTargetId);
+            if (target) {
+              const updated = { ...target, bed: intake.bed.trim() };
+              setPendingBed(pendingBed.filter(p => p.id !== bedTargetId));
+              setPendingAssess([updated, ...pendingAssess]);
+              toast.success(`床位 ${updated.bed} 已分配 · 进入待首次评估`);
+            }
+          }
+          setBedTargetId(null);
+          setIntake({ name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1 });
+          close();
+        }}>保存床位号</PrimaryBtn>}>
         <IntakeBedSheet intake={intake} onChange={setIntake} />
       </PhoneSheet>
+
 
 
       <PhoneSheet open={sheet === "meetingList"} onClose={close} title="团队会议" accent="nurse">
