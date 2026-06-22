@@ -146,8 +146,8 @@ export const ALL_CONDITIONS = Array.from(new Set(PATIENTS.map(p => p.condition))
 export const getPatientStage = (p: Patient, accent?: Accent): PatientStage => {
   if (p.status === "已出院") return "院后";
   if (p.status === "待出院") return "待出院";
-  // 康复医师端：不区分院前 / 院中，统一归为院中
-  if (accent === "doctor") return "院中";
+  // 康复医师 / 治疗师端：不区分院前 / 院中，统一归为院中
+  if (accent === "doctor" || accent === "therapist") return "院中";
   if (p.needFirstAssess || p.returnedReassess || p.needPlanConfirm || p.needRxConfirm) return "院前";
   return "院中";
 };
