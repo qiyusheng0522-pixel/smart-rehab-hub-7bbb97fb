@@ -148,6 +148,8 @@ export const getPatientStage = (p: Patient, accent?: Accent): PatientStage => {
   if (p.status === "待出院") return "待出院";
   // 康复医师 / 治疗师端：不区分院前 / 院中，统一归为院中
   if (accent === "doctor" || accent === "therapist") return "院中";
+  // 护理端：院前 = 已登记入院但尚未填写床位号
+  if (accent === "nurse") return p.bed ? "院中" : "院前";
   if (p.needFirstAssess || p.returnedReassess || p.needPlanConfirm || p.needRxConfirm) return "院前";
   return "院中";
 };
@@ -357,7 +359,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   const planConfirmed = !p.needPlanConfirm && !!p.currentPlan && p.currentPlan.length > 0;
   const pending: { key: PatientPendingKey; label: string; show: boolean }[] = [
     { key: "assess", label: "开始评估", show: !!p.needFirstAssess },
-    { key: "rx", label: "待确认医嘱", show: !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
+    { key: "rx", label: "待确认医嘱", show: accent !== "nurse" && !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
   ];
   // 仅当父级提供 onAction 时展示，且同一患者最多只展示一个待办按钮（首评 > 方案 > 医嘱）
   const pendingVisible = onAction ? pending.filter(x => x.show).slice(0, 1) : [];
