@@ -359,13 +359,13 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   ];
   // 仅当父级提供 onAction 时展示，且同一患者最多只展示一个待办按钮（首评 > 方案 > 医嘱）
   const pendingVisible = onAction ? pending.filter(x => x.show).slice(0, 1) : [];
-  // 已完成首次评估的患者：始终提供「查看首程」入口
-  const showFirstNote = !!onAction && evalDone && stage === "院前";
+  // 「查看首程」入口已下线
+  const showFirstNote = false;
   // 每日小结仅在康复方案已确认后展示
   const showSummary = !!onSummary && planConfirmed;
   return (
     <div className="relative w-full bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99]">
-      {showFirstNote && (
+      {false && (
         <button
           onClick={(e) => { e.stopPropagation(); onAction?.("firstNote"); }}
           className={`absolute top-3 right-3 z-10 text-[11px] px-2.5 py-1 rounded-full font-medium text-foreground/75 bg-muted hover:bg-muted/80 inline-flex items-center gap-1 active:scale-95 shadow-sm`}
