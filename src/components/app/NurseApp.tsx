@@ -640,47 +640,19 @@ const NurseHome = ({
       </div>
 
       <div className="px-4 mt-4">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-[13px] font-bold text-foreground">今日待办清单</span>
-          <span className="text-[11px] text-muted-foreground">共 {allTodos.length} 项 · 按优先级</span>
-        </div>
-        <div className="bg-card rounded-2xl shadow-card border border-border/40 divide-y divide-border/60 overflow-hidden">
-          {allTodos.map((t, idx) => {
-            const tag = QUEUE_TITLE[t.k].replace("待执行", "").replace("待", "");
-            const tagColor =
-              t.k === "med" ? "bg-primary/10 text-primary" :
-              t.k === "execTask" ? "bg-success/10 text-success" :
-              t.k === "vitals" ? "bg-secondary/10 text-secondary" :
-              "bg-warning/15 text-warning";
-            const uColor =
-              t.urgency === "high" ? "bg-destructive/10 text-destructive" :
-              t.urgency === "medium" ? "bg-warning/15 text-warning" :
-              "bg-muted text-muted-foreground";
-            const uLabel = t.urgency === "high" ? "紧急" : t.urgency === "medium" ? "重要" : "常规";
-            return (
-              <button
-                key={`${t.k}-${idx}`}
-                onClick={() => onOpenQueue(t.k)}
-                className="w-full text-left px-3 py-2.5 flex items-center gap-2 active:bg-muted/40"
-              >
-                <div className="w-7 h-7 rounded-lg bg-muted text-foreground/70 flex items-center justify-center text-[11px] font-bold shrink-0">
-                  {idx + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${tagColor}`}>{tag}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${uColor}`}>{uLabel}</span>
-                    <span className="text-[12px] font-semibold truncate">{t.patient}</span>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                    {t.meta}{t.time ? ` · ${t.time}` : ""}
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              </button>
-            );
-          })}
-        </div>
+        <button
+          onClick={onOpenDailyNote}
+          className="w-full bg-card rounded-2xl shadow-card border border-border/40 p-4 flex items-center gap-3 active:scale-[0.99] transition-transform"
+        >
+          <div className="w-10 h-10 rounded-xl bg-role-nurse text-white flex items-center justify-center">
+            <NotebookPen className="w-5 h-5" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-[13px] font-bold text-foreground">每日护理记录</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">语音 / 文字输入 · 自动归档患者档案</div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
     </div>
   );
