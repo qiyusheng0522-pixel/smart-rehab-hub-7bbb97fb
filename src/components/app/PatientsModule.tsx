@@ -167,7 +167,7 @@ const accentSoftBg: Record<Accent, string> = {
 };
 
 /* ============== 患者管理主页 ============== */
-export type PatientPendingKey = "assess" | "plan" | "rx" | "firstNote";
+export type PatientPendingKey = "assess" | "plan" | "rx" | "firstNote" | "bed";
 
 export const PatientsPage = ({
   accent,
