@@ -234,7 +234,7 @@ export const DoctorApp = () => {
               }}
               className="flex-1 gradient-doctor text-white rounded-2xl py-3 text-sm font-semibold"
             >
-              确认首次评估
+              确认评估
             </button>
           </div>
         }>
@@ -357,15 +357,16 @@ export const DoctorApp = () => {
                 if (stage === "待出院") {
                   // 待出院：仅查看详情 + 备注，无其他操作
                   acts = [];
+                } else if (stage === "院中") {
+                  // 院中：患者评估 / 医嘱（均可编辑） + 计划出院
+                  acts.push({ key: "assess", label: "患者评估", icon: ClipboardCheck, onClick: () => setSheet("assess") });
+                  acts.push({ key: "rx", label: "医嘱", icon: Sparkles, onClick: () => setSheet("rx") });
+                  acts.push({ key: "discharge-plan", label: "计划出院", icon: LogOut, onClick: () => setDischargePlanOpen(true) });
                 } else {
-                  // 院前 / 院中 统一展示：首评 / 方案 / 医嘱
+                  // 院前：首评 / 医嘱
                   const assessLabel = pickedPatient.needFirstAssess ? "首次评估" : "查看评估";
                   acts.push({ key: "assess", label: assessLabel, icon: ClipboardCheck, onClick: () => setSheet("assess") });
-                  acts.push({ key: "plan", label: pickedPatient.needPlanConfirm ? "确认方案" : "查看方案", icon: FileText, onClick: () => setSheet("plan") });
                   acts.push({ key: "rx", label: pickedPatient.needRxConfirm ? "确认医嘱" : "查看医嘱", icon: Sparkles, onClick: () => setSheet("rx") });
-                  if (stage === "院中") {
-                    acts.push({ key: "discharge-plan", label: "计划出院", icon: LogOut, onClick: () => setDischargePlanOpen(true) });
-                  }
                 }
                 acts.push(noteAct);
                 return <PatientActionsBar accent="doctor" actions={acts} />;
