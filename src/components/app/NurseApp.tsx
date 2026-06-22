@@ -162,11 +162,6 @@ export const NurseApp = () => {
   };
 
   const queueToSheet: Record<QueueKey, SheetKey> = {
-    med: "med",
-    vitals: "vitals",
-    inject: "inject",
-    obs: "obs",
-    execTask: "execTask",
     confirmAssess: "confirmAssess",
   };
 
