@@ -143,9 +143,11 @@ export const RETURNED_REASSESS_COUNT = PATIENTS.filter(p => p.returnedReassess).
 export const ALL_CONDITIONS = Array.from(new Set(PATIENTS.map(p => p.condition)));
 
 /** 根据状态推导患者所处阶段 */
-export const getPatientStage = (p: Patient): PatientStage => {
+export const getPatientStage = (p: Patient, accent?: Accent): PatientStage => {
   if (p.status === "已出院") return "院后";
   if (p.status === "待出院") return "待出院";
+  // 康复医师端：不区分院前 / 院中，统一归为院中
+  if (accent === "doctor") return "院中";
   if (p.needFirstAssess || p.returnedReassess || p.needPlanConfirm || p.needRxConfirm) return "院前";
   return "院中";
 };
@@ -206,7 +208,7 @@ export const PatientsPage = ({
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "待首次评估") return !!p.needFirstAssess;
-    return getPatientStage(p) === statusFilter;
+    return getPatientStage(p, accent) === statusFilter;
   };
   const matchAdmit = (p: Patient) => {
     if (admitRange === "all") return true;
@@ -228,10 +230,10 @@ export const PatientsPage = ({
   });
 
 
-  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p) === s).length;
+  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent) === s).length;
   const filterChips: { key: PatientFilter; label: string; count: number }[] = [
     { key: "all", label: "全部", count: PATIENTS.length },
-    { key: "院前", label: "院前", count: stageCount("院前") },
+    ...(accent === "doctor" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
     { key: "院中", label: "院中", count: stageCount("院中") },
     { key: "待出院", label: "待出院", count: stageCount("待出院") },
     { key: "院后", label: "院后", count: stageCount("院后") },
@@ -344,7 +346,7 @@ export const PatientsPage = ({
 };
 
 const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; accent: Accent; onClick: () => void; onSummary?: () => void; onAction?: (key: PatientPendingKey) => void }) => {
-  const stage = getPatientStage(p);
+  const stage = getPatientStage(p, accent);
   const stageMap: Record<PatientStage, string> = {
     "院前": "bg-warning/15 text-warning",
     "院中": "bg-primary/10 text-primary",
