@@ -752,7 +752,7 @@ const Me = ({ onOpenTeam }: { onOpenTeam: () => void }) => (
       accent="nurse"
       tiles={[
         { label: "本月护理", value: 412, sub: "次" },
-        { label: "给药执行", value: 286, sub: "项" },
+        { label: "每日护理", value: 286, sub: "条" },
         { label: "宣教推送", value: 64, sub: "次" },
       ]}
       trend={[
