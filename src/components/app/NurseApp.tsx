@@ -213,13 +213,15 @@ export const NurseApp = () => {
           onOpenChat={() => setTab("chat")}
           onOpenFollowUpList={() => open("followUpList")}
           onOpenFollowUp={(p) => { setActiveFollowUp(p); open("followUp"); }}
-          intake={intake}
-          onScanIntake={() => open("intakeScan")}
-          onFillBed={() => open("intakeBed")}
-          onIntakeAssess={() => {
-            setActivePatient(`${intake.bed || "新患者"} ${intake.name || "王秀英"}`);
-            open("confirmAssess");
+          pendingBed={pendingBed}
+          pendingAssessCount={pendingAssess.length + QUEUES.confirmAssess.length}
+          onScanIntake={() => { setBedTargetId(null); setIntake({ name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1 }); open("intakeScan"); }}
+          onFillBed={(rec) => {
+            setBedTargetId(rec.id);
+            setIntake({ ...rec, step: 2 });
+            open("intakeBed");
           }}
+          onOpenAssessQueue={() => openQueue("confirmAssess")}
         />
       )}
       {tab === "patients" && (
