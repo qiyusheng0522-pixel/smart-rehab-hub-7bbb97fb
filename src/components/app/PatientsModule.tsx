@@ -353,9 +353,11 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   };
   const evalDone = !p.needFirstAssess && !p.returnedReassess;
   const planConfirmed = !p.needPlanConfirm && !!p.currentPlan && p.currentPlan.length > 0;
+  const needBed = !p.bed || !String(p.bed).trim();
   const pending: { key: PatientPendingKey; label: string; show: boolean }[] = [
-    { key: "assess", label: "开始评估", show: !!p.needFirstAssess },
-    { key: "rx", label: "待确认医嘱", show: !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
+    { key: "bed", label: "填床位号", show: needBed },
+    { key: "assess", label: "开始评估", show: !needBed && !!p.needFirstAssess },
+    { key: "rx", label: "待确认医嘱", show: !needBed && !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
   ];
   // 仅当父级提供 onAction 时展示，且同一患者最多只展示一个待办按钮（首评 > 方案 > 医嘱）
   const pendingVisible = onAction ? pending.filter(x => x.show).slice(0, 1) : [];
