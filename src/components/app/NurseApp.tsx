@@ -361,7 +361,7 @@ export const NurseApp = () => {
 
       <PhoneSheet open={sheet === "dailyNote"} onClose={close} title="每日康复护理备注" accent="nurse"
         footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("护理备注已保存到患者档案"); close(); }}>保存到患者档案</PrimaryBtn>}>
-        <DailyNoteSheet />
+        <DailyNoteSheet patient={activePatient} />
       </PhoneSheet>
 
       <PhoneSheet open={sheet === "eduPush"} onClose={close} title="多患者宣教推送" accent="nurse"
