@@ -113,6 +113,7 @@
   .gradient-therapist { background: var(--gradient-therapist); }
   .gradient-nurse { background: var(--gradient-nurse); }
   .gradient-physio { background: var(--gradient-physio); }
+  .gradient-community { background: var(--gradient-community); }
   .gradient-hero { background: var(--gradient-hero); }
   .gradient-mesh { background: var(--gradient-mesh); }
   .shadow-phone { box-shadow: var(--shadow-phone); }
