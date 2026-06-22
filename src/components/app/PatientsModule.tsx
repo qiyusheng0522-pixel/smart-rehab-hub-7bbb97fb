@@ -167,7 +167,7 @@ const accentSoftBg: Record<Accent, string> = {
 };
 
 /* ============== 患者管理主页 ============== */
-export type PatientPendingKey = "assess" | "plan" | "rx" | "firstNote" | "bed";
+export type PatientPendingKey = "assess" | "plan" | "rx" | "firstNote" | "bed" | "daily";
 
 export const PatientsPage = ({
   accent,
@@ -358,9 +358,17 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
     { key: "bed", label: "填床位号", show: needBed },
     { key: "assess", label: "开始评估", show: !needBed && !!p.needFirstAssess },
     { key: "rx", label: "待确认医嘱", show: !needBed && !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
+    { key: "daily", label: "每日护理", show: !needBed && evalDone },
   ];
-  // 仅当父级提供 onAction 时展示，且同一患者最多只展示一个待办按钮（首评 > 方案 > 医嘱）
-  const pendingVisible = onAction ? pending.filter(x => x.show).slice(0, 1) : [];
+  // 仅当父级提供 onAction 时展示；优先级：床位 > 首评 > 医嘱；评估完成后追加「每日护理」
+  const pendingVisible = onAction
+    ? (() => {
+        const visible = pending.filter(x => x.show);
+        const primary = visible.find(x => x.key !== "daily");
+        const daily = visible.find(x => x.key === "daily");
+        return [primary, daily].filter(Boolean) as typeof pending;
+      })()
+    : [];
   // 「查看首程」入口已下线
   const showFirstNote = false;
   // 每日小结仅在康复方案已确认后展示
