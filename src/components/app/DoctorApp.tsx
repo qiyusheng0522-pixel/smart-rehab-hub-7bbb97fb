@@ -163,12 +163,15 @@ export const DoctorApp = ({ community = false }: { community?: boolean } = {}) =
     <ScreenShell tabBar={<TabBar active={tab} onChange={setTab} accent="doctor" newPatientCount={NEW_PATIENT_COUNT} items={community ? COMMUNITY_TABS : DOCTOR_TABS} />}>
       {tab === "home" && (
         <DoctorHome
+          community={community}
           onOpen={open}
           onGoPatients={goPatients}
           onGoPlan={goPlan}
           onGoRx={goRx}
           onGoDischarge={() => setTab("discharge")}
           onGoChat={() => setTab("chat")}
+          onGoEducation={() => setTab("education")}
+          onGoFollowup={() => setTab("followup")}
         />
       )}
       {tab === "patients" && (
@@ -648,20 +651,39 @@ const DoctorChatHub = ({
 );
 
 const DoctorHome = ({
+  community = false,
   onOpen,
   onGoPatients,
   onGoPlan,
   onGoRx,
   onGoDischarge,
   onGoChat,
+  onGoEducation,
+  onGoFollowup,
 }: {
+  community?: boolean;
   onOpen: (k: SheetKey) => void;
   onGoPatients: (filter?: PatientFilter) => void;
   onGoPlan: (stage: PlanStage) => void;
   onGoRx: () => void;
   onGoDischarge: () => void;
   onGoChat: () => void;
+  onGoEducation?: () => void;
+  onGoFollowup?: () => void;
 }) => {
+  const pendingItems = community
+    ? [
+        { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
+        { label: "待宣教推送", count: 6, icon: BookOpen, iconClass: "bg-primary text-white", onClick: onGoEducation },
+        { label: "待随访", count: 8, icon: ClipboardList, iconClass: "bg-success text-white", onClick: onGoFollowup },
+        { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-destructive text-white", onClick: onGoRx },
+      ]
+    : [
+        { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
+        { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
+        { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-primary text-white", onClick: onGoChat },
+        { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p, "doctor") === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
+      ];
   return (
     <div className="pb-4">
       {/* 顶部白色头部 */}
@@ -669,8 +691,8 @@ const DoctorHome = ({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs text-muted-foreground">早上好</div>
-            <div className="text-xl font-bold mt-0.5 text-foreground">李医师 👋</div>
-            <div className="text-[11px] text-muted-foreground mt-1">康复医师 · 共 {PATIENTS.length} 位患者</div>
+            <div className="text-xl font-bold mt-0.5 text-foreground">{community ? "社区医生 👋" : "李医师 👋"}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">{community ? "社区康复 · " : "康复医师 · "}共 {PATIENTS.length} 位患者</div>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => onOpen("patientChatList")} className="w-9 h-9 rounded-full bg-primary-soft text-primary flex items-center justify-center relative">
@@ -693,29 +715,33 @@ const DoctorHome = ({
         <div>
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-[13px] font-bold text-foreground">今日待处理</span>
-            <button onClick={() => onGoPlan("plan")} className="text-[11px] text-primary font-medium flex items-center">
+            <button onClick={() => (community ? onGoPatients() : onGoPlan("plan"))} className="text-[11px] text-primary font-medium flex items-center">
               点击进入处理 <ChevronRight className="w-3 h-3" />
             </button>
           </div>
-          <PendingTodoGrid
-            items={[
-              { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-              { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
-              { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-primary text-white", onClick: onGoChat },
-              { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p, "doctor") === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
-            ]}
-          />
+          <PendingTodoGrid items={pendingItems} />
         </div>
 
         <div>
           <SectionTitle
             title="今日待办"
-            extra={<button onClick={onGoChat} className="text-xs text-primary font-medium flex items-center">全部 <ChevronRight className="w-3 h-3" /></button>}
+            extra={<button onClick={community ? onGoFollowup : onGoChat} className="text-xs text-primary font-medium flex items-center">全部 <ChevronRight className="w-3 h-3" /></button>}
           />
           <div className="space-y-2">
-            <PatientTaskCard onClick={() => onGoPatients("待首次评估")} patient="患者首评" tag={`共 ${FIRST_ASSESS_COUNT} 位患者`} task="进入患者列表完成首次评估" urgency="high" time="今日" />
-            <PatientTaskCard onClick={onGoRx} patient="待确认医嘱" tag="共 4 条" task="审核 AI 生成 / 治疗师上报的医嘱" urgency="medium" time="今日" />
-            <PatientTaskCard onClick={onGoChat} patient="待回复消息" tag={`共 ${PATIENT_UNREAD} 条`} task="患者沟通 + 团队会议消息待回复" urgency="low" time="今日" />
+            {community ? (
+              <>
+                <PatientTaskCard onClick={onGoFollowup} patient="术后随访" tag="共 8 位患者" task="术后第 3-14 天电话随访 · AI 话术辅助" urgency="high" time="今日" />
+                <PatientTaskCard onClick={onGoEducation} patient="宣教推送" tag="共 6 位患者" task="按病种批量推送康复宣教与家属指导" urgency="medium" time="今日" />
+                <PatientTaskCard onClick={() => onGoPatients("待首次评估")} patient="居家首评" tag={`共 ${FIRST_ASSESS_COUNT} 位患者`} task="新入组居家患者完成首次评估" urgency="medium" time="今日" />
+                <PatientTaskCard onClick={onGoChat} patient="待回复消息" tag={`共 ${PATIENT_UNREAD} 条`} task="患者沟通 + 团队会议消息待回复" urgency="low" time="今日" />
+              </>
+            ) : (
+              <>
+                <PatientTaskCard onClick={() => onGoPatients("待首次评估")} patient="患者首评" tag={`共 ${FIRST_ASSESS_COUNT} 位患者`} task="进入患者列表完成首次评估" urgency="high" time="今日" />
+                <PatientTaskCard onClick={onGoRx} patient="待确认医嘱" tag="共 4 条" task="审核 AI 生成 / 治疗师上报的医嘱" urgency="medium" time="今日" />
+                <PatientTaskCard onClick={onGoChat} patient="待回复消息" tag={`共 ${PATIENT_UNREAD} 条`} task="患者沟通 + 团队会议消息待回复" urgency="low" time="今日" />
+              </>
+            )}
           </div>
         </div>
 
