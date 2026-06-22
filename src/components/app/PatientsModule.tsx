@@ -236,14 +236,19 @@ export const PatientsPage = ({
   });
 
 
-  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent) === s).length;
-  const filterChips: { key: PatientFilter; label: string; count: number }[] = [
-    { key: "all", label: "全部", count: PATIENTS.length },
-    ...(accent === "doctor" || accent === "therapist" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
-    { key: "院中", label: "院中", count: stageCount("院中") },
-    { key: "待出院", label: "待出院", count: stageCount("待出院") },
-    { key: "院外", label: "院外", count: stageCount("院外") },
-  ];
+  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent, community) === s).length;
+  const filterChips: { key: PatientFilter; label: string; count: number }[] = community
+    ? [
+        { key: "all", label: "全部", count: PATIENTS.length },
+        { key: "院外", label: "院外", count: stageCount("院外") },
+      ]
+    : [
+        { key: "all", label: "全部", count: PATIENTS.length },
+        ...(accent === "doctor" || accent === "therapist" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
+        { key: "院中", label: "院中", count: stageCount("院中") },
+        { key: "待出院", label: "待出院", count: stageCount("待出院") },
+        { key: "院外", label: "院外", count: stageCount("院外") },
+      ];
 
   return (
     <div className="pb-4">
