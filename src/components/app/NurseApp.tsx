@@ -297,30 +297,6 @@ export const NurseApp = () => {
         />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "med"} onClose={close} title={`给药操作${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("给药完成 · 已自动生成执行记录"); close(); }}>确认给药完成</PrimaryBtn>}>
-        <MedExecSheet patient={activePatient} />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "vitals"} onClose={close} title={`生命体征录入${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("生命体征已保存 · 已同步医师端"); close(); }}>保存</PrimaryBtn>}>
-        <VitalsSheet patient={activePatient} />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "inject"} onClose={close} title={`注射记录${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("注射记录已保存"); close(); }}>保存记录</PrimaryBtn>}>
-        <InjectSheet />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "obs"} onClose={close} title={`病情观察${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("观察记录已上传医师端"); close(); }}>上报观察</PrimaryBtn>}>
-        <ObsSheet />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "execTask"} onClose={close} title={`执行护理任务${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("任务已完成 · 已记录"); close(); }}>完成任务</PrimaryBtn>}>
-        <ExecTaskSheet />
-      </PhoneSheet>
 
       <PhoneSheet open={sheet === "dailyNote"} onClose={close} title="每日康复护理备注" accent="nurse"
         footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("护理备注已保存到患者档案"); close(); }}>保存到患者档案</PrimaryBtn>}>
