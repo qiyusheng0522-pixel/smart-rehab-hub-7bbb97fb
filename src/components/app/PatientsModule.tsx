@@ -235,7 +235,7 @@ export const PatientsPage = ({
   });
 
 
-  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p) === s).length;
+  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent) === s).length;
   const filterChips: { key: PatientFilter; label: string; count: number }[] = [
     { key: "all", label: "全部", count: PATIENTS.length },
     { key: "院前", label: "院前", count: stageCount("院前") },
