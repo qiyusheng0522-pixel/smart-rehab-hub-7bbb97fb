@@ -46,6 +46,9 @@ import {
   BedDouble,
   ArrowRight,
   NotebookPen,
+  Plus,
+  FileText,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MeStats } from "@/components/app/MeStats";
