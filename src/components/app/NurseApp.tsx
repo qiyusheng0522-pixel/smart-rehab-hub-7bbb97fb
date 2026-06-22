@@ -68,11 +68,6 @@ const NURSE_TABS: TabBarItem[] = [
 
 type SheetKey =
   | null
-  | "med"
-  | "vitals"
-  | "inject"
-  | "obs"
-  | "execTask"
   | "patientDetail"
   | "addNote"
   | "team"
@@ -89,41 +84,14 @@ type SheetKey =
   | "intakeScan"
   | "intakeBed";
 
-type QueueKey = "med" | "vitals" | "inject" | "obs" | "execTask" | "confirmAssess";
+type QueueKey = "confirmAssess";
 
 const QUEUE_TITLE: Record<QueueKey, string> = {
-  med: "待执行给药",
-  vitals: "待测生命体征",
-  inject: "待执行注射",
-  obs: "待病情观察",
-  execTask: "待执行护理任务",
   confirmAssess: "待首次评估",
 };
 
 // 根据康复处方生成的待办（按患者维度）
 const QUEUES: Record<QueueKey, TodoItem[]> = {
-  med: [
-    { id: "m1", patient: "303 张建国", meta: "阿司匹林 100mg · IV", detail: "处方关联：脑卒中后偏瘫", time: "14:00", urgency: "high" },
-    { id: "m2", patient: "310 陈丽华", meta: "多奈哌齐 5mg · po", detail: "处方关联：认知障碍", time: "15:30", urgency: "medium" },
-    { id: "m3", patient: "305 王秀英", meta: "塞来昔布 200mg · po", detail: "处方关联：髋关节术后", time: "16:00", urgency: "medium" },
-    { id: "m4", patient: "307 李 强", meta: "巴氯芬 10mg · po", detail: "处方关联：脊髓损伤", time: "21:00", urgency: "low" },
-  ],
-  vitals: [
-    { id: "v1", patient: "305 王秀英", meta: "血压 + 心率", detail: "VS q4h · 第 3 次", time: "14:30", urgency: "medium" },
-    { id: "v2", patient: "303 张建国", meta: "血压 + 心率 + 血氧", detail: "VS q6h", time: "15:00", urgency: "medium" },
-  ],
-  inject: [
-    { id: "in1", patient: "305 王秀英", meta: "低分子肝素 0.4ml ih", detail: "腹部皮下", time: "14:35", urgency: "medium" },
-  ],
-  obs: [
-    { id: "o1", patient: "303 张建国", meta: "夜间血压波动", detail: "AI 提示加强观察", urgency: "high" },
-    { id: "o2", patient: "307 李 强", meta: "压疮高风险监测", detail: "Braden 14 分", urgency: "medium" },
-  ],
-  execTask: [
-    { id: "et1", patient: "312 刘伟明", meta: "伤口换药", detail: "术后第 5 天", time: "16:00", urgency: "high" },
-    { id: "et2", patient: "303 张建国", meta: "翻身 + 拍背", detail: "q2h", time: "15:00", urgency: "medium" },
-    { id: "et3", patient: "307 李 强", meta: "导尿管护理", detail: "每日清洁", time: "17:00", urgency: "medium" },
-  ],
   confirmAssess: [
     { id: "ca1", patient: "305 王秀英", meta: "髋关节置换术后", detail: "护理首评 · 一般情况 / ADL / 风险评估", urgency: "high" },
     { id: "ca2", patient: "311 周建华", meta: "脑梗死恢复期", detail: "护理首评 · 跌倒 / 压疮 / VTE / 营养", urgency: "medium" },
@@ -194,11 +162,6 @@ export const NurseApp = () => {
   };
 
   const queueToSheet: Record<QueueKey, SheetKey> = {
-    med: "med",
-    vitals: "vitals",
-    inject: "inject",
-    obs: "obs",
-    execTask: "execTask",
     confirmAssess: "confirmAssess",
   };
 
@@ -334,30 +297,6 @@ export const NurseApp = () => {
         />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "med"} onClose={close} title={`给药操作${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("给药完成 · 已自动生成执行记录"); close(); }}>确认给药完成</PrimaryBtn>}>
-        <MedExecSheet patient={activePatient} />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "vitals"} onClose={close} title={`生命体征录入${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("生命体征已保存 · 已同步医师端"); close(); }}>保存</PrimaryBtn>}>
-        <VitalsSheet patient={activePatient} />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "inject"} onClose={close} title={`注射记录${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("注射记录已保存"); close(); }}>保存记录</PrimaryBtn>}>
-        <InjectSheet />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "obs"} onClose={close} title={`病情观察${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("观察记录已上传医师端"); close(); }}>上报观察</PrimaryBtn>}>
-        <ObsSheet />
-      </PhoneSheet>
-
-      <PhoneSheet open={sheet === "execTask"} onClose={close} title={`执行护理任务${activePatient ? " · " + activePatient : ""}`} accent="nurse"
-        footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("任务已完成 · 已记录"); close(); }}>完成任务</PrimaryBtn>}>
-        <ExecTaskSheet />
-      </PhoneSheet>
 
       <PhoneSheet open={sheet === "dailyNote"} onClose={close} title="每日康复护理备注" accent="nurse"
         footer={<PrimaryBtn variant="nurse" onClick={() => { toast.success("护理备注已保存到患者档案"); close(); }}>保存到患者档案</PrimaryBtn>}>
@@ -601,13 +540,7 @@ const NurseHome = ({
   onFillBed: (rec: IntakeRecord) => void;
   onOpenAssessQueue: () => void;
 }) => {
-  const totalTodo = QUEUES.med.length + QUEUES.vitals.length + QUEUES.inject.length + QUEUES.obs.length + QUEUES.execTask.length;
-  const allTodos: { patient: string; meta: string; time?: string; urgency: "high" | "medium" | "low"; k: QueueKey }[] = [
-    ...QUEUES.med.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "med" as QueueKey })),
-    ...QUEUES.execTask.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "execTask" as QueueKey })),
-    ...QUEUES.vitals.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "vitals" as QueueKey })),
-    ...QUEUES.obs.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "obs" as QueueKey })),
-  ].sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.urgency] - { high: 0, medium: 1, low: 2 }[b.urgency]));
+  const pendingTodoTotal = pendingAssessCount + 3 + PATIENT_UNREAD + FOLLOW_UPS.filter(f => f.status === "pending").length;
 
   return (
     <div className="pb-4">
@@ -616,7 +549,7 @@ const NurseHome = ({
           <div>
             <div className="text-xs text-muted-foreground">您好</div>
             <div className="text-xl font-bold mt-0.5 text-foreground">赵护士 👋</div>
-            <div className="text-[11px] text-muted-foreground mt-1">今日共 {totalTodo} 项护理待办（来自康复处方）</div>
+            <div className="text-[11px] text-muted-foreground mt-1">今日共 {pendingTodoTotal} 项护理待办</div>
           </div>
           <button onClick={() => toast("您有 4 条新任务")} className="w-9 h-9 rounded-full bg-rose-50 text-role-nurse flex items-center justify-center relative">
             <Bell className="w-4 h-4" />
@@ -707,47 +640,19 @@ const NurseHome = ({
       </div>
 
       <div className="px-4 mt-4">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-[13px] font-bold text-foreground">今日待办清单</span>
-          <span className="text-[11px] text-muted-foreground">共 {allTodos.length} 项 · 按优先级</span>
-        </div>
-        <div className="bg-card rounded-2xl shadow-card border border-border/40 divide-y divide-border/60 overflow-hidden">
-          {allTodos.map((t, idx) => {
-            const tag = QUEUE_TITLE[t.k].replace("待执行", "").replace("待", "");
-            const tagColor =
-              t.k === "med" ? "bg-primary/10 text-primary" :
-              t.k === "execTask" ? "bg-success/10 text-success" :
-              t.k === "vitals" ? "bg-secondary/10 text-secondary" :
-              "bg-warning/15 text-warning";
-            const uColor =
-              t.urgency === "high" ? "bg-destructive/10 text-destructive" :
-              t.urgency === "medium" ? "bg-warning/15 text-warning" :
-              "bg-muted text-muted-foreground";
-            const uLabel = t.urgency === "high" ? "紧急" : t.urgency === "medium" ? "重要" : "常规";
-            return (
-              <button
-                key={`${t.k}-${idx}`}
-                onClick={() => onOpenQueue(t.k)}
-                className="w-full text-left px-3 py-2.5 flex items-center gap-2 active:bg-muted/40"
-              >
-                <div className="w-7 h-7 rounded-lg bg-muted text-foreground/70 flex items-center justify-center text-[11px] font-bold shrink-0">
-                  {idx + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${tagColor}`}>{tag}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${uColor}`}>{uLabel}</span>
-                    <span className="text-[12px] font-semibold truncate">{t.patient}</span>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                    {t.meta}{t.time ? ` · ${t.time}` : ""}
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              </button>
-            );
-          })}
-        </div>
+        <button
+          onClick={onOpenDailyNote}
+          className="w-full bg-card rounded-2xl shadow-card border border-border/40 p-4 flex items-center gap-3 active:scale-[0.99] transition-transform"
+        >
+          <div className="w-10 h-10 rounded-xl bg-role-nurse text-white flex items-center justify-center">
+            <NotebookPen className="w-5 h-5" />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-[13px] font-bold text-foreground">每日护理记录</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">语音 / 文字输入 · 自动归档患者档案</div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
       </div>
     </div>
   );
@@ -818,153 +723,20 @@ const EduPushSheet = () => {
 };
 
 const DailyNoteSheet = ({ patient }: { patient?: string }) => {
-  const generated = `【${patient || "患者"}】今日 ${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2, "0")} 护理记录\n· 一般情况：神志清，精神可，配合度高\n· 生命体征：T 36.6℃ / P 78 / R 18 / BP 126/78mmHg，SpO₂ 98%\n· 给药执行：今日医嘱给药已全部执行到位\n· 康复参与：PT/OT 训练耐受良好，无诉不适\n· 皮肤 / 伤口：皮肤完好，伤口干洁无渗出\n· 二便 / 饮食：饮食可，二便正常\n· 夜间睡眠：约 6 小时，无夜醒\n· 风险预警：跌倒 / 压疮 / VTE 风险已落实预防措施`;
-  const [text, setText] = useState(generated);
-  const [recording, setRecording] = useState(false);
+  const [text, setText] = useState("");
   return (
-    <div className="p-4 space-y-3">
-      <AICard title="AI 生成每日护理记录">
-        已根据今日给药、体征、训练执行记录自动生成模板，可直接编辑，或通过语音/上传文件继续补充。
-      </AICard>
-      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="患者" value={<span className="text-xs font-semibold">{patient || "—"}</span>} />
-        <FormRow label="班次" value={<select className="bg-muted rounded px-2 py-1 text-xs"><option>白班</option><option>夜班</option></select>} />
-        <FormRow label="日期" value={<span className="text-xs">{new Date().toLocaleDateString("zh-CN")}</span>} />
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={() => { setText(generated); toast.success("已重新生成"); }}
-          className="flex-1 rounded-xl border border-role-nurse/40 text-role-nurse bg-rose-50 py-2 text-[12px] font-semibold flex items-center justify-center gap-1"
-        >
-          <Sparkles className="w-3.5 h-3.5" /> 重新生成
-        </button>
-        <button
-          onClick={() => {
-            setRecording(r => !r);
-            if (recording) {
-              setText(t => t + "\n· 语音补充：患者诉左下肢稍有麻木感，已告知医师。");
-              toast.success("语音已转写并追加");
-            } else {
-              toast("正在录音…再次点击结束");
-            }
-          }}
-          className={`flex-1 rounded-xl border py-2 text-[12px] font-semibold flex items-center justify-center gap-1 ${recording ? "bg-role-nurse text-white border-role-nurse animate-pulse" : "border-border bg-card"}`}
-        >
-          <Activity className="w-3.5 h-3.5" /> {recording ? "结束录音" : "语音输入"}
-        </button>
-        <label className="flex-1 rounded-xl border border-border bg-card py-2 text-[12px] font-semibold flex items-center justify-center gap-1 cursor-pointer">
-          <ArrowRight className="w-3.5 h-3.5 rotate-[-90deg]" /> 上传文件
-          <input
-            type="file"
-            accept="image/*,application/pdf,.doc,.docx"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) {
-                setText(t => t + `\n· 附件：${f.name}（已上传，AI 将自动抽取关键内容）`);
-                toast.success(`已上传 ${f.name}`);
-              }
-            }}
-          />
-        </label>
-      </div>
+    <div className="p-4">
       <textarea
         value={text}
         onChange={e => setText(e.target.value)}
-        className="w-full bg-card border border-border rounded-2xl p-3 text-xs h-48 outline-none leading-relaxed"
+        placeholder={`记录${patient ? ` ${patient} ` : ""}今日护理情况…`}
+        className="w-full bg-card border border-border rounded-2xl p-3 text-sm h-64 outline-none leading-relaxed focus:border-role-nurse"
       />
     </div>
   );
 };
 
-/* ===================== Sheets ===================== */
 
-const MedExecSheet = ({ patient }: { patient?: string }) => (
-  <div className="p-4 space-y-3">
-    <div className="rounded-2xl gradient-nurse text-white p-5">
-      <div className="text-xs opacity-80">给药任务</div>
-      <div className="text-xl font-bold mt-1">{patient || "303 床 · 张建国"}</div>
-      <div className="text-xs opacity-90 mt-2">阿司匹林 100mg · 静脉注射 · 14:00</div>
-    </div>
-    <AICard title="AI 用药安全核对">未检测到药物相互作用风险。患者无 NSAIDs 过敏史。</AICard>
-    <SectionTitle title="三查七对" />
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      {["患者姓名 · 张建国", "床号 · 303", "药物 · 阿司匹林 100mg", "剂量 · 100mg", "给药时间 · 14:00", "给药途径 · IV", "有效期 · 2026-12"].map((c) => (
-        <div key={c} className="flex items-center justify-between py-3">
-          <span className="text-[12px]">{c}</span>
-          <CheckCircle2 className="w-4 h-4 text-success" />
-        </div>
-      ))}
-    </div>
-    <div className="bg-warning-soft text-warning rounded-2xl p-3 text-xs flex items-center gap-2">
-      <ShieldCheck className="w-4 h-4" /> 需双人核对，请同事扫码确认
-    </div>
-  </div>
-);
-
-const VitalsSheet = ({ patient }: { patient?: string }) => (
-  <div className="p-4 space-y-3">
-    <div className="bg-card rounded-2xl shadow-card p-4">
-      <div className="text-sm font-semibold">{patient || "305 床 · 王秀英"}</div>
-      <div className="text-[11px] text-muted-foreground">14:30 测量</div>
-    </div>
-    <div className="grid grid-cols-2 gap-2">
-      {[
-        { l: "体温 ℃", d: "36.7" }, { l: "脉搏 bpm", d: "78" }, { l: "呼吸 /min", d: "18" },
-        { l: "血压 mmHg", d: "128/82" }, { l: "血氧 %", d: "98" }, { l: "疼痛 VAS", d: "3" },
-      ].map((v) => (
-        <div key={v.l} className="bg-card rounded-2xl shadow-card p-3">
-          <div className="text-[10px] text-muted-foreground">{v.l}</div>
-          <input defaultValue={v.d} className="w-full mt-1 bg-transparent text-lg font-bold outline-none" />
-        </div>
-      ))}
-    </div>
-    <AICard title="AI 异常筛查">所有指标在正常范围内。</AICard>
-  </div>
-);
-
-const InjectSheet = () => (
-  <div className="p-4 space-y-3">
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      <FormRow label="患者" value="305 王秀英 ▾" />
-      <FormRow label="药物" value="低分子肝素 ▾" />
-      <FormRow label="部位" value="腹部皮下 ▾" />
-      <FormRow label="剂量" value={<input defaultValue="0.4ml" className="w-20 bg-muted rounded px-2 py-1 text-xs text-right" />} />
-      <FormRow label="时间" value="14:35" />
-    </div>
-  </div>
-);
-
-const ObsSheet = () => (
-  <div className="p-4 space-y-3">
-    <AICard title="AI 异常监测提示">检测到患者夜间血压波动较大，建议加强观察。</AICard>
-    <div className="bg-card rounded-2xl shadow-card p-4 space-y-2">
-      <div className="text-[11px] text-muted-foreground">观察记录</div>
-      <textarea defaultValue="患者意识清楚，对答切题。下肢肌力 III 级，无新发疼痛。皮肤完好，无压疮。" className="w-full bg-muted rounded-xl p-3 text-xs h-32 outline-none" />
-    </div>
-    <SectionTitle title="风险评估" />
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      <FormRow label="跌倒风险" value="中 ▾" />
-      <FormRow label="压疮风险" value="低 ▾" />
-      <FormRow label="DVT 风险" value="中 ▾" />
-    </div>
-  </div>
-);
-
-const ExecTaskSheet = () => (
-  <div className="p-4 space-y-3">
-    <div className="bg-card rounded-2xl shadow-card p-4">
-      <div className="text-sm font-semibold">312 床 · 刘伟明</div>
-      <div className="text-[11px] text-muted-foreground mt-0.5">伤口换药 · 术后第 5 天</div>
-    </div>
-    <SectionTitle title="操作步骤" />
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      {["手卫生 + 戴手套", "评估伤口情况", "去除旧敷料", "消毒伤口", "更换敷料", "记录伤口情况"].map((s, i) => (
-        <FormRow key={s} label={`${i + 1}. ${s}`} value={<input type="checkbox" className="w-4 h-4 accent-pink-500" />} />
-      ))}
-    </div>
-  </div>
-);
 
 const Me = ({ onOpenTeam }: { onOpenTeam: () => void }) => (
   <div className="px-4 pt-4 pb-4 space-y-4">
@@ -980,7 +752,7 @@ const Me = ({ onOpenTeam }: { onOpenTeam: () => void }) => (
       accent="nurse"
       tiles={[
         { label: "本月护理", value: 412, sub: "次" },
-        { label: "给药执行", value: 286, sub: "项" },
+        { label: "每日护理", value: 286, sub: "条" },
         { label: "宣教推送", value: 64, sub: "次" },
       ]}
       trend={[
@@ -1000,7 +772,7 @@ const Me = ({ onOpenTeam }: { onOpenTeam: () => void }) => (
       </button>
       {[
         { label: "护理记录", info: "本月护理记录 412 条已同步患者档案" },
-        { label: "给药历史", info: "本月给药 286 项，AI 三查七对零差错" },
+        { label: "每日护理记录", info: "本月记录 286 条，已同步患者档案" },
         { label: "宣教记录", info: "本月推送 64 次宣教，平均阅读率 86%" },
         { label: "排班", info: "本周白班 5 / 夜班 2，已与组长确认" },
         { label: "设置", info: "夜间免打扰：22:00-06:00 · 紧急任务直达" },
