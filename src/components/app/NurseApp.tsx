@@ -653,21 +653,6 @@ const NurseHome = ({
         </div>
       </div>
 
-      <div className="px-4 mt-4">
-        <button
-          onClick={onOpenDailyNote}
-          className="w-full bg-card rounded-2xl shadow-card border border-border/40 p-4 flex items-center gap-3 active:scale-[0.99] transition-transform"
-        >
-          <div className="w-10 h-10 rounded-xl bg-role-nurse text-white flex items-center justify-center">
-            <NotebookPen className="w-5 h-5" />
-          </div>
-          <div className="flex-1 text-left">
-            <div className="text-[13px] font-bold text-foreground">每日护理记录</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">语音 / 文字输入 · 自动归档患者档案</div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        </button>
-      </div>
     </div>
   );
 };
