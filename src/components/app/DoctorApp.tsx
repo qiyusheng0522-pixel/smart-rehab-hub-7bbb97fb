@@ -103,7 +103,7 @@ const DOCTOR_TABS: TabBarItem[] = [
   { key: "me", label: "我的", icon: UserIcon },
 ];
 
-export const DoctorApp = () => {
+export const DoctorApp = ({ community = false }: { community?: boolean } = {}) => {
   const [tab, setTab] = useState("home");
   const [sheet, setSheet] = useState<SheetKey>(null);
   const [activePatient, setActivePatient] = useState<string>("");
@@ -164,6 +164,7 @@ export const DoctorApp = () => {
       {tab === "patients" && (
         <PatientsPage
           accent="doctor"
+          community={community}
           onPick={pickPatient}
           initialFilter={patientsFilter}
           onAction={(key, p) => {

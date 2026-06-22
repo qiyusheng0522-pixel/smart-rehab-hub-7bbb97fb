@@ -26,14 +26,14 @@ import { toast } from "sonner";
 
 export type Accent = "doctor" | "therapist" | "nurse";
 
-export type PatientStage = "院前" | "院中" | "待出院" | "院后";
+export type PatientStage = "院前" | "院中" | "待出院" | "院外";
 
 export type PatientFilter =
   | "all"
   | "院前"
   | "院中"
   | "待出院"
-  | "院后"
+  | "院外"
   | "待首次评估";
 
 export type Patient = {
@@ -143,8 +143,10 @@ export const RETURNED_REASSESS_COUNT = PATIENTS.filter(p => p.returnedReassess).
 export const ALL_CONDITIONS = Array.from(new Set(PATIENTS.map(p => p.condition)));
 
 /** 根据状态推导患者所处阶段 */
-export const getPatientStage = (p: Patient, accent?: Accent): PatientStage => {
-  if (p.status === "已出院") return "院后";
+export const getPatientStage = (p: Patient, accent?: Accent, community?: boolean): PatientStage => {
+  // 社区端：所有患者统一进入院外阶段
+  if (community) return "院外";
+  if (p.status === "已出院") return "院外";
   if (p.status === "待出院") return "待出院";
   // 康复医师 / 治疗师端：不区分院前 / 院中，统一归为院中
   if (accent === "doctor" || accent === "therapist") return "院中";
@@ -179,12 +181,14 @@ export const PatientsPage = ({
   onSummary,
   onAction,
   initialFilter = "all",
+  community = false,
 }: {
   accent: Accent;
   onPick: (p: Patient) => void;
   onSummary?: (p: Patient) => void;
   onAction?: (key: PatientPendingKey, p: Patient) => void;
   initialFilter?: PatientFilter;
+  community?: boolean;
 }) => {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<PatientFilter>(initialFilter);
@@ -210,7 +214,7 @@ export const PatientsPage = ({
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "待首次评估") return !!p.needFirstAssess;
-    return getPatientStage(p, accent) === statusFilter;
+    return getPatientStage(p, accent, community) === statusFilter;
   };
   const matchAdmit = (p: Patient) => {
     if (admitRange === "all") return true;
@@ -232,14 +236,19 @@ export const PatientsPage = ({
   });
 
 
-  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent) === s).length;
-  const filterChips: { key: PatientFilter; label: string; count: number }[] = [
-    { key: "all", label: "全部", count: PATIENTS.length },
-    ...(accent === "doctor" || accent === "therapist" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
-    { key: "院中", label: "院中", count: stageCount("院中") },
-    { key: "待出院", label: "待出院", count: stageCount("待出院") },
-    { key: "院后", label: "院后", count: stageCount("院后") },
-  ];
+  const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent, community) === s).length;
+  const filterChips: { key: PatientFilter; label: string; count: number }[] = community
+    ? [
+        { key: "all", label: "全部", count: PATIENTS.length },
+        { key: "院外", label: "院外", count: stageCount("院外") },
+      ]
+    : [
+        { key: "all", label: "全部", count: PATIENTS.length },
+        ...(accent === "doctor" || accent === "therapist" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
+        { key: "院中", label: "院中", count: stageCount("院中") },
+        { key: "待出院", label: "待出院", count: stageCount("待出院") },
+        { key: "院外", label: "院外", count: stageCount("院外") },
+      ];
 
   return (
     <div className="pb-4">
@@ -338,7 +347,7 @@ export const PatientsPage = ({
             <div className="bg-card rounded-2xl p-8 text-center text-xs text-muted-foreground">无匹配患者</div>
           ) : (
             <div className="space-y-2">
-              {list.map(p => <PatientCard key={p.id} p={p} accent={accent} onClick={() => onPick(p)} onSummary={onSummary ? () => onSummary(p) : undefined} onAction={onAction ? (k) => onAction(k, p) : undefined} />)}
+              {list.map(p => <PatientCard key={p.id} p={p} accent={accent} community={community} onClick={() => onPick(p)} onSummary={onSummary ? () => onSummary(p) : undefined} onAction={onAction ? (k) => onAction(k, p) : undefined} />)}
             </div>
           )}
         </div>
@@ -347,13 +356,13 @@ export const PatientsPage = ({
   );
 };
 
-const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; accent: Accent; onClick: () => void; onSummary?: () => void; onAction?: (key: PatientPendingKey) => void }) => {
-  const stage = getPatientStage(p, accent);
+const PatientCard = ({ p, accent, community, onClick, onSummary, onAction }: { p: Patient; accent: Accent; community?: boolean; onClick: () => void; onSummary?: () => void; onAction?: (key: PatientPendingKey) => void }) => {
+  const stage = getPatientStage(p, accent, community);
   const stageMap: Record<PatientStage, string> = {
     "院前": "bg-warning/15 text-warning",
     "院中": "bg-primary/10 text-primary",
     "待出院": "bg-success-soft text-success",
-    "院后": "bg-muted text-muted-foreground",
+    "院外": "bg-muted text-muted-foreground",
   };
   const evalDone = !p.needFirstAssess && !p.returnedReassess;
   const planConfirmed = !p.needPlanConfirm && !!p.currentPlan && p.currentPlan.length > 0;
