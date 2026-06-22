@@ -730,7 +730,7 @@ export const TeamMeetingDisputeSheet = ({
     plan: true,
     rx: false,
   });
-  const [showFirstNote, setShowFirstNote] = useState(false);
+  
   const toggle = (k: string) => setSyncTargets({ ...syncTargets, [k]: !syncTargets[k] });
   const finish = () => {
     const labels = [
