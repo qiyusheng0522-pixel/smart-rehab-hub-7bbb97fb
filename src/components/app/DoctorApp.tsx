@@ -227,6 +227,8 @@ export const DoctorApp = ({ community = false }: { community?: boolean } = {}) =
           onCreateMeeting={() => setSheet("newMeeting")}
         />
       )}
+      {tab === "education" && <EducationModule />}
+      {tab === "followup" && <FollowupModule />}
       {tab === "me" && <DoctorMe onOpenTeam={() => open("team")} />}
 
       <PhoneSheet open={sheet === "assess"} onClose={close} title={`首次康复评估${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="doctor"
