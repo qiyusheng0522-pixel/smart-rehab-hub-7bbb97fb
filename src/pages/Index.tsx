@@ -43,6 +43,17 @@ const roleMeta = {
     label: "护士 · 工作台",
     features: ["AI 智能任务排序", "给药安全核对", "康复护理执行", "AI 宣教内容推送"],
   },
+  community: {
+    title: "社区端",
+    subtitle: "Community Rehab · All-in-One",
+    desc: "一人多岗：医师 + 治疗师 + 护士 三端集合",
+    icon: Home,
+    gradient: "gradient-community",
+    softBg: "bg-purple-50",
+    text: "text-role-community",
+    label: "社区端 · 工作台",
+    features: ["三端身份一键切换", "医师评估 / 开方", "治疗师任务执行", "护士给药与宣教"],
+  },
 };
 
 const Index = () => {
