@@ -68,11 +68,6 @@ const NURSE_TABS: TabBarItem[] = [
 
 type SheetKey =
   | null
-  | "med"
-  | "vitals"
-  | "inject"
-  | "obs"
-  | "execTask"
   | "patientDetail"
   | "addNote"
   | "team"
