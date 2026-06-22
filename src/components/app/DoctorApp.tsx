@@ -76,6 +76,8 @@ import {
   Mic,
   Minus,
 } from "lucide-react";
+import { BookOpen, ClipboardList } from "lucide-react";
+import { EducationModule, FollowupModule } from "@/components/app/CommunityModules";
 
 type SheetKey =
   | null
@@ -100,6 +102,14 @@ const DOCTOR_TABS: TabBarItem[] = [
   { key: "patients", label: "患者管理", icon: UsersRound },
   { key: "rx", label: "医嘱", icon: Sparkles },
   { key: "chat", label: "沟通", icon: MessageCircle, badge: PATIENT_UNREAD },
+  { key: "me", label: "我的", icon: UserIcon },
+];
+
+const COMMUNITY_TABS: TabBarItem[] = [
+  { key: "home", label: "工作台", icon: HomeIcon },
+  { key: "patients", label: "患者", icon: UsersRound },
+  { key: "education", label: "宣教", icon: BookOpen },
+  { key: "followup", label: "随访", icon: ClipboardList },
   { key: "me", label: "我的", icon: UserIcon },
 ];
 
@@ -150,7 +160,7 @@ export const DoctorApp = ({ community = false }: { community?: boolean } = {}) =
   };
 
   return (
-    <ScreenShell tabBar={<TabBar active={tab} onChange={setTab} accent="doctor" newPatientCount={NEW_PATIENT_COUNT} items={DOCTOR_TABS} />}>
+    <ScreenShell tabBar={<TabBar active={tab} onChange={setTab} accent="doctor" newPatientCount={NEW_PATIENT_COUNT} items={community ? COMMUNITY_TABS : DOCTOR_TABS} />}>
       {tab === "home" && (
         <DoctorHome
           onOpen={open}
@@ -217,6 +227,8 @@ export const DoctorApp = ({ community = false }: { community?: boolean } = {}) =
           onCreateMeeting={() => setSheet("newMeeting")}
         />
       )}
+      {tab === "education" && <EducationModule />}
+      {tab === "followup" && <FollowupModule />}
       {tab === "me" && <DoctorMe onOpenTeam={() => open("team")} />}
 
       <PhoneSheet open={sheet === "assess"} onClose={close} title={`首次康复评估${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="doctor"
