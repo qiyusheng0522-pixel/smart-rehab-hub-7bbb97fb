@@ -549,7 +549,7 @@ const NurseHome = ({
           <div>
             <div className="text-xs text-muted-foreground">您好</div>
             <div className="text-xl font-bold mt-0.5 text-foreground">赵护士 👋</div>
-            <div className="text-[11px] text-muted-foreground mt-1">今日共 {totalTodo} 项护理待办（来自康复处方）</div>
+            <div className="text-[11px] text-muted-foreground mt-1">今日共 {pendingTodoTotal} 项护理待办</div>
           </div>
           <button onClick={() => toast("您有 4 条新任务")} className="w-9 h-9 rounded-full bg-rose-50 text-role-nurse flex items-center justify-center relative">
             <Bell className="w-4 h-4" />
