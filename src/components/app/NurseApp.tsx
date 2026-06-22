@@ -194,9 +194,23 @@ export const NurseApp = () => {
           initialFilter={patientsFilter}
           onAction={(key, p) => {
             if (key === "assess") {
+              if (!p.bed || !String(p.bed).trim()) { toast.error("请先填写床位号"); return; }
               setActivePatient(`${p.name} · 床${p.bed}`);
               setPickedPatient({ ...p, notes: patientNotes[p.id] ?? p.notes });
               setSheet("confirmAssess");
+            } else if (key === "bed") {
+              setPickedPatient({ ...p, notes: patientNotes[p.id] ?? p.notes });
+              setBedTargetId(null);
+              setIntake({
+                name: p.name,
+                sex: "",
+                age: "",
+                diagnosis: p.condition,
+                admitNo: "",
+                bed: p.bed || "",
+                step: 2,
+              });
+              setSheet("intakeBed");
             }
           }}
         />
