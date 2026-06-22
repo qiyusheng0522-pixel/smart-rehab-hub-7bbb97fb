@@ -303,7 +303,7 @@ export const TherapistApp = () => {
             <PatientActionsBar
               accent="therapist"
               actions={
-                getPatientStage(pickedPatient) === "待出院"
+                getPatientStage(pickedPatient, "therapist") === "待出院"
                   ? [
                       { key: "dischargeAssess", label: "出院评估", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("dischargeAssess"); } },
                       { key: "discharge", label: "确认出院", icon: LogOut, onClick: () => { toast.success(`已确认「${pickedPatient.name}」出院`); close(); } },
@@ -464,7 +464,7 @@ const TherapistHome = ({
     onOpen: () => onPickMeeting(m),
   }));
 
-  const dischargeRows: TodoRow[] = PATIENTS.filter(p => getPatientStage(p) === "待出院").map(p => ({
+  const dischargeRows: TodoRow[] = PATIENTS.filter(p => getPatientStage(p, "therapist") === "待出院").map(p => ({
     kind: "discharge",
     title: `${p.name} · 床${p.bed}`,
     meta: `${p.condition} · 入院第 ${p.admitDays} 天`,
