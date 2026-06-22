@@ -135,6 +135,9 @@ export const PATIENTS: Patient[] = [
   { id: "p7", name: "黄淑芬", bed: "320", meta: "女 70 · 脑出血恢复期 · 入院第 3 天", status: "新患者", condition: "脑出血", admitDays: 3, needFirstAssess: true, returnedReassess: true, returnReason: "护士反馈：夜间意识波动 GCS 13→11，AI 评估结论与床旁观察存在偏差。", shared: ["李医师", "赵护士"], notes: [
     { author: "赵护士", time: "今日 06:50", text: "夜间患者一过性意识模糊，建议医师复评 NIHSS / MMSE。" },
   ] },
+  { id: "p10", name: "孙慧敏", bed: "", meta: "女 62 · 腰椎间盘突出术后 · 今日入院 RY-20260622-007", status: "新患者", condition: "腰椎间盘突出", admitDays: 0, needFirstAssess: true, shared: ["赵护士"], notes: [], isNew: true },
+  { id: "p11", name: "刘文博", bed: "", meta: "男 58 · 右膝 ACL 重建术后 · 今日入院 RY-20260622-009", status: "新患者", condition: "膝关节术后", admitDays: 0, needFirstAssess: true, shared: ["赵护士"], notes: [], isNew: true },
+  { id: "p12", name: "郑雪婷", bed: "", meta: "女 45 · 颈椎病术后 · 今日入院 RY-20260622-010", status: "新患者", condition: "颈椎病", admitDays: 0, needFirstAssess: true, shared: ["李医师", "赵护士"], notes: [], isNew: true },
 ];
 
 export const NEW_PATIENT_COUNT = PATIENTS.filter(p => p.isNew).length;
