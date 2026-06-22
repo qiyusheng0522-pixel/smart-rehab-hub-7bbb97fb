@@ -146,7 +146,7 @@ export const ALL_CONDITIONS = Array.from(new Set(PATIENTS.map(p => p.condition))
 export const getPatientStage = (p: Patient): PatientStage => {
   if (p.status === "已出院") return "院后";
   if (p.status === "待出院") return "待出院";
-  if (p.needFirstAssess || p.returnedReassess || p.needPlanConfirm || p.needRxConfirm) return "院前";
+  if (!p.bed || !String(p.bed).trim()) return "院前";
   return "院中";
 };
 
@@ -357,7 +357,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
   const pending: { key: PatientPendingKey; label: string; show: boolean }[] = [
     { key: "bed", label: "填床位号", show: needBed },
     { key: "assess", label: "开始评估", show: !needBed && !!p.needFirstAssess },
-    { key: "rx", label: "待确认医嘱", show: !needBed && !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
+    { key: "rx", label: "待确认医嘱", show: accent !== "nurse" && !needBed && !p.needFirstAssess && (!!p.needPlanConfirm || !!p.needRxConfirm) },
     { key: "daily", label: "每日护理", show: !needBed && evalDone },
   ];
   // 仅当父级提供 onAction 时展示；优先级：床位 > 首评 > 医嘱；评估完成后追加「每日护理」
