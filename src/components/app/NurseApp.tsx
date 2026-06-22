@@ -528,6 +528,7 @@ const IntakeScanSheet = ({ intake, onChange }: { intake: IntakeState; onChange: 
       <FormRow label="年龄" value={<input value={intake.age} onChange={e => onChange({ ...intake, age: e.target.value })} placeholder="68" className="w-16 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
       <FormRow label="入院诊断" value={<input value={intake.diagnosis} onChange={e => onChange({ ...intake, diagnosis: e.target.value })} placeholder="髋关节置换术后" className="w-40 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
       <FormRow label="入院单号" value={<input value={intake.admitNo} onChange={e => onChange({ ...intake, admitNo: e.target.value })} placeholder="RY-..." className="w-36 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+      <FormRow label="床位号" hint="可留空，稍后填" value={<input value={intake.bed} onChange={e => onChange({ ...intake, bed: e.target.value })} placeholder="如 305" className="w-20 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
     </div>
   </div>
 );
