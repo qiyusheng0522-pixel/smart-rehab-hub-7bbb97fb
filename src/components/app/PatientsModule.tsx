@@ -327,9 +327,9 @@ export const PatientsPage = ({
                         : "bg-muted border-border text-foreground/80"
                     }`}
                   >
-                    <option value={allValue}>{f.placeholder}</option>
+                    <option value={allValue}>{isActive ? `${f.label}：全部` : f.label}</option>
                     {f.opts.filter(o => o.v !== allValue).map(o => (
-                      <option key={o.v} value={o.v}>{o.t}</option>
+                      <option key={o.v} value={o.v}>{f.label}：{o.t}</option>
                     ))}
                   </select>
                   <ChevronRight className={`w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none ${isActive ? "text-white/80" : "text-muted-foreground"}`} />
