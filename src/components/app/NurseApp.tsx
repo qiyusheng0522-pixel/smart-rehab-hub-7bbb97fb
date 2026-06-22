@@ -530,7 +530,7 @@ const IntakeBedSheet = ({ intake, onChange }: { intake: IntakeState; onChange: (
 const NurseHome = ({
   onOpenQueue,
   onGoPatients,
-  onOpenDailyNote,
+  
   onOpenEdu,
   onOpenChat,
   onOpenFollowUpList,
