@@ -211,6 +211,10 @@ export const NurseApp = () => {
                 step: 2,
               });
               setSheet("intakeBed");
+            } else if (key === "daily") {
+              setActivePatient(`${p.name} · 床${p.bed}`);
+              setPickedPatient({ ...p, notes: patientNotes[p.id] ?? p.notes });
+              setSheet("dailyNote");
             }
           }}
         />
