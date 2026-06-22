@@ -26,14 +26,14 @@ import { toast } from "sonner";
 
 export type Accent = "doctor" | "therapist" | "nurse";
 
-export type PatientStage = "院前" | "院中" | "待出院" | "院后";
+export type PatientStage = "院前" | "院中" | "待出院" | "院外";
 
 export type PatientFilter =
   | "all"
   | "院前"
   | "院中"
   | "待出院"
-  | "院后"
+  | "院外"
   | "待首次评估";
 
 export type Patient = {
@@ -144,7 +144,7 @@ export const ALL_CONDITIONS = Array.from(new Set(PATIENTS.map(p => p.condition))
 
 /** 根据状态推导患者所处阶段 */
 export const getPatientStage = (p: Patient, accent?: Accent): PatientStage => {
-  if (p.status === "已出院") return "院后";
+  if (p.status === "已出院") return "院外";
   if (p.status === "待出院") return "待出院";
   // 康复医师 / 治疗师端：不区分院前 / 院中，统一归为院中
   if (accent === "doctor" || accent === "therapist") return "院中";
@@ -238,7 +238,7 @@ export const PatientsPage = ({
     ...(accent === "doctor" || accent === "therapist" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
     { key: "院中", label: "院中", count: stageCount("院中") },
     { key: "待出院", label: "待出院", count: stageCount("待出院") },
-    { key: "院后", label: "院后", count: stageCount("院后") },
+    { key: "院外", label: "院外", count: stageCount("院外") },
   ];
 
   return (
@@ -353,7 +353,7 @@ const PatientCard = ({ p, accent, onClick, onSummary, onAction }: { p: Patient; 
     "院前": "bg-warning/15 text-warning",
     "院中": "bg-primary/10 text-primary",
     "待出院": "bg-success-soft text-success",
-    "院后": "bg-muted text-muted-foreground",
+    "院外": "bg-muted text-muted-foreground",
   };
   const evalDone = !p.needFirstAssess && !p.returnedReassess;
   const planConfirmed = !p.needPlanConfirm && !!p.currentPlan && p.currentPlan.length > 0;
@@ -1364,7 +1364,7 @@ export interface PatientChatThread {
 export const DEFAULT_PATIENT_THREADS: PatientChatThread[] = [
   { patientId: "p1", lastMsg: "医生今晚我可以下床走几步吗？", time: "14:32", unread: 2 },
   { patientId: "p2", lastMsg: "夜间疼痛比昨天好多了，谢谢", time: "12:08", unread: 0 },
-  { patientId: "p3", lastMsg: "出院后社区怎么衔接？", time: "昨日", unread: 1 },
+  { patientId: "p3", lastMsg: "出院外社区怎么衔接？", time: "昨日", unread: 1 },
   { patientId: "p5", lastMsg: "首次评估什么时候安排？", time: "昨日", unread: 3 },
 ];
 
