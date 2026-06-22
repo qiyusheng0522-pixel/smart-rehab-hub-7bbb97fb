@@ -160,7 +160,7 @@ export const DoctorApp = ({ community = false }: { community?: boolean } = {}) =
   };
 
   return (
-    <ScreenShell tabBar={<TabBar active={tab} onChange={setTab} accent="doctor" newPatientCount={NEW_PATIENT_COUNT} items={DOCTOR_TABS} />}>
+    <ScreenShell tabBar={<TabBar active={tab} onChange={setTab} accent="doctor" newPatientCount={NEW_PATIENT_COUNT} items={community ? COMMUNITY_TABS : DOCTOR_TABS} />}>
       {tab === "home" && (
         <DoctorHome
           onOpen={open}
