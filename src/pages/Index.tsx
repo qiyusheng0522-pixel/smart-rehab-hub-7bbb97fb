@@ -3,10 +3,11 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { DoctorApp } from "@/components/app/DoctorApp";
 import { TherapistApp } from "@/components/app/TherapistApp";
 import { NurseApp } from "@/components/app/NurseApp";
-import { Sparkles, Stethoscope, Activity, HeartPulse, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { CommunityApp } from "@/components/app/CommunityApp";
+import { Sparkles, Stethoscope, Activity, HeartPulse, Home, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { WorkflowSection } from "@/components/WorkflowSection";
 
-type Role = "landing" | "doctor" | "therapist" | "nurse";
+type Role = "landing" | "doctor" | "therapist" | "nurse" | "community";
 
 const roleMeta = {
   doctor: {
