@@ -165,9 +165,14 @@ export const NurseApp = () => {
   const [activeMeeting, setActiveMeeting] = useState<TeamMeeting | null>(null);
   const [activeFollowUp, setActiveFollowUp] = useState<FollowUpPatient | null>(null);
   const [patientsFilter, setPatientsFilter] = useState<import("@/components/app/PatientsModule").PatientFilter>("all");
-  const [intake, setIntake] = useState<{ name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 }>({
+  const [intake, setIntake] = useState<IntakeState>({
     name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1,
   });
+  const [pendingBed, setPendingBed] = useState<IntakeRecord[]>([
+    { id: "pb-demo", name: "孙慧敏", sex: "女", age: "62", diagnosis: "腰椎间盘突出术后", admitNo: "RY-20260622-007", bed: "" },
+  ]);
+  const [pendingAssess, setPendingAssess] = useState<IntakeRecord[]>([]);
+  const [bedTargetId, setBedTargetId] = useState<string | null>(null);
   const goPatients = (filter: import("@/components/app/PatientsModule").PatientFilter = "all") => {
     setPatientsFilter(filter);
     setTab("patients");
@@ -208,13 +213,15 @@ export const NurseApp = () => {
           onOpenChat={() => setTab("chat")}
           onOpenFollowUpList={() => open("followUpList")}
           onOpenFollowUp={(p) => { setActiveFollowUp(p); open("followUp"); }}
-          intake={intake}
-          onScanIntake={() => open("intakeScan")}
-          onFillBed={() => open("intakeBed")}
-          onIntakeAssess={() => {
-            setActivePatient(`${intake.bed || "新患者"} ${intake.name || "王秀英"}`);
-            open("confirmAssess");
+          pendingBed={pendingBed}
+          pendingAssessCount={pendingAssess.length + QUEUES.confirmAssess.length}
+          onScanIntake={() => { setBedTargetId(null); setIntake({ name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1 }); open("intakeScan"); }}
+          onFillBed={(rec) => {
+            setBedTargetId(rec.id);
+            setIntake({ ...rec, step: 2 });
+            open("intakeBed");
           }}
+          onOpenAssessQueue={() => openQueue("confirmAssess")}
         />
       )}
       {tab === "patients" && (
@@ -253,38 +260,54 @@ export const NurseApp = () => {
       <PhoneSheet open={sheet === "confirmAssess"} onClose={close} title={`首次评估${activePatient ? " · " + activePatient : ""}`} accent="nurse"
         footer={<div className="flex gap-3">
           <button onClick={() => { setActiveMeeting(null); setSheet("meeting"); }} className="flex-1 border border-primary/60 text-primary bg-card rounded-full py-3 text-sm font-semibold">团队会议评估</button>
-          <button onClick={() => { toast.success("首次评估已确认 · 已同步医师 / 治疗师"); if (intake.step === 3) setIntake({ ...intake, step: 4 }); close(); }} className="flex-1 gradient-nurse text-white rounded-full py-3 text-sm font-semibold shadow-card">确认首次评估</button>
+          <button onClick={() => { toast.success("首次评估已确认 · 已同步医师 / 治疗师"); close(); }} className="flex-1 gradient-nurse text-white rounded-full py-3 text-sm font-semibold shadow-card">确认首次评估</button>
         </div>}>
         <NurseFirstAssessSheet patient={activePatient} />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "intakeScan"} onClose={close} title="扫描患者入院单" accent="nurse"
+      <PhoneSheet open={sheet === "intakeScan"} onClose={close} title="扫入院单" accent="nurse"
         footer={<PrimaryBtn variant="nurse" onClick={() => {
-          setIntake({
+          const filled: IntakeRecord = {
+            id: `ip-${Date.now()}`,
             name: intake.name || "王秀英",
             sex: intake.sex || "女",
             age: intake.age || "68",
             diagnosis: intake.diagnosis || "髋关节置换术后",
             admitNo: intake.admitNo || "RY-20260622-008",
-            bed: intake.bed,
-            step: 2,
-          });
-          toast.success("入院单已识别");
-          setSheet("intakeBed");
-        }}>识别并下一步：填床位号</PrimaryBtn>}>
+            bed: intake.bed.trim(),
+          };
+          if (filled.bed) {
+            setPendingAssess([filled, ...pendingAssess]);
+            toast.success(`${filled.name} · 床${filled.bed} 已加入待首次评估`);
+          } else {
+            setPendingBed([filled, ...pendingBed]);
+            toast.success(`${filled.name} 已加入待填床位号清单`);
+          }
+          setIntake({ name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1 });
+          close();
+        }}>{intake.bed.trim() ? "保存并加入待首次评估" : "保存（稍后填床位号）"}</PrimaryBtn>}>
         <IntakeScanSheet intake={intake} onChange={setIntake} />
       </PhoneSheet>
 
-      <PhoneSheet open={sheet === "intakeBed"} onClose={close} title="分配床位" accent="nurse"
+      <PhoneSheet open={sheet === "intakeBed"} onClose={close} title="填床位号" accent="nurse"
         footer={<PrimaryBtn variant="nurse" onClick={() => {
-          if (!intake.bed) { toast.error("请填写床位号"); return; }
-          setIntake({ ...intake, step: 3 });
-          toast.success(`床位 ${intake.bed} 已分配`);
-          setActivePatient(`${intake.bed} ${intake.name || "患者"}`);
-          setSheet("confirmAssess");
-        }}>保存并下一步：首次评估</PrimaryBtn>}>
+          if (!intake.bed.trim()) { toast.error("请填写床位号"); return; }
+          if (bedTargetId) {
+            const target = pendingBed.find(p => p.id === bedTargetId);
+            if (target) {
+              const updated = { ...target, bed: intake.bed.trim() };
+              setPendingBed(pendingBed.filter(p => p.id !== bedTargetId));
+              setPendingAssess([updated, ...pendingAssess]);
+              toast.success(`床位 ${updated.bed} 已分配 · 进入待首次评估`);
+            }
+          }
+          setBedTargetId(null);
+          setIntake({ name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1 });
+          close();
+        }}>保存床位号</PrimaryBtn>}>
         <IntakeBedSheet intake={intake} onChange={setIntake} />
       </PhoneSheet>
+
 
 
       <PhoneSheet open={sheet === "meetingList"} onClose={close} title="团队会议" accent="nurse">
@@ -460,6 +483,7 @@ export const NurseApp = () => {
 
 /* ============== 入院工作流：步骤按钮 / 扫单 / 床位 ============== */
 type IntakeState = { name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 };
+type IntakeRecord = { id: string; name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string };
 
 const IntakeStep = ({
   n, icon: Icon, label, active, done, disabled, onClick,
@@ -504,6 +528,7 @@ const IntakeScanSheet = ({ intake, onChange }: { intake: IntakeState; onChange: 
       <FormRow label="年龄" value={<input value={intake.age} onChange={e => onChange({ ...intake, age: e.target.value })} placeholder="68" className="w-16 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
       <FormRow label="入院诊断" value={<input value={intake.diagnosis} onChange={e => onChange({ ...intake, diagnosis: e.target.value })} placeholder="髋关节置换术后" className="w-40 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
       <FormRow label="入院单号" value={<input value={intake.admitNo} onChange={e => onChange({ ...intake, admitNo: e.target.value })} placeholder="RY-..." className="w-36 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
+      <FormRow label="床位号" hint="可留空，稍后填" value={<input value={intake.bed} onChange={e => onChange({ ...intake, bed: e.target.value })} placeholder="如 305" className="w-20 bg-muted rounded px-2 py-1 text-xs text-right outline-none" />} />
     </div>
   </div>
 );
@@ -549,10 +574,11 @@ const NurseHome = ({
   onOpenChat,
   onOpenFollowUpList,
   onOpenFollowUp,
-  intake,
+  pendingBed,
+  pendingAssessCount,
   onScanIntake,
   onFillBed,
-  onIntakeAssess,
+  onOpenAssessQueue,
 }: {
   onOpenQueue: (k: QueueKey) => void;
   onGoPatients: (filter?: import("@/components/app/PatientsModule").PatientFilter) => void;
@@ -561,10 +587,11 @@ const NurseHome = ({
   onOpenChat: () => void;
   onOpenFollowUpList: () => void;
   onOpenFollowUp: (p: FollowUpPatient) => void;
-  intake: { name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 };
+  pendingBed: IntakeRecord[];
+  pendingAssessCount: number;
   onScanIntake: () => void;
-  onFillBed: () => void;
-  onIntakeAssess: () => void;
+  onFillBed: (rec: IntakeRecord) => void;
+  onOpenAssessQueue: () => void;
 }) => {
   const totalTodo = QUEUES.med.length + QUEUES.vitals.length + QUEUES.inject.length + QUEUES.obs.length + QUEUES.execTask.length;
   const allTodos: { patient: string; meta: string; time?: string; urgency: "high" | "medium" | "low"; k: QueueKey }[] = [
@@ -590,59 +617,43 @@ const NurseHome = ({
         </div>
       </div>
 
-      {/* 新患者入院工作流 */}
+      {/* 新患者入院：扫单 + 床位 */}
       <div className="px-4 mt-3">
         <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-[13px] font-bold text-foreground">新患者入院流程</span>
-          <span className="text-[10px] text-muted-foreground">扫单 → 床位 → 首评 → 护理日志</span>
+          <span className="text-[13px] font-bold text-foreground">新患者入院</span>
+          <span className="text-[10px] text-muted-foreground">扫入院单 · 可同时填床位号</span>
         </div>
         <div className="bg-card rounded-2xl shadow-card border border-border/40 p-3 space-y-2.5">
-          {/* 摘要 */}
-          {(intake.name || intake.bed) && (
-            <div className="rounded-xl bg-rose-50/60 border border-role-nurse/20 px-3 py-2 text-[11px] text-foreground/80 flex items-center gap-2">
-              <BedDouble className="w-3.5 h-3.5 text-role-nurse" />
-              <span className="font-semibold">{intake.name || "待录入"}</span>
-              {intake.sex && <span>· {intake.sex}{intake.age && ` ${intake.age}`}</span>}
-              {intake.bed && <span>· 床 {intake.bed}</span>}
-              {intake.diagnosis && <span className="truncate">· {intake.diagnosis}</span>}
+          <button
+            onClick={onScanIntake}
+            className="w-full rounded-xl gradient-nurse text-white px-3 py-3 text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-card"
+          >
+            <ScanLine className="w-4.5 h-4.5" />
+            扫入院单（可同时填床位号）
+          </button>
+          {pendingBed.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 px-1">
+                <BedDouble className="w-3 h-3 text-warning" />
+                <span className="text-[11px] font-semibold text-foreground/80">待填床位号</span>
+                <span className="text-[10px] text-muted-foreground">{pendingBed.length} 位患者</span>
+              </div>
+              {pendingBed.map(p => (
+                <div key={p.id} className="rounded-xl bg-warning/5 border border-warning/30 px-3 py-2 flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] font-semibold truncate">{p.name} · {p.sex} {p.age}岁</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{p.diagnosis} · {p.admitNo}</div>
+                  </div>
+                  <button
+                    onClick={() => onFillBed(p)}
+                    className="text-[11px] px-2.5 py-1.5 rounded-full bg-warning text-white font-semibold shrink-0 flex items-center gap-1"
+                  >
+                    <BedDouble className="w-3 h-3" /> 填床位号
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-          <div className="grid grid-cols-3 gap-2">
-            <IntakeStep
-              n={1}
-              icon={ScanLine}
-              label="扫入院单"
-              active={intake.step === 1}
-              done={intake.step > 1}
-              onClick={onScanIntake}
-            />
-            <IntakeStep
-              n={2}
-              icon={BedDouble}
-              label="填床位号"
-              active={intake.step === 2}
-              done={intake.step > 2}
-              disabled={intake.step < 2}
-              onClick={onFillBed}
-            />
-            <IntakeStep
-              n={3}
-              icon={ClipboardCheck}
-              label="首次评估"
-              active={intake.step === 3}
-              done={intake.step > 3}
-              disabled={intake.step < 3}
-              onClick={onIntakeAssess}
-            />
-          </div>
-          <button
-            onClick={onOpenDailyNote}
-            disabled={intake.step < 4}
-            className="w-full rounded-xl border border-role-nurse/30 bg-rose-50/40 text-role-nurse px-3 py-2.5 text-[12.5px] font-semibold flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:bg-muted/40 disabled:text-muted-foreground disabled:border-border"
-          >
-            <NotebookPen className="w-4 h-4" />
-            {intake.step >= 4 ? "记录每日护理日志" : "完成首评后开始每日护理日志"}
-          </button>
         </div>
       </div>
 
@@ -652,6 +663,7 @@ const NurseHome = ({
         </div>
         <PendingTodoGrid
           items={[
+            { label: "待首次评估", count: pendingAssessCount, icon: ClipboardCheck, iconClass: "bg-role-nurse text-white", onClick: onOpenAssessQueue },
             { label: "待宣教", count: 3, icon: BookOpen, iconClass: "bg-warning text-white", onClick: onOpenEdu },
             { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-secondary text-white", onClick: onOpenChat },
             { label: "待随访", count: FOLLOW_UPS.filter(f => f.status === "pending").length, icon: Stethoscope, iconClass: "bg-role-nurse text-white", onClick: onOpenFollowUpList },
