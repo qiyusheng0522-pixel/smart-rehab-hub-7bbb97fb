@@ -62,7 +62,7 @@ import { toast } from "sonner";
 const THERAPIST_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: ClipboardList },
   { key: "patients", label: "患者管理", icon: UsersRound },
-  { key: "rx", label: "康复方案", icon: FileHeart },
+  { key: "rx", label: "医嘱", icon: FileHeart },
   { key: "chat", label: "沟通", icon: MessageCircle, badge: PATIENT_UNREAD },
   { key: "me", label: "我的", icon: UserIcon },
 ];
@@ -524,7 +524,7 @@ const TherapistHome = ({
         <PendingTodoGrid
           items={[
             { label: "待首次评估", count: firstAssessRows.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-            { label: "待确认方案", count: PATIENTS.filter(p => p.needPlanConfirm || p.needRxConfirm).length, icon: FileText, iconClass: "bg-secondary text-white", onClick: onGoRx },
+            { label: "待确认医嘱", count: PATIENTS.filter(p => p.needPlanConfirm || p.needRxConfirm).length, icon: FileText, iconClass: "bg-secondary text-white", onClick: onGoRx },
             { label: "待出院评估", count: dischargeRows.length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
           ]}
         />
