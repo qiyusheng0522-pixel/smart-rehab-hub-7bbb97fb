@@ -1100,9 +1100,61 @@ const NURSE_DEFAULT_SCALES: NurseScaleDef[] = [
 ];
 
 const NURSE_SCALE_LIB: NurseScaleDef[] = [
-  // 专科评估库
+  /* ============ 专科评估库 ============ */
   {
-    key: "eat10", category: "special", name: "EAT-10 吞咽障碍自评", brief: "10 项 · 总分 ≥ 3 提示吞咽异常",
+    key: "trach-vvst", category: "special",
+    name: "气管切开患者改良 V-VST 染料试验评估表",
+    brief: "蓝色染料 + 不同稠度 / 容积 · 评估气切患者误吸",
+    Render: makeGenericScale(
+      [
+        { label: "套管口分泌物可见蓝色染料", score: 3 },
+        { label: "吸引物中可见蓝色染料", score: 3 },
+        { label: "饮水后 SpO₂ 下降 ≥ 3%", score: 2 },
+        { label: "进食后湿性嗓音 / 咳嗽", score: 2 },
+        { label: "咽部残留明显", score: 1 },
+        { label: "唇部闭合不全 / 流涎", score: 1 },
+      ],
+      { high: 3, label: "存在误吸风险，建议暂停经口进食并联系 ST" },
+    ),
+  },
+  {
+    key: "bowel", category: "special",
+    name: "肠道评估",
+    brief: "排便频率 / 性状 / 失禁 · Bristol 分型",
+    Render: makeGenericScale(
+      [
+        { label: "便秘（> 3 天未排便）", score: 2 },
+        { label: "腹泻（> 3 次 / 天稀便）", score: 2 },
+        { label: "Bristol 1–2 型（硬便）", score: 1 },
+        { label: "Bristol 6–7 型（稀水便）", score: 1 },
+        { label: "大便失禁", score: 3 },
+        { label: "腹胀 / 肠鸣音减弱", score: 1 },
+        { label: "需药物 / 灌肠辅助排便", score: 1 },
+      ],
+      { high: 3, label: "存在排便障碍，需启动肠道管理方案" },
+    ),
+  },
+  {
+    key: "bladder", category: "special",
+    name: "膀胱评估",
+    brief: "排尿方式 / 残余尿 / 失禁 · 留置管路评估",
+    Render: makeGenericScale(
+      [
+        { label: "尿潴留（PVR > 100ml）", score: 2 },
+        { label: "尿频（> 8 次 / 日）", score: 1 },
+        { label: "尿急 / 急迫性尿失禁", score: 2 },
+        { label: "压力性尿失禁", score: 2 },
+        { label: "留置导尿管 > 48h", score: 2 },
+        { label: "尿路感染征象（尿浑浊 / 异味）", score: 3 },
+        { label: "需间歇导尿 CIC", score: 1 },
+      ],
+      { high: 3, label: "存在膀胱功能障碍，建议膀胱训练 + 残余尿监测" },
+    ),
+  },
+  {
+    key: "eat10", category: "special",
+    name: "EAT10 量表",
+    brief: "10 项吞咽自评 · 总分 ≥ 3 提示吞咽异常",
     Render: makeGenericScale(
       [
         { label: "我的吞咽问题使我体重减轻", score: 2 },
@@ -1119,22 +1171,12 @@ const NURSE_SCALE_LIB: NurseScaleDef[] = [
       { high: 3, label: "存在吞咽功能异常，建议进一步评估" },
     ),
   },
+
+  /* ============ 基础评估库 ============ */
   {
-    key: "wada", category: "special", name: "洼田饮水试验", brief: "5 级分级 · 吞咽功能床旁筛查",
-    Render: makeGenericScale(
-      [
-        { label: "Ⅰ 级：5s 内一次顺利咽下", score: 1 },
-        { label: "Ⅱ 级：分 2 次以上无呛咳咽下", score: 2 },
-        { label: "Ⅲ 级：能 1 次咽下但有呛咳", score: 3 },
-        { label: "Ⅳ 级：分 2 次以上咽下且有呛咳", score: 4 },
-        { label: "Ⅴ 级：频繁呛咳，不能全部咽下", score: 5 },
-      ],
-      { high: 3, label: "存在吞咽障碍，需调整饮食性状" },
-    ),
-  },
-  // 基础评估库
-  {
-    key: "morse", category: "basic", name: "Morse 跌倒风险评估", brief: "6 项 · 总分 ≥ 45 高危",
+    key: "fall", category: "basic",
+    name: "跌倒风险临床评估量表",
+    brief: "Morse · 6 项 · 总分 ≥ 45 高危",
     Render: makeGenericScale(
       [
         { label: "跌倒史（近 3 个月）", score: 25 },
@@ -1148,7 +1190,9 @@ const NURSE_SCALE_LIB: NurseScaleDef[] = [
     ),
   },
   {
-    key: "braden", category: "basic", name: "Braden 压疮风险评估", brief: "6 维度反向评分 · ≤ 12 高危",
+    key: "pressure", category: "basic",
+    name: "成人压力性损伤评分量表",
+    brief: "Braden · 6 维度 · ≤ 12 高危",
     Render: makeGenericScale(
       [
         { label: "感觉完全受限", score: 4 },
@@ -1162,7 +1206,26 @@ const NURSE_SCALE_LIB: NurseScaleDef[] = [
     ),
   },
   {
-    key: "caprini", category: "basic", name: "Caprini VTE 风险评估", brief: "≥ 5 极高危 · 需药物预防",
+    key: "general", category: "basic",
+    name: "一般护理评估",
+    brief: "意识 / 皮肤 / 管路 / 自理 / 心理",
+    Render: makeGenericScale(
+      [
+        { label: "意识改变（嗜睡 / 昏睡 / 昏迷）", score: 2 },
+        { label: "皮肤破损 / 发红", score: 1 },
+        { label: "留置管路 ≥ 1 条", score: 1 },
+        { label: "ADL 重度依赖", score: 2 },
+        { label: "情绪低落 / 焦虑", score: 1 },
+        { label: "睡眠障碍", score: 1 },
+        { label: "家属照护能力不足", score: 1 },
+      ],
+      { high: 3, label: "护理风险偏高，建议制定个性化护理计划" },
+    ),
+  },
+  {
+    key: "vte", category: "basic",
+    name: "深静脉血栓风险因素评分表",
+    brief: "Caprini · 总分 ≥ 5 极高危，需药物预防",
     Render: makeGenericScale(
       [
         { label: "年龄 ≥ 75 岁", score: 3 },
@@ -1171,40 +1234,15 @@ const NURSE_SCALE_LIB: NurseScaleDef[] = [
         { label: "中心静脉置管", score: 2 },
         { label: "脑卒中", score: 5 },
         { label: "下肢骨折", score: 5 },
+        { label: "恶性肿瘤", score: 2 },
+        { label: "既往 VTE 病史", score: 3 },
       ],
       { high: 5, label: "VTE 极高危，建议药物 + 机械联合预防" },
     ),
   },
-  {
-    key: "barthel", category: "basic", name: "Barthel ADL 指数", brief: "10 项 · ≤ 40 重度依赖",
-    Render: makeGenericScale(
-      [
-        { label: "进食独立", score: 10 },
-        { label: "洗澡独立", score: 5 },
-        { label: "修饰独立", score: 5 },
-        { label: "穿衣独立", score: 10 },
-        { label: "大便控制良好", score: 10 },
-        { label: "小便控制良好", score: 10 },
-        { label: "如厕独立", score: 10 },
-        { label: "床椅转移独立", score: 15 },
-        { label: "平地行走 45m 独立", score: 15 },
-        { label: "上下楼梯独立", score: 10 },
-      ],
-    ),
-  },
-  {
-    key: "nrs-pain", category: "basic", name: "NRS 疼痛数字评分", brief: "0–10 分 · ≥ 4 需镇痛干预",
-    Render: makeGenericScale(
-      [
-        { label: "无痛", score: 0 },
-        { label: "轻度疼痛（不影响睡眠）", score: 3 },
-        { label: "中度疼痛（影响睡眠）", score: 6 },
-        { label: "重度疼痛（无法入睡）", score: 9 },
-      ],
-      { high: 4, label: "需镇痛干预并复评" },
-    ),
-  },
 ];
+
+
 
 const NurseScaleList = ({
   scales,
