@@ -164,6 +164,7 @@ export const DoctorApp = ({ community = false }: { community?: boolean } = {}) =
       {tab === "patients" && (
         <PatientsPage
           accent="doctor"
+          community={community}
           onPick={pickPatient}
           initialFilter={patientsFilter}
           onAction={(key, p) => {
