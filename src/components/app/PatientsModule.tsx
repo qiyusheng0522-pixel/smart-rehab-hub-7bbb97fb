@@ -459,7 +459,7 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
             <div className="text-base font-bold">{patient.name} · 床 {patient.bed}</div>
             <div className="text-[11px] opacity-90 mt-0.5">{patient.meta}</div>
           </div>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 backdrop-blur font-semibold">{getPatientStage(patient)}</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 backdrop-blur font-semibold">{getPatientStage(patient, accent)}</span>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 text-center">
           <div className="bg-white/15 backdrop-blur rounded-xl py-1.5"><div className="text-[9px] opacity-80">入院天数</div><div className="text-[12px] font-semibold mt-0.5">{patient.admitDays} 天</div></div>
@@ -476,7 +476,7 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
         <FormRow label="主诉 / 病症" value={patient.condition} hint={patient.meta} />
         <FormRow label="入院时间" value={`${patient.admitDays} 天前`} />
-        <FormRow label="当前状态" value={getPatientStage(patient)} />
+        <FormRow label="当前状态" value={getPatientStage(patient, accent)} />
         <FormRow label="主管医师" value="李志远 主任医师" hint="神经康复科" />
         <FormRow label="既往史" value="高血压 8 年 · 糖尿病 5 年" />
         <FormRow label="手术史" value="2026-04-23 关节置换 / 减压内固定" />
@@ -610,7 +610,7 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
       )}
 
       {/* 首评核心评分：未评估患者展示「待评估」入口；已完成评估患者也保持与首评一致的展示 */}
-      {getPatientStage(patient) !== "待出院" && (
+      {getPatientStage(patient, accent) !== "待出院" && (
         <>
           <SectionTitle title="首次评估 · 核心评分" extra={<span className="text-[10px] text-muted-foreground">AI 辅助生成</span>} />
           <div className="grid grid-cols-2 gap-2">
@@ -649,9 +649,9 @@ export const PatientDetailSheet = ({ patient, accent, onAddNote, onShare, action
       )}
 
       {/* 康复中 / 待出院 患者：AI 基于当前状态给出方案 / 出院建议 */}
-      {(getPatientStage(patient) === "院中" || getPatientStage(patient) === "待出院") && (
-        <AICard title={getPatientStage(patient) === "待出院" ? "AI 出院建议" : "AI 方案调整建议"}>
-          {getPatientStage(patient) === "待出院" ? (
+      {(getPatientStage(patient, accent) === "院中" || getPatientStage(patient, accent) === "待出院") && (
+        <AICard title={getPatientStage(patient, accent) === "待出院" ? "AI 出院建议" : "AI 方案调整建议"}>
+          {getPatientStage(patient, accent) === "待出院" ? (
             <div className="text-[12px] leading-relaxed">
               基于近 7 日康复执行（PT/OT 完成率 100%）、Barthel 已达 85、Berg 48、独立步行 60m，已满足出院标准。
               建议：① 启动院外二级方案二次确认；② 完成家属跌倒预防与转移培训；③ 对接社区康复站每周 2 次随访。
