@@ -165,6 +165,9 @@ export const NurseApp = () => {
   const [activeMeeting, setActiveMeeting] = useState<TeamMeeting | null>(null);
   const [activeFollowUp, setActiveFollowUp] = useState<FollowUpPatient | null>(null);
   const [patientsFilter, setPatientsFilter] = useState<import("@/components/app/PatientsModule").PatientFilter>("all");
+  const [intake, setIntake] = useState<{ name: string; sex: string; age: string; diagnosis: string; admitNo: string; bed: string; step: 1 | 2 | 3 | 4 }>({
+    name: "", sex: "", age: "", diagnosis: "", admitNo: "", bed: "", step: 1,
+  });
   const goPatients = (filter: import("@/components/app/PatientsModule").PatientFilter = "all") => {
     setPatientsFilter(filter);
     setTab("patients");
