@@ -543,7 +543,7 @@ const NurseHome = ({
 }: {
   onOpenQueue: (k: QueueKey) => void;
   onGoPatients: (filter?: import("@/components/app/PatientsModule").PatientFilter) => void;
-  onOpenDailyNote: () => void;
+  
   onOpenEdu: () => void;
   onOpenChat: () => void;
   onOpenFollowUpList: () => void;
