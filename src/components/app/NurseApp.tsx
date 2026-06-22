@@ -1042,55 +1042,292 @@ const NRS2002Scale = () => {
   );
 };
 
-type NurseScaleKey = "vvst" | "nrs2002";
+type NurseScaleCategory = "special" | "basic";
 type NurseScaleDef = {
-  key: NurseScaleKey;
+  key: string;
   name: string;
   brief: string;
-  result: string;
+  result?: string;
+  category: NurseScaleCategory;
   Render: React.FC;
 };
 
-const NURSE_SPECIAL_SCALES: NurseScaleDef[] = [
-  { key: "vvst", name: "V-VST 吞咽障碍临床评估", brief: "3 种稠度 × 3 种容积 · 安全性 / 有效性指标", result: "可疑异常 · 液体 10ml 咳嗽阳性", Render: VVSTScale },
-];
-
-const NURSE_BASIC_SCALES: NurseScaleDef[] = [
-  { key: "nrs2002", name: "NRS2002 营养风险筛查", brief: "6 维度评分 · 总分 ≥ 3 提示营养风险", result: "4 分 · 存在营养风险", Render: NRS2002Scale },
-];
-
-const NurseScaleList = ({ scales }: { scales: NurseScaleDef[] }) => {
-  const [expanded, setExpanded] = useState<NurseScaleKey | null>(scales[0]?.key ?? null);
-  return (
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      {scales.map((s) => {
-        const open = expanded === s.key;
-        const Render = s.Render;
-        return (
-          <div key={s.key} className="px-3 py-2.5">
-            <button onClick={() => setExpanded(open ? null : s.key)} className="w-full flex items-center gap-2 text-left">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[12px] font-semibold truncate">{s.name}</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-50 text-role-nurse font-semibold shrink-0">护理</span>
-                </div>
-                <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
-                {s.result && <div className="text-[11px] text-foreground/80 mt-1 font-medium">{s.result}</div>}
-              </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
-              <span className="text-[11px] text-role-nurse font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
+/** 通用打分量表渲染器（量表库新增量表使用） */
+const makeGenericScale = (items: { label: string; score: number }[], threshold?: { high: number; label: string }): React.FC =>
+  function GenericScale() {
+    const [picked, setPicked] = useState<Record<number, boolean>>({});
+    const toggle = (i: number) => setPicked({ ...picked, [i]: !picked[i] });
+    const total = items.reduce((acc, it, i) => acc + (picked[i] ? it.score : 0), 0);
+    const danger = threshold ? total >= threshold.high : false;
+    return (
+      <div className="mt-2 bg-muted/30 rounded-xl p-2 space-y-1">
+        {items.map((it, i) => {
+          const on = !!picked[i];
+          return (
+            <button
+              key={i}
+              onClick={() => toggle(i)}
+              className={`w-full flex items-center justify-between text-left px-2 py-1.5 rounded-lg border ${
+                on ? "border-role-nurse/60 bg-rose-50/60" : "border-border/60 bg-card"
+              }`}
+            >
+              <span className="flex items-center gap-1.5 text-[11px]">
+                <span className={`w-3.5 h-3.5 rounded border ${on ? "bg-role-nurse border-role-nurse" : "border-muted-foreground/50"} flex items-center justify-center text-white text-[9px]`}>
+                  {on ? "✓" : ""}
+                </span>
+                {it.label}
+              </span>
+              <span className="text-[10px] text-muted-foreground">{it.score} 分</span>
             </button>
-            {open && <Render />}
+          );
+        })}
+        <div className="flex items-center justify-between bg-card rounded-lg px-3 py-2 mt-1">
+          <span className="text-[12px] font-bold">本次评估总分</span>
+          <span className="text-[15px] font-bold text-role-nurse">{total} 分</span>
+        </div>
+        {threshold && (
+          <div className={`text-[11px] font-semibold px-1 ${danger ? "text-warning" : "text-success"}`}>
+            风险判定：{danger ? threshold.label : "暂未达到高危阈值"}
           </div>
-        );
-      })}
-    </div>
+        )}
+      </div>
+    );
+  };
+
+const NURSE_DEFAULT_SCALES: NurseScaleDef[] = [
+  { key: "vvst", category: "special", name: "V-VST 吞咽障碍临床评估", brief: "3 种稠度 × 3 种容积 · 安全性 / 有效性指标", result: "可疑异常 · 液体 10ml 咳嗽阳性", Render: VVSTScale },
+  { key: "nrs2002", category: "basic", name: "NRS2002 营养风险筛查", brief: "6 维度评分 · 总分 ≥ 3 提示营养风险", result: "4 分 · 存在营养风险", Render: NRS2002Scale },
+];
+
+const NURSE_SCALE_LIB: NurseScaleDef[] = [
+  // 专科评估库
+  {
+    key: "eat10", category: "special", name: "EAT-10 吞咽障碍自评", brief: "10 项 · 总分 ≥ 3 提示吞咽异常",
+    Render: makeGenericScale(
+      [
+        { label: "我的吞咽问题使我体重减轻", score: 2 },
+        { label: "我的吞咽问题影响我在外就餐", score: 2 },
+        { label: "吞咽液体费力", score: 2 },
+        { label: "吞咽固体费力", score: 2 },
+        { label: "吞咽药片费力", score: 2 },
+        { label: "吞咽时疼痛", score: 2 },
+        { label: "我的吞咽问题影响我享用食物", score: 2 },
+        { label: "我吞咽时有食物卡在喉咙里", score: 2 },
+        { label: "我吃东西时咳嗽", score: 2 },
+        { label: "我吞咽时紧张", score: 2 },
+      ],
+      { high: 3, label: "存在吞咽功能异常，建议进一步评估" },
+    ),
+  },
+  {
+    key: "wada", category: "special", name: "洼田饮水试验", brief: "5 级分级 · 吞咽功能床旁筛查",
+    Render: makeGenericScale(
+      [
+        { label: "Ⅰ 级：5s 内一次顺利咽下", score: 1 },
+        { label: "Ⅱ 级：分 2 次以上无呛咳咽下", score: 2 },
+        { label: "Ⅲ 级：能 1 次咽下但有呛咳", score: 3 },
+        { label: "Ⅳ 级：分 2 次以上咽下且有呛咳", score: 4 },
+        { label: "Ⅴ 级：频繁呛咳，不能全部咽下", score: 5 },
+      ],
+      { high: 3, label: "存在吞咽障碍，需调整饮食性状" },
+    ),
+  },
+  // 基础评估库
+  {
+    key: "morse", category: "basic", name: "Morse 跌倒风险评估", brief: "6 项 · 总分 ≥ 45 高危",
+    Render: makeGenericScale(
+      [
+        { label: "跌倒史（近 3 个月）", score: 25 },
+        { label: "超过 1 个医学诊断", score: 15 },
+        { label: "使用助行器 / 拐杖", score: 15 },
+        { label: "静脉输液 / 肝素锁", score: 20 },
+        { label: "步态虚弱", score: 10 },
+        { label: "认知能力差（高估自身能力）", score: 15 },
+      ],
+      { high: 45, label: "跌倒高危，需启用防跌倒预案" },
+    ),
+  },
+  {
+    key: "braden", category: "basic", name: "Braden 压疮风险评估", brief: "6 维度反向评分 · ≤ 12 高危",
+    Render: makeGenericScale(
+      [
+        { label: "感觉完全受限", score: 4 },
+        { label: "皮肤潮湿持续暴露", score: 4 },
+        { label: "活动能力卧床", score: 4 },
+        { label: "移动能力完全无法移动", score: 4 },
+        { label: "营养摄入极差", score: 4 },
+        { label: "摩擦力 / 剪切力问题", score: 3 },
+      ],
+      { high: 12, label: "压疮高危，需 q2h 翻身 + 减压垫" },
+    ),
+  },
+  {
+    key: "caprini", category: "basic", name: "Caprini VTE 风险评估", brief: "≥ 5 极高危 · 需药物预防",
+    Render: makeGenericScale(
+      [
+        { label: "年龄 ≥ 75 岁", score: 3 },
+        { label: "卧床 > 72h", score: 2 },
+        { label: "下肢肿胀", score: 1 },
+        { label: "中心静脉置管", score: 2 },
+        { label: "脑卒中", score: 5 },
+        { label: "下肢骨折", score: 5 },
+      ],
+      { high: 5, label: "VTE 极高危，建议药物 + 机械联合预防" },
+    ),
+  },
+  {
+    key: "barthel", category: "basic", name: "Barthel ADL 指数", brief: "10 项 · ≤ 40 重度依赖",
+    Render: makeGenericScale(
+      [
+        { label: "进食独立", score: 10 },
+        { label: "洗澡独立", score: 5 },
+        { label: "修饰独立", score: 5 },
+        { label: "穿衣独立", score: 10 },
+        { label: "大便控制良好", score: 10 },
+        { label: "小便控制良好", score: 10 },
+        { label: "如厕独立", score: 10 },
+        { label: "床椅转移独立", score: 15 },
+        { label: "平地行走 45m 独立", score: 15 },
+        { label: "上下楼梯独立", score: 10 },
+      ],
+    ),
+  },
+  {
+    key: "nrs-pain", category: "basic", name: "NRS 疼痛数字评分", brief: "0–10 分 · ≥ 4 需镇痛干预",
+    Render: makeGenericScale(
+      [
+        { label: "无痛", score: 0 },
+        { label: "轻度疼痛（不影响睡眠）", score: 3 },
+        { label: "中度疼痛（影响睡眠）", score: 6 },
+        { label: "重度疼痛（无法入睡）", score: 9 },
+      ],
+      { high: 4, label: "需镇痛干预并复评" },
+    ),
+  },
+];
+
+const NurseScaleList = ({
+  scales,
+  category,
+  libraryOpen,
+  onToggleLibrary,
+  libraryScales,
+  onAdd,
+  onRemove,
+}: {
+  scales: NurseScaleDef[];
+  category: NurseScaleCategory;
+  libraryOpen: boolean;
+  onToggleLibrary: () => void;
+  libraryScales: NurseScaleDef[];
+  onAdd: (s: NurseScaleDef) => void;
+  onRemove: (key: string) => void;
+}) => {
+  const [expanded, setExpanded] = useState<string | null>(scales[0]?.key ?? null);
+  const addedKeys = new Set(scales.map((s) => s.key));
+  return (
+    <>
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
+        {scales.length === 0 && (
+          <div className="px-3 py-4 text-center text-[11px] text-muted-foreground">暂无量表，请从量表库添加</div>
+        )}
+        {scales.map((s) => {
+          const open = expanded === s.key;
+          const Render = s.Render;
+          const isDefault = NURSE_DEFAULT_SCALES.some((d) => d.key === s.key);
+          return (
+            <div key={s.key} className="px-3 py-2.5">
+              <button onClick={() => setExpanded(open ? null : s.key)} className="w-full flex items-center gap-2 text-left">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[12px] font-semibold truncate">{s.name}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-50 text-role-nurse font-semibold shrink-0">护理</span>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
+                  {s.result && <div className="text-[11px] text-foreground/80 mt-1 font-medium">{s.result}</div>}
+                </div>
+                {isDefault && (
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
+                )}
+                <span className="text-[11px] text-role-nurse font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onRemove(s.key); }}
+                  className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30"
+                >
+                  删除
+                </button>
+              </button>
+              {open && <Render />}
+            </div>
+          );
+        })}
+      </div>
+
+      {libraryOpen && (
+        <div className="mt-2 bg-card rounded-2xl border border-border/60 overflow-hidden shadow-card">
+          <div className="px-3 pt-2.5 pb-2 border-b border-border/60 flex items-center justify-between">
+            <div className="text-[12px] font-semibold flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-role-nurse" />
+              护理评估量表库 · {category === "special" ? "专科" : "基础"}
+            </div>
+            <button onClick={onToggleLibrary} className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+              <X className="w-3 h-3" />关闭
+            </button>
+          </div>
+          <div className="max-h-[280px] overflow-y-auto divide-y divide-border/60">
+            {libraryScales.map((s) => {
+              const added = addedKeys.has(s.key);
+              return (
+                <button
+                  key={s.key}
+                  onClick={() => !added && onAdd(s)}
+                  disabled={added}
+                  className="w-full px-3 py-2.5 flex items-start gap-2 text-left active:bg-muted/40 disabled:opacity-50"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12px] font-semibold truncate">{s.name}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
+                  </div>
+                  <span className={`text-[11px] font-semibold shrink-0 ${added ? "text-muted-foreground" : "text-role-nurse"}`}>
+                    {added ? "已添加" : "+ 加入"}
+                  </span>
+                </button>
+              );
+            })}
+            {libraryScales.length === 0 && (
+              <div className="px-3 py-6 text-center text-[11px] text-muted-foreground">量表库暂无可添加量表</div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
 const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
   const name = patient ? patient.split(" ").slice(-1)[0] : "王秀英";
-  const [scaleTab, setScaleTab] = useState<"special" | "basic">("special");
+  const [scaleTab, setScaleTab] = useState<NurseScaleCategory>("special");
+  const [specialScales, setSpecialScales] = useState<NurseScaleDef[]>(
+    NURSE_DEFAULT_SCALES.filter((s) => s.category === "special"),
+  );
+  const [basicScales, setBasicScales] = useState<NurseScaleDef[]>(
+    NURSE_DEFAULT_SCALES.filter((s) => s.category === "basic"),
+  );
+  const [libOpen, setLibOpen] = useState(false);
+
+  const currentScales = scaleTab === "special" ? specialScales : basicScales;
+  const setCurrent = scaleTab === "special" ? setSpecialScales : setBasicScales;
+  const libraryScales = NURSE_SCALE_LIB.filter((s) => s.category === scaleTab);
+
+  const handleAdd = (s: NurseScaleDef) => {
+    setCurrent([...currentScales, s]);
+    toast.success(`已加入「${s.name}」`);
+  };
+  const handleRemove = (key: string) => {
+    setCurrent(currentScales.filter((x) => x.key !== key));
+    toast(`已移除该量表`);
+  };
+
   return (
     <div className="p-4 space-y-3">
       {/* 患者档案概要 */}
@@ -1121,7 +1358,7 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
             return (
               <button
                 key={it.k}
-                onClick={() => setScaleTab(it.k)}
+                onClick={() => { setScaleTab(it.k); setLibOpen(false); }}
                 className={`flex-1 text-[12px] py-1.5 rounded-full font-semibold transition-all ${
                   isActive ? "gradient-nurse text-white shadow-card" : "text-foreground/70"
                 }`}
@@ -1134,14 +1371,25 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
       </div>
 
       <SectionTitle
-        title={scaleTab === "special" ? "专科评估量表" : "基础评估量表"}
+        title={`${scaleTab === "special" ? "专科评估量表" : "基础评估量表"} · ${currentScales.length} 项`}
         extra={
-          <span className="text-[10px] text-muted-foreground">
-            {scaleTab === "special" ? "V-VST 吞咽筛查" : "NRS2002 营养筛查"}
-          </span>
+          <button
+            onClick={() => setLibOpen(!libOpen)}
+            className="text-[11px] font-semibold text-role-nurse flex items-center gap-1"
+          >
+            <Plus className="w-3 h-3" />{libOpen ? "收起量表库" : "从量表库添加"}
+          </button>
         }
       />
-      <NurseScaleList scales={scaleTab === "special" ? NURSE_SPECIAL_SCALES : NURSE_BASIC_SCALES} />
+      <NurseScaleList
+        scales={currentScales}
+        category={scaleTab}
+        libraryOpen={libOpen}
+        onToggleLibrary={() => setLibOpen(!libOpen)}
+        libraryScales={libraryScales}
+        onAdd={handleAdd}
+        onRemove={handleRemove}
+      />
 
       <AICard title="AI 护理评估辅助结论">
         <div className="text-[12px] leading-relaxed whitespace-pre-line">
@@ -1156,6 +1404,7 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
     </div>
   );
 };
+
 
 
 
