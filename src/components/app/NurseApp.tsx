@@ -50,13 +50,7 @@ import {
 import { toast } from "sonner";
 import { MeStats } from "@/components/app/MeStats";
 
-import {
-  EvalTabs,
-  EvalTabKey,
-  RehabPanel,
-  NumberedGoals,
-  ALL_REHAB_CONCLUSIONS,
-} from "@/components/app/EvalShared";
+// (护理首评已切换为 V-VST / NRS2002 量表，不再使用 EvalShared 的 Tabs/RehabPanel)
 
 const NURSE_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
@@ -834,38 +828,266 @@ const NurseChatHub = ({
   </div>
 );
 
-/* ============== 护理首次评估（参照康复医师端：2 段式 Tabs · 康复评估只展示护理内容 + 其他角色意见） ============== */
-const NurseNursingScales = () => (
-  <>
-    <SectionTitle title="护理首评量表" extra={<span className="text-[10px] text-muted-foreground">已完成 5 / 5</span>} />
-    <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      {[
-        { name: "Morse 跌倒评估", val: "55 · 高危" },
-        { name: "Braden 压疮评估", val: "14 · 高危" },
-        { name: "Caprini VTE 评估", val: "5 · 高危" },
-        { name: "Barthel ADL", val: "35 · 重度依赖" },
-        { name: "NRS-2002 营养筛查", val: "3 · 有风险" },
-      ].map(s => (
-        <div key={s.name} className="flex items-center justify-between px-3 py-2.5">
-          <span className="text-[12px] font-semibold">{s.name}</span>
-          <span className="text-[11px] text-foreground/80 font-semibold">{s.val}</span>
+/* ============== 护理首次评估（专科评估 V-VST / 基础评估 NRS2002） ============== */
+
+// V-VST 吞咽障碍临床评估：3 种稠度 × 3 种容积；2 大类指标
+const VVST_THICKNESS = ["糖浆中稠度", "液体-水", "布丁状稠度"] as const;
+const VVST_VOLUMES = ["5ml", "10ml", "15ml"] as const;
+const VVST_SAFETY = ["咳嗽", "音质改变", "血氧饱和度下降"];
+const VVST_EFFECT = ["唇部闭合", "口腔残留", "分次吞咽", "咽部残留"];
+
+const VVSTScale = () => {
+  const allRows = [...VVST_SAFETY, ...VVST_EFFECT];
+  const [grid, setGrid] = useState<Record<string, Record<string, boolean>>>(() => {
+    const init: Record<string, Record<string, boolean>> = {};
+    allRows.forEach((label) => {
+      init[label] = {};
+      VVST_THICKNESS.forEach((t) => VVST_VOLUMES.forEach((v) => (init[label][`${t}|${v}`] = false)));
+    });
+    init["咳嗽"]["液体-水|10ml"] = true;
+    init["血氧饱和度下降"]["液体-水|15ml"] = true;
+    init["口腔残留"]["糖浆中稠度|15ml"] = true;
+    return init;
+  });
+  const toggle = (label: string, col: string) =>
+    setGrid({ ...grid, [label]: { ...grid[label], [col]: !grid[label][col] } });
+
+  const positives = Object.values(grid).reduce(
+    (acc, row) => acc + Object.values(row).filter(Boolean).length,
+    0
+  );
+
+  return (
+    <div className="mt-2 bg-muted/30 rounded-xl p-2 overflow-x-auto">
+      <div className="text-[11px] text-muted-foreground mb-2 px-1">
+        V-VST 结果记录 · 阳性指标 <span className="text-warning font-semibold">{positives}</span> 项
+      </div>
+      <table className="text-[10px] border-collapse w-full min-w-[520px]">
+        <thead>
+          <tr className="text-foreground/70">
+            <th className="border border-border/60 bg-card px-1 py-1">不同稠度</th>
+            {VVST_THICKNESS.map((t) => (
+              <th key={t} colSpan={3} className="border border-border/60 bg-card px-1 py-1">{t}</th>
+            ))}
+          </tr>
+          <tr className="text-foreground/70">
+            <th className="border border-border/60 bg-card px-1 py-1">不同容积</th>
+            {VVST_THICKNESS.flatMap((t) =>
+              VVST_VOLUMES.map((v) => (
+                <th key={`${t}-${v}`} className="border border-border/60 bg-card px-1 py-1 font-normal">{v}</th>
+              ))
+            )}
+          </tr>
+        </thead>
+        <tbody>
+          {(["safety", "effect"] as const).map((group) => {
+            const rows = group === "safety" ? VVST_SAFETY : VVST_EFFECT;
+            const groupLabel = group === "safety" ? "安全性受损指标" : "有效性受损指标";
+            return rows.map((label, ri) => (
+              <tr key={label}>
+                {ri === 0 && (
+                  <td
+                    rowSpan={rows.length}
+                    className="border border-border/60 bg-rose-50/40 px-1 py-1 text-center font-semibold text-foreground/80"
+                  >
+                    {groupLabel}
+                  </td>
+                )}
+                <td className="border border-border/60 bg-card px-1 py-1">{label}</td>
+                {VVST_THICKNESS.flatMap((t) =>
+                  VVST_VOLUMES.map((v) => {
+                    const key = `${t}|${v}`;
+                    const on = grid[label][key];
+                    return (
+                      <td key={key} className="border border-border/60 p-0">
+                        <button
+                          onClick={() => toggle(label, key)}
+                          className={`w-full h-7 text-[10px] ${on ? "bg-role-nurse/80 text-white font-semibold" : "bg-card text-muted-foreground"}`}
+                        >
+                          {on ? "+" : ""}
+                        </button>
+                      </td>
+                    );
+                  })
+                )}
+              </tr>
+            ));
+          })}
+        </tbody>
+      </table>
+      <div className="mt-2 text-[10px] text-muted-foreground px-1">
+        点击单元格标记阳性（+）。AI 已根据床旁试验预填示范结果。
+      </div>
+    </div>
+  );
+};
+
+// NRS2002 评分表
+type NrsOption = { label: string; score: number };
+type NrsSection = { key: string; title: string; multi?: boolean; options: NrsOption[] };
+const NRS_SECTIONS: NrsSection[] = [
+  {
+    key: "disease", title: "一、疾病状况（可多选）", multi: true,
+    options: [
+      { label: "髋骨折", score: 1 }, { label: "肝硬化", score: 1 }, { label: "慢性阻塞性肺病", score: 1 },
+      { label: "血液透析", score: 1 }, { label: "糖尿病", score: 1 }, { label: "一般恶性肿瘤", score: 1 },
+      { label: "慢性疾病急性发作或有并发症", score: 1 }, { label: "腹部重大手术", score: 2 },
+      { label: "脑卒中", score: 2 }, { label: "重症肺炎", score: 2 }, { label: "血液系统恶性肿瘤", score: 2 },
+      { label: "颅脑损伤", score: 2 }, { label: "骨髓移植", score: 2 }, { label: "重症病患（APACHE>10）", score: 3 },
+    ],
+  },
+  {
+    key: "weight", title: "二、体重变化情况（单选）",
+    options: [
+      { label: "3 个月内体重无减轻或减轻 < 5%", score: 0 },
+      { label: "3 个月内体重减轻 > 5%", score: 1 },
+      { label: "2 个月内体重减轻 > 5%", score: 2 },
+      { label: "1 个月内体重减轻 > 5%", score: 3 },
+    ],
+  },
+  {
+    key: "intake", title: "三、进食变化情况（单选）",
+    options: [
+      { label: "近一周进食量减少 0%–25%", score: 0 },
+      { label: "近一周进食量减少 25%–50%", score: 1 },
+      { label: "近一周进食量减少 50%–75%", score: 2 },
+      { label: "近一周进食量减少 75%–100%", score: 3 },
+    ],
+  },
+  {
+    key: "bmi", title: "四、BMI 变化（单选）",
+    options: [{ label: "BMI ≥ 18.5", score: 0 }, { label: "BMI < 18.5", score: 3 }],
+  },
+  {
+    key: "alb", title: "五、白蛋白变化（单选）",
+    options: [{ label: "白蛋白 ≥ 30 g/L", score: 0 }, { label: "白蛋白 < 30 g/L", score: 3 }],
+  },
+  {
+    key: "age", title: "六、年龄校正（单选）",
+    options: [{ label: "年龄 < 70 岁", score: 0 }, { label: "年龄 ≥ 70 岁", score: 1 }],
+  },
+];
+
+const NRS2002Scale = () => {
+  const [picked, setPicked] = useState<Record<string, Record<number, boolean>>>(() => ({
+    disease: { 8: true },     // 脑卒中
+    weight: { 1: true },
+    intake: { 0: true },
+    bmi: { 0: true },
+    alb: { 0: true },
+    age: { 1: true },
+  }));
+  const togglePick = (sec: NrsSection, i: number) => {
+    const cur = picked[sec.key] || {};
+    const next = sec.multi ? { ...cur, [i]: !cur[i] } : { [i]: true };
+    setPicked({ ...picked, [sec.key]: next });
+  };
+  const sectionScore = (sec: NrsSection) =>
+    Object.entries(picked[sec.key] || {}).reduce(
+      (acc, [i, v]) => acc + (v ? sec.options[Number(i)].score : 0),
+      0
+    );
+  const total = NRS_SECTIONS.reduce((acc, s) => acc + sectionScore(s), 0);
+  const risk = total >= 3 ? "存在营养风险，需营养干预" : "营养状态良好，无营养风险";
+
+  return (
+    <div className="mt-2 bg-muted/30 rounded-xl p-2 space-y-2">
+      {NRS_SECTIONS.map((sec) => (
+        <div key={sec.key} className="bg-card rounded-xl p-2">
+          <div className="flex items-center justify-between mb-1.5 px-1">
+            <span className="text-[11px] font-semibold text-foreground/85">{sec.title}</span>
+            <span className="text-[10px] text-role-nurse font-semibold">本节得分 {sectionScore(sec)}</span>
+          </div>
+          <div className="grid grid-cols-1 gap-1">
+            {sec.options.map((opt, i) => {
+              const on = !!picked[sec.key]?.[i];
+              return (
+                <button
+                  key={i}
+                  onClick={() => togglePick(sec, i)}
+                  className={`flex items-center justify-between text-left px-2 py-1.5 rounded-lg border ${
+                    on ? "border-role-nurse/60 bg-rose-50/60" : "border-border/60 bg-muted/40"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 text-[11px]">
+                    <span
+                      className={`w-3.5 h-3.5 ${sec.multi ? "rounded" : "rounded-full"} border ${
+                        on ? "bg-role-nurse border-role-nurse" : "border-muted-foreground/50"
+                      } flex items-center justify-center text-white text-[9px]`}
+                    >
+                      {on ? "✓" : ""}
+                    </span>
+                    {opt.label}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{opt.score} 分</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       ))}
+      <div className="bg-card rounded-xl p-3">
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] font-bold">本次评估总分</span>
+          <span className="text-[16px] font-bold text-role-nurse">{total} 分</span>
+        </div>
+        <div className={`mt-1.5 text-[11px] font-semibold ${total >= 3 ? "text-warning" : "text-success"}`}>
+          风险等级：{risk}
+        </div>
+      </div>
     </div>
-    <SectionTitle title="护理观察要点" />
+  );
+};
+
+type NurseScaleKey = "vvst" | "nrs2002";
+type NurseScaleDef = {
+  key: NurseScaleKey;
+  name: string;
+  brief: string;
+  result: string;
+  Render: React.FC;
+};
+
+const NURSE_SPECIAL_SCALES: NurseScaleDef[] = [
+  { key: "vvst", name: "V-VST 吞咽障碍临床评估", brief: "3 种稠度 × 3 种容积 · 安全性 / 有效性指标", result: "可疑异常 · 液体 10ml 咳嗽阳性", Render: VVSTScale },
+];
+
+const NURSE_BASIC_SCALES: NurseScaleDef[] = [
+  { key: "nrs2002", name: "NRS2002 营养风险筛查", brief: "6 维度评分 · 总分 ≥ 3 提示营养风险", result: "4 分 · 存在营养风险", Render: NRS2002Scale },
+];
+
+const NurseScaleList = ({ scales }: { scales: NurseScaleDef[] }) => {
+  const [expanded, setExpanded] = useState<NurseScaleKey | null>(scales[0]?.key ?? null);
+  return (
     <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-      <FormRow label="意识 GCS" value="13 分 · 嗜睡" />
-      <FormRow label="皮肤情况" value="完整 · 骶尾部发红" />
-      <FormRow label="管路" value="导尿管 · PICC" />
-      <FormRow label="疼痛 NRS" value="3 · 轻度" />
-      <FormRow label="HAMD 简版" value="9 · 轻度抑郁倾向" />
+      {scales.map((s) => {
+        const open = expanded === s.key;
+        const Render = s.Render;
+        return (
+          <div key={s.key} className="px-3 py-2.5">
+            <button onClick={() => setExpanded(open ? null : s.key)} className="w-full flex items-center gap-2 text-left">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[12px] font-semibold truncate">{s.name}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-50 text-role-nurse font-semibold shrink-0">护理</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
+                {s.result && <div className="text-[11px] text-foreground/80 mt-1 font-medium">{s.result}</div>}
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
+              <span className="text-[11px] text-role-nurse font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
+            </button>
+            {open && <Render />}
+          </div>
+        );
+      })}
     </div>
-  </>
-);
+  );
+};
 
 const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
   const name = patient ? patient.split(" ").slice(-1)[0] : "王秀英";
-  const [tab, setTab] = useState<EvalTabKey>("rehab");
+  const [scaleTab, setScaleTab] = useState<"special" | "basic">("special");
   return (
     <div className="p-4 space-y-3">
       {/* 患者档案概要 */}
@@ -883,35 +1105,55 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
           <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">VAS</div><div className="text-[12px] font-semibold mt-0.5">6 → 3</div></div>
           <div className="bg-muted rounded-xl py-2"><div className="text-[9px] text-muted-foreground">DVT 风险</div><div className="text-[12px] font-semibold mt-0.5">中</div></div>
         </div>
-        <div className="mt-2 text-[11px] text-foreground/75 leading-relaxed bg-muted/60 rounded-xl px-3 py-2">
-          基础情况：术后第 5 天，伤口干洁；夜间血压一过性升高，疼痛 VAS 6→3；跌倒 / 压疮 / VTE 均为高风险。
+      </div>
+
+      {/* 专科评估 / 基础评估 二段式切换 */}
+      <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2 bg-background/95 backdrop-blur">
+        <div className="flex items-center gap-1.5 bg-muted rounded-full p-1">
+          {([
+            { k: "special" as const, label: "专科评估" },
+            { k: "basic" as const, label: "基础评估" },
+          ]).map((it) => {
+            const isActive = scaleTab === it.k;
+            return (
+              <button
+                key={it.k}
+                onClick={() => setScaleTab(it.k)}
+                className={`flex-1 text-[12px] py-1.5 rounded-full font-semibold transition-all ${
+                  isActive ? "gradient-nurse text-white shadow-card" : "text-foreground/70"
+                }`}
+              >
+                {it.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <EvalTabs active={tab} onChange={setTab} accent="nurse" hideClinical />
+      <SectionTitle
+        title={scaleTab === "special" ? "专科评估量表" : "基础评估量表"}
+        extra={
+          <span className="text-[10px] text-muted-foreground">
+            {scaleTab === "special" ? "V-VST 吞咽筛查" : "NRS2002 营养筛查"}
+          </span>
+        }
+      />
+      <NurseScaleList scales={scaleTab === "special" ? NURSE_SPECIAL_SCALES : NURSE_BASIC_SCALES} />
 
-      {tab === "rehab" && (
-        <RehabPanel
-          hideDirections
-          scaleSlot={<NurseNursingScales />}
-          conclusions={ALL_REHAB_CONCLUSIONS}
-          aiBottom={
-            <AICard title="AI 康复评估辅助结论">
-              <div className="text-[12px] leading-relaxed whitespace-pre-line">
-                {`综合护理首评 + 医师 / 治疗师评估：
-1. 当前主要护理风险：跌倒（Morse 55）/ 压疮（Braden 14）/ VTE（Caprini 5）均为高危，需 q2h 翻身 + 镇痛护理。
-2. 训练配合：训练时段建议安排在镇痛后 30min 内，避免 VAS > 4 进行下地训练。
-3. 出院前重点：自理训练 + 居家防跌倒宣教 + 家属照护培训。`}
-              </div>
-              <div className="mt-2 text-[10px] text-muted-foreground">AI · 基于护理首评 + 三角色档案综合生成</div>
-            </AICard>
-          }
-        />
-      )}
-      {tab === "goal" && <NumberedGoals accent="nurse" readOnly />}
+      <AICard title="AI 护理评估辅助结论">
+        <div className="text-[12px] leading-relaxed whitespace-pre-line">
+          {scaleTab === "special"
+            ? `V-VST 液体 10ml 出现咳嗽与 SpO₂ 下降，提示稀流质安全性受损；
+建议：暂予糊状饮食 + 增稠剂；进食时 30° 半坐卧位，避免一次性大口；ST 联合评估。`
+            : `NRS2002 总分 4 分（脑卒中 2 + 体重减轻 1 + 年龄 ≥70 岁 1），存在营养风险；
+建议：营养教育 + 口服营养补充剂 ONS，必要时联系营养科会诊。`}
+        </div>
+        <div className="mt-2 text-[10px] text-muted-foreground">AI · 基于护理量表与患者档案综合生成</div>
+      </AICard>
     </div>
   );
 };
+
 
 
 /* ============== 随访清单 ============== */
