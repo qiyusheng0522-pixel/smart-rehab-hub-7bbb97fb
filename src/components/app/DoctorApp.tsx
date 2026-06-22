@@ -105,6 +105,14 @@ const DOCTOR_TABS: TabBarItem[] = [
   { key: "me", label: "我的", icon: UserIcon },
 ];
 
+const COMMUNITY_TABS: TabBarItem[] = [
+  { key: "home", label: "工作台", icon: HomeIcon },
+  { key: "patients", label: "患者", icon: UsersRound },
+  { key: "education", label: "宣教", icon: BookOpen },
+  { key: "followup", label: "随访", icon: ClipboardList },
+  { key: "me", label: "我的", icon: UserIcon },
+];
+
 export const DoctorApp = ({ community = false }: { community?: boolean } = {}) => {
   const [tab, setTab] = useState("home");
   const [sheet, setSheet] = useState<SheetKey>(null);
