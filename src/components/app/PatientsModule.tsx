@@ -146,8 +146,8 @@ export const ALL_CONDITIONS = Array.from(new Set(PATIENTS.map(p => p.condition))
 export const getPatientStage = (p: Patient, accent?: Accent): PatientStage => {
   if (p.status === "已出院") return "院后";
   if (p.status === "待出院") return "待出院";
-  // 康复医师端：不区分院前 / 院中，统一归为院中
-  if (accent === "doctor") return "院中";
+  // 康复医师 / 治疗师端：不区分院前 / 院中，统一归为院中
+  if (accent === "doctor" || accent === "therapist") return "院中";
   if (p.needFirstAssess || p.returnedReassess || p.needPlanConfirm || p.needRxConfirm) return "院前";
   return "院中";
 };
@@ -233,7 +233,7 @@ export const PatientsPage = ({
   const stageCount = (s: PatientStage) => PATIENTS.filter(p => getPatientStage(p, accent) === s).length;
   const filterChips: { key: PatientFilter; label: string; count: number }[] = [
     { key: "all", label: "全部", count: PATIENTS.length },
-    ...(accent === "doctor" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
+    ...(accent === "doctor" || accent === "therapist" ? [] : [{ key: "院前" as PatientFilter, label: "院前", count: stageCount("院前") }]),
     { key: "院中", label: "院中", count: stageCount("院中") },
     { key: "待出院", label: "待出院", count: stageCount("待出院") },
     { key: "院后", label: "院后", count: stageCount("院后") },
