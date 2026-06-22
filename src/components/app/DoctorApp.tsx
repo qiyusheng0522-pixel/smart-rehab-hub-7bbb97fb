@@ -351,7 +351,7 @@ export const DoctorApp = () => {
         footer={
           pickedPatient
             ? (() => {
-                const stage = getPatientStage(pickedPatient);
+                const stage = getPatientStage(pickedPatient, "doctor");
                 const noteAct = { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") };
                 let acts: any[] = [];
                 if (stage === "待出院") {
@@ -689,7 +689,7 @@ const DoctorHome = ({
               { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
               { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-success text-white", onClick: onGoRx },
               { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-primary text-white", onClick: onGoChat },
-              { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p) === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
+              { label: "待出院评估", count: PATIENTS.filter(p => getPatientStage(p, "doctor") === "待出院").length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
             ]}
           />
         </div>
