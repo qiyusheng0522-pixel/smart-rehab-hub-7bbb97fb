@@ -540,13 +540,7 @@ const NurseHome = ({
   onFillBed: (rec: IntakeRecord) => void;
   onOpenAssessQueue: () => void;
 }) => {
-  const totalTodo = QUEUES.med.length + QUEUES.vitals.length + QUEUES.inject.length + QUEUES.obs.length + QUEUES.execTask.length;
-  const allTodos: { patient: string; meta: string; time?: string; urgency: "high" | "medium" | "low"; k: QueueKey }[] = [
-    ...QUEUES.med.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "med" as QueueKey })),
-    ...QUEUES.execTask.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "execTask" as QueueKey })),
-    ...QUEUES.vitals.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "vitals" as QueueKey })),
-    ...QUEUES.obs.map(t => ({ patient: t.patient, meta: t.meta, time: t.time, urgency: t.urgency, k: "obs" as QueueKey })),
-  ].sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.urgency] - { high: 0, medium: 1, low: 2 }[b.urgency]));
+  const pendingTodoTotal = pendingAssessCount + 3 + PATIENT_UNREAD + FOLLOW_UPS.filter(f => f.status === "pending").length;
 
   return (
     <div className="pb-4">
