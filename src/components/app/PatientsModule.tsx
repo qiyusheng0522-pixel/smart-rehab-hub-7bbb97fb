@@ -214,7 +214,7 @@ export const PatientsPage = ({
   const matchStatus = (p: Patient) => {
     if (statusFilter === "all") return true;
     if (statusFilter === "待首次评估") return !!p.needFirstAssess;
-    return getPatientStage(p, accent) === statusFilter;
+    return getPatientStage(p, accent, community) === statusFilter;
   };
   const matchAdmit = (p: Patient) => {
     if (admitRange === "all") return true;
