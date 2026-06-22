@@ -171,7 +171,7 @@ export const DoctorApp = () => {
             setPickedPatient({ ...p, notes: patientNotes[p.id] ?? p.notes });
             if (key === "assess") setSheet("assess");
             else if (key === "plan") setSheet("plan");
-            else if (key === "firstNote") setSheet("firstNote");
+            else if (key === "firstNote") return;
             else setSheet("rx");
           }}
         />
