@@ -171,7 +171,7 @@ export const NurseApp = () => {
         <NurseHome
           onOpenQueue={openQueue}
           onGoPatients={goPatients}
-          onOpenDailyNote={() => open("dailyNote")}
+          
           onOpenEdu={() => setTab("edu")}
           onOpenChat={() => setTab("chat")}
           onOpenFollowUpList={() => open("followUpList")}
