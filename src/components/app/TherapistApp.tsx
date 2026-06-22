@@ -240,6 +240,11 @@ export const TherapistApp = () => {
         <FirstAssessSheet patient={activePatient} type={therapistType} onChangeType={setTherapistType} />
       </PhoneSheet>
 
+      <PhoneSheet open={sheet === "dischargeAssess"} onClose={close} title={`出院评估${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="therapist"
+        footer={<button onClick={() => { toast.success(`出院评估已确认 · ${therapistType} 结果已同步医师`); close(); }} className="w-full gradient-therapist text-white rounded-2xl py-3 text-sm font-semibold">确认出院评估</button>}>
+        <FirstAssessSheet patient={activePatient} type={therapistType} onChangeType={setTherapistType} />
+      </PhoneSheet>
+
       <PhoneSheet open={sheet === "confirmAssess"} onClose={close} title={`评估结果确认${activePatient ? " · " + activePatient.split(" ")[0] : ""}`} accent="therapist"
         footer={<div className="flex gap-2">
           <button onClick={() => { toast("已请医师再次评估"); close(); }} className="flex-1 border border-border rounded-2xl py-3 text-sm font-semibold">结果不确定</button>
