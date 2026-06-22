@@ -318,7 +318,7 @@ export const TherapistApp = () => {
                   : [
                       { key: "firstAssess", label: "首次评估", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("firstAssess"); } },
                       { key: "rx", label: "康复医嘱", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("rx"); } },
-                      { key: "record", label: "康复记录", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("uploadDaily"); } },
+                      { key: "record", label: "康复记录", icon: ClipboardList, onClick: () => { setActivePatient(`${pickedPatient.name} · 床${pickedPatient.bed}`); setSheet("summary"); } },
                       { key: "note", label: "备注", icon: Edit3, onClick: () => setSheet("addNote") },
                     ]
               }
