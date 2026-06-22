@@ -165,8 +165,8 @@ const Index = () => {
           <span className="text-xs text-muted-foreground hidden sm:block">点击卡片预览对应 APP</span>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {(["doctor", "therapist", "nurse"] as const).map((key) => {
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {(["doctor", "therapist", "nurse", "community"] as const).map((key) => {
             const m = roleMeta[key];
             return (
               <button
