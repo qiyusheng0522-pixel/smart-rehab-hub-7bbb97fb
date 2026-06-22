@@ -93,7 +93,6 @@ type SheetKey =
   | "addNote"
   | "team"
   | "patientChatList"
-  | "patientChat"
   | "patientChat";
 
 const DOCTOR_TABS: TabBarItem[] = [
