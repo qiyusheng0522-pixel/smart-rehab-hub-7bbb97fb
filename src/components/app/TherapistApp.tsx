@@ -394,6 +394,7 @@ const TherapistHome = ({
   onGoPatients,
   onOpenSchedule,
   onGoRx,
+  onGoChat,
   meetings,
   onOpenFirstAssess,
   onOpenSummary,
@@ -405,6 +406,7 @@ const TherapistHome = ({
   onOpenQueue: (k: QueueKey) => void;
   onGoPatients: (filter?: import("@/components/app/PatientsModule").PatientFilter) => void;
   onGoRx: () => void;
+  onGoChat: () => void;
   onUploadDaily: () => void;
   onOpenMed: () => void;
   onOpenSchedule: () => void;
