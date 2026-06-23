@@ -168,6 +168,7 @@ export const TherapistApp = () => {
           onOpenQueue={openQueue}
           onGoPatients={goPatients}
           onGoRx={() => setTab("rx")}
+          onGoChat={() => setTab("chat")}
           onUploadDaily={() => open("uploadDaily")}
           onOpenMed={() => open("med")}
           onOpenSchedule={() => setScheduleOpen(true)}
