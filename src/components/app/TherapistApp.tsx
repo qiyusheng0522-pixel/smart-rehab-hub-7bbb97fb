@@ -537,6 +537,7 @@ const TherapistHome = ({
           items={[
             { label: "待首次评估", count: firstAssessRows.length, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
             { label: "待确认医嘱", count: PATIENTS.filter(p => p.needPlanConfirm || p.needRxConfirm).length, icon: FileText, iconClass: "bg-secondary text-white", onClick: onGoRx },
+            { label: "待回复消息", count: PATIENT_UNREAD, icon: MessageCircle, iconClass: "bg-primary text-white", onClick: onGoChat },
             { label: "待出院评估", count: dischargeRows.length, icon: LogOut, iconClass: "bg-destructive text-white", onClick: () => onGoPatients("待出院") },
           ]}
         />
