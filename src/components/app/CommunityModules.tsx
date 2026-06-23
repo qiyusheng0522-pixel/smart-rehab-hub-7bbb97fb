@@ -137,135 +137,53 @@ export const EducationModule = () => {
   );
 };
 
-/* ===================== 随访模块 ===================== */
+/* ===================== 随访模块（与护士端保持一致） ===================== */
 
-type FollowupItem = {
-  id: string;
-  patient: string;
-  bed?: string;
-  condition: string;
-  type: "电话随访" | "上门随访" | "线上问诊";
-  due: string;
-  status: "待随访" | "进行中" | "已完成";
-  note?: string;
-  urgency: "high" | "medium" | "low";
-};
-
-const FOLLOWUPS: FollowupItem[] = [
-  { id: "f1", patient: "王秀英", condition: "脑卒中 · 院外 3 个月", type: "电话随访", due: "今日", status: "待随访", note: "复评 NIHSS / mRS · 用药依从性", urgency: "high" },
-  { id: "f2", patient: "陈建国", condition: "髋关节置换 · 院外 6 周", type: "上门随访", due: "今日", status: "待随访", note: "评估步态与切口愈合", urgency: "high" },
-  { id: "f3", patient: "刘大山", condition: "糖尿病足 · 慢病管理", type: "电话随访", due: "明日", status: "待随访", note: "确认血糖记录与换药", urgency: "medium" },
-  { id: "f4", patient: "赵桂芬", condition: "COPD · 慢病管理", type: "线上问诊", due: "本周", status: "进行中", note: "呼吸训练打卡查看", urgency: "medium" },
-  { id: "f5", patient: "孙立军", condition: "高血压 · 慢病管理", type: "电话随访", due: "已完成", status: "已完成", note: "血压平稳，2 周后再随访", urgency: "low" },
-];
+import {
+  FOLLOW_UPS,
+  FollowUpPatient,
+  FollowUpListView,
+  FollowUpSheet,
+  ManualCallSheet,
+} from "@/components/app/NurseApp";
 
 export const FollowupModule = () => {
-  const [filter, setFilter] = useState<"全部" | "待随访" | "进行中" | "已完成">("待随访");
-  const [active, setActive] = useState<FollowupItem | null>(null);
-  const counts = {
-    全部: FOLLOWUPS.length,
-    待随访: FOLLOWUPS.filter(f => f.status === "待随访").length,
-    进行中: FOLLOWUPS.filter(f => f.status === "进行中").length,
-    已完成: FOLLOWUPS.filter(f => f.status === "已完成").length,
-  };
-  const list = filter === "全部" ? FOLLOWUPS : FOLLOWUPS.filter(f => f.status === filter);
-
-  const urgencyMap = {
-    high: "bg-destructive/10 text-destructive",
-    medium: "bg-warning/15 text-warning",
-    low: "bg-primary/10 text-primary",
-  };
-  const typeIcon = (t: FollowupItem["type"]) => t === "上门随访" ? Users : t === "线上问诊" ? FileText : Phone;
+  const [active, setActive] = useState<FollowUpPatient | null>(null);
+  const [sheet, setSheet] = useState<null | "ai" | "manual">(null);
 
   return (
-    <div className="px-4 pt-4 pb-4 space-y-4">
-      <AICard title="AI 随访提醒">
-        本周共 {counts.待随访} 位患者待随访，其中 2 位为高优先级（康复阶段关键节点）。建议优先处理。
-      </AICard>
-
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-0.5 px-0.5">
-        {(["全部", "待随访", "进行中", "已完成"] as const).map(c => {
-          const active = filter === c;
-          return (
-            <button
-              key={c}
-              onClick={() => setFilter(c)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                active ? "gradient-doctor text-white shadow-card" : "bg-muted text-foreground/70"
-              }`}
-            >
-              {c} <span className={active ? "opacity-80" : "text-muted-foreground"}>({counts[c]})</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div>
-        <SectionTitle title={`随访列表 · ${list.length}`} extra={<button onClick={() => toast.success("已打开新建随访任务")} className="text-xs text-primary font-medium">+ 新建</button>} />
-        {list.length === 0 ? (
-          <div className="bg-card rounded-2xl p-8 text-center text-xs text-muted-foreground">无对应随访任务</div>
-        ) : (
-          <div className="space-y-2">
-            {list.map(f => {
-              const Icon = typeIcon(f.type);
-              return (
-                <button key={f.id} onClick={() => setActive(f)} className="w-full text-left bg-card rounded-2xl shadow-card p-3.5 active:scale-[0.99] transition-transform">
-                  <div className="flex items-start justify-between mb-1.5">
-                    <div className="min-w-0">
-                      <div className="text-[13px] font-semibold text-foreground">{f.patient}</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5">{f.condition}</div>
-                    </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${urgencyMap[f.urgency]}`}>{f.status}</span>
-                  </div>
-                  <div className="text-[12px] text-foreground/80 leading-relaxed">{f.note}</div>
-                  <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border/60">
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-1"><Icon className="w-3 h-3" /> {f.type}</span>
-                    <span className="text-[11px] text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {f.due}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+    <div className="pb-4">
+      <FollowUpListView
+        patients={FOLLOW_UPS}
+        onPick={(p) => { setActive(p); setSheet("ai"); }}
+      />
 
       <PhoneSheet
-        open={!!active}
-        onClose={() => setActive(null)}
-        title={active ? `随访 · ${active.patient}` : ""}
-        accent="doctor"
-        footer={
-          active?.status !== "已完成" ? (
-            <div className="flex gap-2">
-              <button onClick={() => { toast("已稍后提醒"); setActive(null); }} className="flex-1 border border-primary/30 text-primary rounded-2xl py-3 text-sm font-semibold">稍后提醒</button>
-              <button onClick={() => { toast.success("已记录本次随访结果"); setActive(null); }} className="flex-1 gradient-doctor text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-1.5"><CheckCircle2 className="w-4 h-4" />完成随访</button>
-            </div>
-          ) : undefined
-        }
+        open={sheet === "ai"}
+        onClose={() => setSheet(null)}
+        title={`AI 随访${active ? " · " + active.name : ""}`}
+        accent="nurse"
+        flush
+        hideHeader
       >
-        {active && (
-          <div className="p-4 space-y-3">
-            <div className="bg-muted/50 rounded-xl p-3 space-y-1">
-              <div className="text-sm font-semibold">{active.patient}</div>
-              <div className="text-xs text-muted-foreground">{active.condition}</div>
-              <div className="text-xs text-muted-foreground">随访方式：{active.type} · {active.due}</div>
-            </div>
-            <AICard title="AI 随访要点">
-              {active.note}。建议确认用药依从性、康复训练打卡、近期不适主诉，并视情况发送配套宣教资料。
-            </AICard>
-            <div>
-              <div className="text-xs text-muted-foreground mb-2">随访记录</div>
-              <textarea
-                placeholder="记录本次随访的关键内容、患者反馈与下一步计划…"
-                className="w-full min-h-[120px] rounded-xl bg-muted p-3 text-sm outline-none resize-none"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => toast.success("已发送配套宣教")} className="rounded-xl bg-primary-soft text-primary py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5"><BookOpen className="w-3.5 h-3.5" />发送宣教</button>
-              <button onClick={() => toast.success("已预约下次随访")} className="rounded-xl bg-primary-soft text-primary py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5"><Clock className="w-3.5 h-3.5" />预约下次</button>
-            </div>
-          </div>
-        )}
+        <FollowUpSheet
+          patient={active}
+          onManualCall={() => setSheet("manual")}
+          onDone={() => { toast.success("随访结论已归档"); setSheet(null); }}
+        />
+      </PhoneSheet>
+
+      <PhoneSheet
+        open={sheet === "manual"}
+        onClose={() => setSheet("ai")}
+        title={`人工外呼录入${active ? " · " + active.name : ""}`}
+        accent="nurse"
+        flush
+      >
+        <ManualCallSheet
+          patient={active}
+          onDone={() => { toast.success("外呼小结已生成并归档"); setSheet(null); }}
+        />
       </PhoneSheet>
     </div>
   );

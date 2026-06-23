@@ -95,8 +95,8 @@ const QUEUES: Record<QueueKey, TodoItem[]> = {
   ],
 };
 
-type FollowUpStatus = "pending" | "done" | "needRevisit";
-interface FollowUpPatient {
+export type FollowUpStatus = "pending" | "done" | "needRevisit";
+export interface FollowUpPatient {
   id: string;
   name: string;
   age: number;
@@ -108,7 +108,7 @@ interface FollowUpPatient {
   conclusion?: string;
   phone?: string;
 }
-const FOLLOW_UPS: FollowUpPatient[] = [
+export const FOLLOW_UPS: FollowUpPatient[] = [
   { id: "f0", name: "韩启航", age: 24, sex: "男", meta: "术后第 3 天", postOpDays: 3, diagnosis: "髌骨关节疼痛综合征", status: "done", conclusion: "居家维护现状，按现有方案训练" },
   { id: "f1", name: "王晓彤", age: 30, sex: "女", meta: "术后第 4 天", postOpDays: 4, diagnosis: "右肩冲击综合征", status: "pending", phone: "138****4421" },
   { id: "f2", name: "杨成轩", age: 31, sex: "男", meta: "术后第 5 天", postOpDays: 5, diagnosis: "左跟腱缝合术", status: "pending", phone: "138****4421" },
@@ -1453,7 +1453,7 @@ const STATUS_TONE: Record<FollowUpStatus, { label: string; cls: string }> = {
   needRevisit: { label: "需复访", cls: "bg-warning/20 text-warning" },
 };
 
-const FollowUpListView = ({
+export const FollowUpListView = ({
   patients,
   onPick,
 }: {
@@ -1528,7 +1528,7 @@ const ADVICE_OPTIONS: { key: FollowUpAdvice; label: string; desc: string; tone: 
   { key: "home", label: "居家维护现状", desc: "恢复良好，按现有方案继续居家训练。", tone: "bg-success/10 text-success" },
 ];
 
-const FollowUpSheet = ({
+export const FollowUpSheet = ({
   patient,
   onManualCall,
   onDone,
@@ -1763,7 +1763,7 @@ const FollowUpSheet = ({
 };
 
 /* ============== 人工外呼录入 Sheet ============== */
-const ManualCallSheet = ({
+export const ManualCallSheet = ({
   patient,
   onDone,
 }: {
