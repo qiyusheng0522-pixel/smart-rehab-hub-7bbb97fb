@@ -673,10 +673,10 @@ const DoctorHome = ({
 }) => {
   const pendingItems = community
     ? [
-        { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
-        { label: "待宣教推送", count: 6, icon: BookOpen, iconClass: "bg-primary text-white", onClick: onGoEducation },
-        { label: "待随访", count: 8, icon: ClipboardList, iconClass: "bg-success text-white", onClick: onGoFollowup },
+        { label: "待评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
         { label: "待确认医嘱", count: 4, icon: Sparkles, iconClass: "bg-destructive text-white", onClick: onGoRx },
+        { label: "待宣教", count: 6, icon: BookOpen, iconClass: "bg-primary text-white", onClick: onGoEducation },
+        { label: "待随访", count: 8, icon: ClipboardList, iconClass: "bg-success text-white", onClick: onGoFollowup },
       ]
     : [
         { label: "待首次评估", count: FIRST_ASSESS_COUNT, icon: ClipboardCheck, iconClass: "bg-warning text-white", onClick: () => onGoPatients("待首次评估") },
