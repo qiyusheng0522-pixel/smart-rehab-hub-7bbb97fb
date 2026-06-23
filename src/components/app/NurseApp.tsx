@@ -666,21 +666,31 @@ const EduPage = ({ onOpenPush }: { onOpenPush: () => void }) => (
       <button onClick={onOpenPush} className="w-full gradient-nurse text-white rounded-2xl py-3 text-sm font-semibold flex items-center justify-center gap-2 shadow-card">
         <Send className="w-4 h-4" /> 多患者宣教推送
       </button>
-      <AICard title="AI 智能推荐宣教内容">基于患者康复阶段（术后早期 / 中期 / 出院前）自动匹配最适合的宣教素材。</AICard>
-      <SectionTitle title="按阶段分类" />
-      <div className="grid grid-cols-2 gap-2">
+      <AICard title="AI 智能推荐宣教内容">基于患者康复阶段与护理风险，自动匹配最适合的护理宣教文档。</AICard>
+      <SectionTitle title="护理宣教" extra={<span className="text-[11px] text-muted-foreground">7 个文档</span>} />
+      <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
         {[
-          { title: "术后早期", desc: "0-7 天", count: 8 },
-          { title: "康复中期", desc: "8-21 天", count: 14 },
-          { title: "出院前", desc: "22+ 天", count: 9 },
-          { title: "家属篇", desc: "全阶段", count: 6 },
-        ].map(c => (
-          <button key={c.title} onClick={onOpenPush} className="bg-card rounded-2xl shadow-card p-4 text-left active:scale-[0.99]">
-            <div className="text-sm font-bold">{c.title}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">{c.desc} · {c.count} 个素材</div>
+          { title: "入院宣教", date: "2026-06-13", highlight: true },
+          { title: "出院宣教", date: "2026-06-04" },
+          { title: "脑卒中患者康复护理的健康宣教", date: "2026-06-04" },
+          { title: "脑卒中患者偏瘫肢体功能训练宣教", date: "2026-06-04" },
+          { title: "下肢深静脉血栓的预防宣教", date: "2026-06-04" },
+          { title: "预防跌倒宣教", date: "2026-06-08" },
+          { title: "预防压力性损伤宣教", date: "2026-06-04" },
+        ].map(d => (
+          <button key={d.title} onClick={onOpenPush} className="w-full flex items-center justify-between px-3 py-3 active:bg-muted/40">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold ${d.highlight ? "gradient-nurse text-white" : "bg-muted text-muted-foreground"}`}>DOC</div>
+              <div className="text-left min-w-0">
+                <div className={`text-[12px] font-semibold truncate ${d.highlight ? "text-role-nurse" : ""}`}>{d.title}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">{d.date}</div>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
           </button>
         ))}
       </div>
+
     </div>
   </div>
 );
@@ -691,13 +701,22 @@ const EduPushSheet = () => {
   return (
     <div className="p-4 space-y-3">
       <AICard title="AI 推荐推送对象">
-        系统已根据康复阶段自动勾选 2 位最适合接收「术后家庭防护」宣教的患者，可手动调整。
+        系统已根据护理风险自动勾选 2 位最适合接收「入院宣教」的患者，可手动调整。
       </AICard>
       <SectionTitle title="选择宣教素材" />
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
-        <FormRow label="素材" value={<select className="bg-muted rounded px-2 py-1 text-xs"><option>术后家庭防护</option><option>吞咽训练</option><option>用药安全</option></select>} />
-        <FormRow label="格式" value={<span className="text-[11px]">视频 + 图文 + 测验</span>} />
+        <FormRow label="素材" value={<select className="bg-muted rounded px-2 py-1 text-xs max-w-[180px]">
+          <option>入院宣教</option>
+          <option>出院宣教</option>
+          <option>脑卒中患者康复护理的健康宣教</option>
+          <option>脑卒中患者偏瘫肢体功能训练宣教</option>
+          <option>下肢深静脉血栓的预防宣教</option>
+          <option>预防跌倒宣教</option>
+          <option>预防压力性损伤宣教</option>
+        </select>} />
+        <FormRow label="格式" value={<span className="text-[11px]">Word 文档 + 图文</span>} />
       </div>
+
       <SectionTitle title={`选择推送患者 · 已选 ${selected.length}`} extra={<button onClick={() => setSelected(PATIENTS.map(p => p.id))} className="text-[11px] text-role-nurse font-semibold">全选</button>} />
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
         {PATIENTS.map(p => (
