@@ -22,6 +22,10 @@ import {
   Pill,
   ShieldAlert,
   Target,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
