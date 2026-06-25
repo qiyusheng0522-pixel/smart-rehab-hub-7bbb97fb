@@ -811,9 +811,46 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const [note, setNote] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
   const [tab, setTab] = useState<EvalTabKey>("rehab");
-  const switchType = (t: TherapistType) => { onChangeType(t); setData(SCALE_LIB[t]); };
+
+  const today = (() => { const n = new Date(); const p = (x: number) => String(x).padStart(2, "0"); return `${n.getFullYear()}/${p(n.getMonth() + 1)}/${p(n.getDate())}`; })();
+  // 每个量表的「最近评估时间 + 历史快照」（默认给典型量表预置一条上次评估）
+  type ScaleMeta = { lastUpdated: string; history: ScaleHistorySnap[] };
+  const buildMeta = (list: typeof scales): Record<string, ScaleMeta> => {
+    const m: Record<string, ScaleMeta> = {};
+    list.forEach((s) => {
+      const totalRow = s.items.find((it) => /总分|分级|距离/.test(it.label));
+      const prev = totalRow ? `${totalRow.value}` : undefined;
+      const hasHist = /总分/.test(totalRow?.label ?? "");
+      m[s.name] = {
+        lastUpdated: "2026/03/21",
+        history: hasHist && prev ? [{ date: "2026/02/21", result: `上次：${prev.replace(/\s*\/\s*\d+/, (x) => x)} · 历史快照` }] : [],
+      };
+    });
+    return m;
+  };
+  const [meta, setMeta] = useState<Record<string, ScaleMeta>>(() => buildMeta(scales));
+
+  const switchType = (t: TherapistType) => { onChangeType(t); setData(SCALE_LIB[t]); setMeta(buildMeta(SCALE_LIB[t])); };
   const update = (si: number, ii: number, v: string) => {
     setData(prev => prev.map((s, i) => i !== si ? s : { ...s, items: s.items.map((it, j) => j !== ii ? it : { ...it, value: v }) }));
+  };
+
+  const getCurrentScore = (s: typeof data[number]): string | undefined => {
+    const totalRow = s.items.find((it) => it.label === "总分");
+    if (totalRow) return totalRow.value;
+    const firstScored = s.items.find((it) => /\d/.test(it.value));
+    return firstScored?.value;
+  };
+  const reassess = (s: typeof data[number]) => {
+    const cur = getCurrentScore(s);
+    setMeta((m) => ({
+      ...m,
+      [s.name]: {
+        lastUpdated: today,
+        history: cur ? [{ date: m[s.name]?.lastUpdated ?? "2026/03/21", result: cur }, ...(m[s.name]?.history ?? [])] : (m[s.name]?.history ?? []),
+      },
+    }));
+    toast.success(`已开启「${s.name}」再次评估`);
   };
 
   const scalesBlock = (
@@ -833,14 +870,18 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         </div>
       </div>
 
-      <SectionTitle title={`${type} 评估量表 · ${data.length} 项`} extra={<button onClick={() => toast("已添加自定义量表")} className="text-[11px] text-secondary font-semibold flex items-center gap-1"><Plus className="w-3 h-3" />补充量表</button>} />
+      <SectionTitle title={`${type} 评估量表 · ${data.length} 项`} extra={<span className="text-[10px] text-muted-foreground">突出当前评分与变化</span>} />
       <div className="bg-card rounded-2xl shadow-card divide-y divide-border/60">
         {data.map((s, si) => {
           const open = expanded === si;
+          const m = meta[s.name] ?? { lastUpdated: today, history: [] };
+          const cur = getCurrentScore(s);
+          const prev = m.history[0]?.result;
+          const scaleKey = s.name.toLowerCase();
           return (
-            <div key={s.name} className="px-3 py-2.5">
-              <button onClick={() => setExpanded(open ? null : si)} className="w-full flex items-center gap-2 text-left">
-                <div className="flex-1 min-w-0">
+            <div key={s.name} className={`px-3 py-2.5 ${open ? "bg-muted/30" : ""}`}>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setExpanded(open ? null : si)} className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[12px] font-semibold truncate">{s.name}</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary-soft text-secondary font-semibold shrink-0">
@@ -848,24 +889,29 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
                     </span>
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.desc}</div>
-                </div>
-
-                <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
-                <span className="text-[11px] text-secondary font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
-                <button onClick={(e) => { e.stopPropagation(); setData(data.filter((_, i) => i !== si)); toast.success(`已删除「${s.name}」`); }} className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30">删除</button>
-              </button>
+                </button>
+                <ScaleScoreBadge scaleKey={scaleKey} current={cur} previous={prev} date={m.lastUpdated} accent="therapist" />
+                <ChevronRight onClick={() => setExpanded(open ? null : si)} className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${open ? "rotate-90" : ""}`} />
+              </div>
               {open && (
-                <div className="mt-2 divide-y divide-border/60 bg-muted/30 rounded-xl">
-                  {s.items.map((it, ii) => (
-                    <div key={ii} className="flex items-center justify-between px-3 py-2">
-                      <div>
-                        <div className="text-[12px] text-foreground">{it.label}</div>
-                        {it.hint && <div className="text-[10px] text-muted-foreground mt-0.5">{it.hint}</div>}
+                <>
+                  <ScaleHistoryList scaleKey={scaleKey} history={m.history} onView={(h) => toast(`${h.date} · ${h.result ?? ""}`)} />
+                  <div className="mt-2 divide-y divide-border/60 bg-muted/30 rounded-xl">
+                    {s.items.map((it, ii) => (
+                      <div key={ii} className="flex items-center justify-between px-3 py-2">
+                        <div>
+                          <div className="text-[12px] text-foreground">{it.label}</div>
+                          {it.hint && <div className="text-[10px] text-muted-foreground mt-0.5">{it.hint}</div>}
+                        </div>
+                        <input value={it.value} onChange={(e) => update(si, ii, e.target.value)} className="w-28 text-right bg-card rounded px-2 py-1 text-xs" />
                       </div>
-                      <input value={it.value} onChange={(e) => update(si, ii, e.target.value)} className="w-28 text-right bg-card rounded px-2 py-1 text-xs" />
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5 pt-2">
+                    <ReassessButton accent="therapist" onClick={() => reassess(s)} />
+                    <button onClick={() => { setData(data.filter((_, i) => i !== si)); toast.success(`已删除「${s.name}」`); }} className="text-[11px] px-2.5 py-1 rounded-lg border border-destructive/30 text-destructive ml-auto">移除</button>
+                  </div>
+                </>
               )}
             </div>
           );
