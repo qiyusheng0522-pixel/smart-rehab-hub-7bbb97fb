@@ -1661,11 +1661,16 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
                 {s.history.map((h, i) => {
                   const hs = extractScore(h.result);
                   return (
-                    <div key={i} className="text-[11px] flex items-baseline gap-2">
+                    <button
+                      key={i}
+                      onClick={() => setViewing({ ...s, status: h.status, result: h.result, lastUpdated: h.date } as Scale)}
+                      className="w-full text-left text-[11px] flex items-baseline gap-2 px-1.5 py-1 -mx-1.5 rounded-md hover:bg-muted/60 active:bg-muted"
+                    >
                       <span className="text-[10px] text-muted-foreground tabular-nums">{h.date}</span>
                       {hs != null && <span className="text-[13px] font-semibold tabular-nums text-foreground/80">{hs}</span>}
-                      {h.result && <span className="text-foreground/60 truncate">{h.result}</span>}
-                    </div>
+                      {h.result && <span className="text-foreground/60 truncate flex-1">{h.result}</span>}
+                      <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                    </button>
                   );
                 })}
               </div>
