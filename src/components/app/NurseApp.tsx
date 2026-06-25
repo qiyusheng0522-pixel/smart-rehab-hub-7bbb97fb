@@ -53,7 +53,9 @@ import {
 import { toast } from "sonner";
 import { MeStats } from "@/components/app/MeStats";
 
-// (护理首评已切换为 V-VST / NRS2002 量表，不再使用 EvalShared 的 Tabs/RehabPanel)
+import { ScaleScoreBadge, ScaleHistoryList, ReassessButton, type ScaleHistorySnap } from "@/components/app/EvalShared";
+
+// (护理首评已切换为 V-VST / NRS2002 量表，沿用各端统一的「评分突出 + 历史快照 + 再次评估」交互)
 
 const NURSE_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
@@ -1271,6 +1273,8 @@ const NurseScaleList = ({
   libraryScales,
   onAdd,
   onRemove,
+  meta,
+  onReassess,
 }: {
   scales: NurseScaleDef[];
   category: NurseScaleCategory;
@@ -1279,6 +1283,8 @@ const NurseScaleList = ({
   libraryScales: NurseScaleDef[];
   onAdd: (s: NurseScaleDef) => void;
   onRemove: (key: string) => void;
+  meta: Record<string, { lastUpdated: string; history: ScaleHistorySnap[] }>;
+  onReassess: (s: NurseScaleDef) => void;
 }) => {
   const [expanded, setExpanded] = useState<string | null>(scales[0]?.key ?? null);
   const addedKeys = new Set(scales.map((s) => s.key));
@@ -1292,29 +1298,40 @@ const NurseScaleList = ({
           const open = expanded === s.key;
           const Render = s.Render;
           const isDefault = NURSE_DEFAULT_SCALES.some((d) => d.key === s.key);
+          const m = meta[s.key] ?? { lastUpdated: "2026/03/21", history: [] };
+          const prev = m.history[0]?.result;
           return (
-            <div key={s.key} className="px-3 py-2.5">
-              <button onClick={() => setExpanded(open ? null : s.key)} className="w-full flex items-center gap-2 text-left">
-                <div className="flex-1 min-w-0">
+            <div key={s.key} className={`px-3 py-2.5 ${open ? "bg-muted/30" : ""}`}>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setExpanded(open ? null : s.key)} className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[12px] font-semibold truncate">{s.name}</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-50 text-role-nurse font-semibold shrink-0">护理</span>
+                    {isDefault && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
+                    )}
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
-                  {s.result && <div className="text-[11px] text-foreground/80 mt-1 font-medium">{s.result}</div>}
-                </div>
-                {isDefault && (
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />AI 预填</span>
-                )}
-                <span className="text-[11px] text-role-nurse font-semibold ml-1">{open ? "收起" : "查看 / 修改"}</span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onRemove(s.key); }}
-                  className="text-[10px] text-destructive ml-1 px-1.5 py-0.5 rounded border border-destructive/30"
-                >
-                  删除
+                  {s.result && <div className="text-[10.5px] text-foreground/75 mt-0.5 truncate">{s.result}</div>}
                 </button>
-              </button>
-              {open && <Render />}
+                <ScaleScoreBadge scaleKey={s.key} current={s.result} previous={prev} date={m.lastUpdated} accent="nurse" />
+                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${open ? "rotate-90" : ""}`} />
+              </div>
+              {open && (
+                <>
+                  <ScaleHistoryList scaleKey={s.key} history={m.history} onView={(h) => toast(`${h.date} · ${h.result ?? ""}`)} />
+                  <Render />
+                  <div className="flex gap-1.5 pt-2">
+                    <ReassessButton accent="nurse" onClick={() => onReassess(s)} />
+                    <button
+                      onClick={() => onRemove(s.key)}
+                      className="text-[11px] px-2.5 py-1 rounded-lg border border-destructive/30 text-destructive ml-auto"
+                    >
+                      移除
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           );
         })}
@@ -1376,13 +1393,42 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
   const setCurrent = scaleTab === "special" ? setSpecialScales : setBasicScales;
   const libraryScales = NURSE_SCALE_LIB.filter((s) => s.category === scaleTab);
 
+  const today = (() => { const n = new Date(); const p = (x: number) => String(x).padStart(2, "0"); return `${n.getFullYear()}/${p(n.getMonth() + 1)}/${p(n.getDate())}`; })();
+  // 每个量表的最近评估时间 + 历史快照
+  const [meta, setMeta] = useState<Record<string, { lastUpdated: string; history: ScaleHistorySnap[] }>>(() => {
+    const m: Record<string, { lastUpdated: string; history: ScaleHistorySnap[] }> = {};
+    NURSE_DEFAULT_SCALES.forEach((s) => {
+      m[s.key] = {
+        lastUpdated: "2026/03/21",
+        history: s.key === "nrs2002" ? [{ date: "2026/02/21", result: "3 分 · 存在营养风险" }]
+          : s.key === "vvst" ? [{ date: "2026/02/21", result: "可疑异常 · 液体 5ml 咳嗽阳性" }]
+          : [],
+      };
+    });
+    return m;
+  });
+
   const handleAdd = (s: NurseScaleDef) => {
     setCurrent([...currentScales, s]);
+    setMeta((m) => ({ ...m, [s.key]: m[s.key] ?? { lastUpdated: today, history: [] } }));
     toast.success(`已加入「${s.name}」`);
   };
   const handleRemove = (key: string) => {
     setCurrent(currentScales.filter((x) => x.key !== key));
     toast(`已移除该量表`);
+  };
+  const handleReassess = (s: NurseScaleDef) => {
+    setMeta((m) => {
+      const cur = m[s.key] ?? { lastUpdated: "2026/03/21", history: [] };
+      return {
+        ...m,
+        [s.key]: {
+          lastUpdated: today,
+          history: s.result ? [{ date: cur.lastUpdated, result: s.result }, ...cur.history] : cur.history,
+        },
+      };
+    });
+    toast.success(`已开启「${s.name}」再次评估`);
   };
 
   return (
@@ -1446,6 +1492,8 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
         libraryScales={libraryScales}
         onAdd={handleAdd}
         onRemove={handleRemove}
+        meta={meta}
+        onReassess={handleReassess}
       />
 
       <AICard title="AI 护理评估辅助结论">

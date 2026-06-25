@@ -22,6 +22,10 @@ import {
   Pill,
   ShieldAlert,
   Target,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1004,5 +1008,126 @@ export const FirstNoteSheet = ({ onClose }: { onClose: () => void }) => {
         </button>
       </div>
     </div>
+  );
+};
+
+/* ==============================================================
+ * 评估量表 · 评分突出 + 历史快照 · 全端复用
+ * （与康复医师端「康复评估」交互保持一致）
+ * ============================================================== */
+
+/** 数值越小越好的量表 key 列表（如 NIHSS / mRS / VAS / Morse / Braden 等） */
+export const SCALE_LOWER_BETTER = new Set<string>([
+  "nihss", "mrs", "vas", "vas-full",
+  "fall", "pressure", "vte", // 风险类总分越低越好
+  "eat10", "general", "nrs2002",
+  "bowel", "bladder", "trach-vvst",
+]);
+
+/** 从形如 "18 / 34"、"32 分"、"4 分 · 中度" 的文本中提取数值 */
+export const extractScaleScore = (txt?: string): number | null => {
+  if (!txt) return null;
+  const m = txt.match(/(\d+(?:\.\d+)?)\s*分/) ?? txt.match(/(\d+(?:\.\d+)?)\s*\/\s*\d+/) ?? txt.match(/(-?\d+(?:\.\d+)?)/);
+  return m ? Number(m[1]) : null;
+};
+
+export type ScaleHistorySnap = { date: string; result?: string };
+
+/** 大字评分 + 变化量徽标（绿涨红跌，自动按 LOWER_BETTER 反转） */
+export const ScaleScoreBadge = ({
+  scaleKey,
+  current,
+  previous,
+  date,
+  accent = "doctor",
+}: {
+  scaleKey: string;
+  current?: string;
+  previous?: string;
+  date?: string;
+  accent?: "doctor" | "therapist" | "nurse";
+}) => {
+  const cur = extractScaleScore(current);
+  const prev = extractScaleScore(previous);
+  if (cur == null) {
+    return date ? <div className="text-[10px] text-muted-foreground shrink-0">{date.slice(5)}</div> : null;
+  }
+  const delta = prev != null ? +(cur - prev).toFixed(1) : null;
+  const lowerBetter = SCALE_LOWER_BETTER.has(scaleKey);
+  const improved = delta != null && delta !== 0 && ((delta < 0 && lowerBetter) || (delta > 0 && !lowerBetter));
+  const worsened = delta != null && delta !== 0 && !improved;
+  const cls = improved ? "text-success bg-success/10" : worsened ? "text-destructive bg-destructive/10" : "text-muted-foreground bg-muted";
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <div className="text-right leading-none">
+        <div className="text-[20px] font-bold tabular-nums text-foreground">{cur}</div>
+        {date && <div className="text-[9px] text-muted-foreground mt-0.5">{date.slice(5)}</div>}
+      </div>
+      {delta != null && delta !== 0 && (
+        <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${cls}`}>
+          {improved ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+          {delta > 0 ? `+${delta}` : delta}
+        </div>
+      )}
+      {delta === 0 && (
+        <div className="flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold text-muted-foreground bg-muted">
+          <Minus className="w-3 h-3" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+/** 历史评估快照列表（可点击查看详情） */
+export const ScaleHistoryList = ({
+  scaleKey,
+  history,
+  onView,
+}: {
+  scaleKey: string;
+  history: ScaleHistorySnap[];
+  onView?: (h: ScaleHistorySnap) => void;
+}) => {
+  if (!history?.length) return null;
+  return (
+    <div className="ml-1 pl-3 border-l-2 border-primary/30 space-y-1.5 my-2">
+      <div className="text-[10px] text-muted-foreground font-semibold">历史评估 · {history.length}</div>
+      {history.map((h, i) => {
+        const hs = extractScaleScore(h.result);
+        return (
+          <button
+            key={i}
+            onClick={() => onView?.(h)}
+            className="w-full text-left text-[11px] flex items-baseline gap-2 px-1.5 py-1 -mx-1.5 rounded-md hover:bg-muted/60 active:bg-muted"
+          >
+            <span className="text-[10px] text-muted-foreground tabular-nums">{h.date}</span>
+            {hs != null && <span className="text-[13px] font-semibold tabular-nums text-foreground/80">{hs}</span>}
+            {h.result && <span className="text-foreground/60 truncate flex-1">{h.result}</span>}
+            <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+/** 「再次评估」按钮（统一样式） */
+export const ReassessButton = ({
+  onClick,
+  accent = "doctor",
+}: {
+  onClick: () => void;
+  accent?: "doctor" | "therapist" | "nurse";
+}) => {
+  const cls = accent === "therapist" ? "border-secondary/40 text-secondary"
+    : accent === "nurse" ? "border-role-nurse/40 text-role-nurse"
+    : "border-primary/40 text-primary";
+  return (
+    <button
+      onClick={onClick}
+      className={`text-[11px] px-2.5 py-1 rounded-lg border flex items-center gap-1 ${cls}`}
+    >
+      <RotateCcw className="w-3 h-3" />再次评估
+    </button>
   );
 };
