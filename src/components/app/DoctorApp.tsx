@@ -75,6 +75,8 @@ import {
   Camera,
   Mic,
   Minus,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { BookOpen, ClipboardList } from "lucide-react";
 import { EducationModule, FollowupModule } from "@/components/app/CommunityModules";
