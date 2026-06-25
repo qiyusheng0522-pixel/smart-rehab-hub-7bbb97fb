@@ -46,7 +46,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+
 import {
   Bell,
   ChevronRight,
