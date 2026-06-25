@@ -53,7 +53,9 @@ import {
 import { toast } from "sonner";
 import { MeStats } from "@/components/app/MeStats";
 
-// (护理首评已切换为 V-VST / NRS2002 量表，不再使用 EvalShared 的 Tabs/RehabPanel)
+import { ScaleScoreBadge, ScaleHistoryList, ReassessButton, type ScaleHistorySnap } from "@/components/app/EvalShared";
+
+// (护理首评已切换为 V-VST / NRS2002 量表，沿用各端统一的「评分突出 + 历史快照 + 再次评估」交互)
 
 const NURSE_TABS: TabBarItem[] = [
   { key: "home", label: "工作台", icon: HomeIcon },
