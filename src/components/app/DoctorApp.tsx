@@ -1697,7 +1697,7 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
         title={`评估量表 · ${totalCount}`}
         extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount} · 最近更新 {latestUpdated}</span>}
       />
-      <div className="text-[10px] text-muted-foreground -mt-1 px-1">默认展示当前最新评估，单个量表支持再次评估并保留历史</div>
+      <div className="text-[10px] text-muted-foreground -mt-1 px-1">突出当前评分与变化，点击展开查看上次评估与详情</div>
 
       <div className="bg-card rounded-2xl shadow-card overflow-hidden">
         <div className="px-4 pt-3 pb-1 text-[11px] font-semibold text-foreground/70">医师评估量表 · {docScales.length}</div>
