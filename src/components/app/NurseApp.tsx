@@ -1393,13 +1393,42 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
   const setCurrent = scaleTab === "special" ? setSpecialScales : setBasicScales;
   const libraryScales = NURSE_SCALE_LIB.filter((s) => s.category === scaleTab);
 
+  const today = (() => { const n = new Date(); const p = (x: number) => String(x).padStart(2, "0"); return `${n.getFullYear()}/${p(n.getMonth() + 1)}/${p(n.getDate())}`; })();
+  // 每个量表的最近评估时间 + 历史快照
+  const [meta, setMeta] = useState<Record<string, { lastUpdated: string; history: ScaleHistorySnap[] }>>(() => {
+    const m: Record<string, { lastUpdated: string; history: ScaleHistorySnap[] }> = {};
+    NURSE_DEFAULT_SCALES.forEach((s) => {
+      m[s.key] = {
+        lastUpdated: "2026/03/21",
+        history: s.key === "nrs2002" ? [{ date: "2026/02/21", result: "3 分 · 存在营养风险" }]
+          : s.key === "vvst" ? [{ date: "2026/02/21", result: "可疑异常 · 液体 5ml 咳嗽阳性" }]
+          : [],
+      };
+    });
+    return m;
+  });
+
   const handleAdd = (s: NurseScaleDef) => {
     setCurrent([...currentScales, s]);
+    setMeta((m) => ({ ...m, [s.key]: m[s.key] ?? { lastUpdated: today, history: [] } }));
     toast.success(`已加入「${s.name}」`);
   };
   const handleRemove = (key: string) => {
     setCurrent(currentScales.filter((x) => x.key !== key));
     toast(`已移除该量表`);
+  };
+  const handleReassess = (s: NurseScaleDef) => {
+    setMeta((m) => {
+      const cur = m[s.key] ?? { lastUpdated: "2026/03/21", history: [] };
+      return {
+        ...m,
+        [s.key]: {
+          lastUpdated: today,
+          history: s.result ? [{ date: cur.lastUpdated, result: s.result }, ...cur.history] : cur.history,
+        },
+      };
+    });
+    toast.success(`已开启「${s.name}」再次评估`);
   };
 
   return (
@@ -1463,6 +1492,8 @@ const NurseFirstAssessSheet = ({ patient }: { patient?: string }) => {
         libraryScales={libraryScales}
         onAdd={handleAdd}
         onRemove={handleRemove}
+        meta={meta}
+        onReassess={handleReassess}
       />
 
       <AICard title="AI 护理评估辅助结论">
