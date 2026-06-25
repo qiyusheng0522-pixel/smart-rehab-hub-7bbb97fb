@@ -46,7 +46,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+
 import {
   Bell,
   ChevronRight,
@@ -1505,182 +1505,216 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
   const [editing, setEditing] = useState(false);
   const [tab, setTab] = useState<EvalTabKey>("clinical");
 
-  // 每次评估为一个 session，按时间倒序展示（风琴）
-  type AssessSession = { id: string; date: string; title: string; docScales: Scale[]; extraScales: Scale[] };
-  const initialSessions: AssessSession[] = [
-    {
-      id: "s-20260321",
-      date: "2026/03/21",
-      title: "再次评估",
-      docScales: DOCTOR_SCALES.filter((s) => ["fma-full", "vas-full", "nihss", "mrs", "moca"].includes(s.key)).map((s) => ({ ...s, status: "AI 已预填" as ScaleStatus })),
-      extraScales: THERAPIST_SCALE_LIB.filter((s) => ["fma", "mbi", "berg"].includes(s.key)),
-    },
-    {
-      id: "s-20260221",
-      date: "2026/02/21",
-      title: "首次评估",
-      docScales: DOCTOR_SCALES,
-      extraScales: THERAPIST_SCALE_LIB.filter((s) => s.status !== "待填写"),
-    },
-  ];
-  const [sessions, setSessions] = useState<AssessSession[]>(initialSessions);
-  const [openSession, setOpenSession] = useState<string>(initialSessions[0].id);
-  const [showLib, setShowLib] = useState<string | null>(null); // session id with library open
+  // 单个量表 · 当前最新结果 + 历史评估快照
+  type ScaleHistEntry = { date: string; result?: string; status: ScaleStatus };
+  type EvalScale = Scale & { lastUpdated: string; history: ScaleHistEntry[] };
+
+  const today = (() => {
+    const n = new Date(); const p = (x: number) => String(x).padStart(2, "0");
+    return `${n.getFullYear()}/${p(n.getMonth() + 1)}/${p(n.getDate())}`;
+  })();
+
+  const initDoc: EvalScale[] = DOCTOR_SCALES.map((s) => {
+    // 演示：给 FMA / NIHSS / MoCA / Barthel 等评分量表一条历史
+    const hasHist = ["fma-full", "nihss", "moca", "mrs", "vas-full"].includes(s.key);
+    return {
+      ...s,
+      lastUpdated: "2026/03/21",
+      history: hasHist
+        ? [{ date: "2026/02/21", result: s.key === "fma-full" ? "上肢 24 / 下肢 12 · 共 36 分"
+            : s.key === "nihss" ? "16 分 · 中度"
+            : s.key === "moca" ? "15/30 · 中度损害"
+            : s.key === "mrs" ? "4 级 · 中重度残疾"
+            : s.key === "vas-full" ? "5 分 · 中度疼痛"
+            : s.result, status: "已完成" as ScaleStatus }]
+        : [],
+    };
+  });
+  const initExtra: EvalScale[] = THERAPIST_SCALE_LIB
+    .filter((s) => ["fma", "mbi", "berg"].includes(s.key))
+    .map((s) => ({
+      ...s,
+      status: s.status === "待填写" ? ("已完成" as ScaleStatus) : s.status,
+      result: s.result ?? (s.key === "berg" ? "32 / 56 · 中等跌倒风险" : s.key === "fma" ? "上肢 28 / 下肢 16" : undefined),
+      lastUpdated: "2026/03/21",
+      history: s.key === "mbi" ? [{ date: "2026/02/21", result: "40 分 · 中重度依赖", status: "已完成" as ScaleStatus }] : [],
+    }));
+
+  const [docScales, setDocScales] = useState<EvalScale[]>(initDoc);
+  const [extraScales, setExtraScales] = useState<EvalScale[]>(initExtra);
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [showLib, setShowLib] = useState(false);
   const [libRole, setLibRole] = useState<ScaleRole | "ALL">("ALL");
   const [viewing, setViewing] = useState<Scale | null>(null);
 
-  const updateSession = (id: string, patch: Partial<AssessSession>) =>
-    setSessions((arr) => arr.map((x) => (x.id === id ? { ...x, ...patch } : x)));
-
-  const addScale = (sid: string, s: Scale) => {
-    const ss = sessions.find((x) => x.id === sid);
-    if (!ss) return;
-    if (ss.extraScales.find((x) => x.key === s.key)) { toast("该量表已添加"); return; }
-    updateSession(sid, { extraScales: [...ss.extraScales, s] });
+  const addScale = (s: Scale) => {
+    if (extraScales.find((x) => x.key === s.key)) { toast("该量表已添加"); return; }
+    setExtraScales([...extraScales, { ...s, lastUpdated: today, history: [] }]);
     toast.success(`已加入「${s.name}」`);
   };
-  const removeExtra = (sid: string, k: string) => {
-    const ss = sessions.find((x) => x.id === sid);
-    if (!ss) return;
-    updateSession(sid, { extraScales: ss.extraScales.filter((x) => x.key !== k) });
-  };
-  const removeDoc = (sid: string, k: string) => {
-    const ss = sessions.find((x) => x.id === sid);
-    if (!ss) return;
-    updateSession(sid, { docScales: ss.docScales.filter((x) => x.key !== k) });
-  };
+  const removeExtra = (k: string) => setExtraScales(extraScales.filter((x) => x.key !== k));
+  const removeDoc = (k: string) => setDocScales(docScales.filter((x) => x.key !== k));
 
-  const addNewSession = () => {
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const date = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())}`;
-    const id = `s-${now.getTime()}`;
-    const ns: AssessSession = { id, date, title: "再次评估", docScales: [], extraScales: [] };
-    setSessions([ns, ...sessions]);
-    setOpenSession(id);
-    toast.success("已新增评估记录，请添加量表");
+  const reassessIn = (
+    arr: EvalScale[],
+    set: (v: EvalScale[]) => void,
+    k: string,
+  ) => {
+    set(arr.map((x) => x.key === k ? {
+      ...x,
+      history: x.result ? [{ date: x.lastUpdated, result: x.result, status: x.status }, ...x.history] : x.history,
+      status: "待填写" as ScaleStatus,
+      lastUpdated: today,
+    } : x));
+    const target = arr.find((x) => x.key === k);
+    if (target) setViewing({ ...target, status: "待填写" });
+    toast.success("已开启再次评估");
   };
 
   const libList = THERAPIST_SCALE_LIB.filter((s) => libRole === "ALL" || s.role === libRole);
-  const latest = sessions[0];
-  const completedCount = [...latest.docScales, ...latest.extraScales].filter((s) => s.status !== "待填写").length;
-  const totalCount = latest.docScales.length + latest.extraScales.length;
+  const allScales = [...docScales, ...extraScales];
+  const completedCount = allScales.filter((s) => s.status !== "待填写").length;
+  const totalCount = allScales.length;
+  const latestUpdated = allScales.map((s) => s.lastUpdated).sort().slice(-1)[0] ?? today;
+
+  const renderRow = (s: EvalScale, kind: "doc" | "extra") => {
+    const role = ROLE_BADGE[s.role];
+    const open = expandedKey === s.key;
+    const hasHist = s.history.length > 0;
+    return (
+      <div key={s.key} className="px-4 py-3">
+        <div className="flex items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[12px] font-semibold">{s.name}</span>
+              <span className={`text-[9px] px-1.5 py-0.5 rounded ${role.cls} font-semibold`}>
+                {role.label}{s.direction ? `-${s.direction}方向` : ""}
+              </span>
+              {s.recommended && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5">
+                  <Sparkles className="w-2.5 h-2.5" />AI 推荐
+                </span>
+              )}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
+            {s.result && <div className="text-[11px] text-foreground/80 mt-1 font-medium">{s.result}</div>}
+            <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+              <span>最近评估 {s.lastUpdated}</span>
+              {hasHist && (
+                <button onClick={() => setExpandedKey(open ? null : s.key)} className="text-primary font-semibold flex items-center gap-0.5">
+                  {open ? "收起历史" : `查看上次（${s.history.length}）`}
+                  <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${STATUS_STYLE[s.status]}`}>{s.status}</span>
+            <div className="flex gap-1">
+              <button onClick={() => setViewing(s)} className="text-[10px] px-2 py-1 rounded-lg border border-border text-foreground/70">
+                {s.status === "待填写" ? "填写" : "查看"}
+              </button>
+              <button
+                onClick={() => kind === "doc" ? reassessIn(docScales, setDocScales, s.key) : reassessIn(extraScales, setExtraScales, s.key)}
+                className="text-[10px] px-2 py-1 rounded-lg border border-primary/40 text-primary flex items-center gap-0.5"
+              >
+                <RotateCcw className="w-3 h-3" />再次评估
+              </button>
+              {kind === "extra" && (
+                <button onClick={() => removeExtra(s.key)} className="text-[10px] px-2 py-1 rounded-lg border border-destructive/30 text-destructive">移除</button>
+              )}
+            </div>
+          </div>
+        </div>
+        {open && hasHist && (
+          <div className="mt-2 ml-1 pl-3 border-l-2 border-primary/30 space-y-1.5">
+            {s.history.map((h, i) => (
+              <div key={i} className="text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground">{h.date}</span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${STATUS_STYLE[h.status]}`}>{h.status}</span>
+                </div>
+                {h.result && <div className="text-foreground/75 mt-0.5">{h.result}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const scalesBlock = (
     <>
       <SectionTitle
-        title={`评估记录 · ${sessions.length}`}
-        extra={
-          <button onClick={addNewSession} className="text-[11px] font-semibold text-primary flex items-center gap-1">
-            <Plus className="w-3 h-3" />再次评估
-          </button>
-        }
+        title={`评估量表 · ${totalCount}`}
+        extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount} · 最近更新 {latestUpdated}</span>}
       />
-      <div className="text-[10px] text-muted-foreground -mt-1 px-1">最近一次（{latest.date}）已完成 {completedCount}/{totalCount}</div>
+      <div className="text-[10px] text-muted-foreground -mt-1 px-1">默认展示当前最新评估，单个量表支持再次评估并保留历史</div>
 
-      <Accordion type="single" collapsible value={openSession} onValueChange={(v) => setOpenSession(v)} className="space-y-2">
-        {sessions.map((ss, idx) => {
-          const total = ss.docScales.length + ss.extraScales.length;
-          const done = [...ss.docScales, ...ss.extraScales].filter((s) => s.status !== "待填写").length;
-          const libOpen = showLib === ss.id;
-          return (
-            <AccordionItem key={ss.id} value={ss.id} className="bg-card rounded-2xl shadow-card border-0 overflow-hidden">
-              <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                <div className="flex-1 flex items-center gap-2 text-left">
-                  <div className="w-9 h-9 rounded-xl gradient-doctor text-white flex items-center justify-center text-[10px] font-bold leading-tight text-center">
-                    {ss.date.slice(5)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[13px] font-semibold">{ss.title}</span>
-                      {idx === 0 && <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary-soft text-primary font-semibold">最新</span>}
+      <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold text-foreground/70">医师评估量表 · {docScales.length}</div>
+        <div className="divide-y divide-border/60">
+          {docScales.map((s) => renderRow(s, "doc"))}
+        </div>
+      </div>
+
+      <div className="bg-card rounded-2xl shadow-card overflow-hidden">
+        <div className="px-4 pt-3 pb-1 flex items-center justify-between">
+          <div className="text-[11px] font-semibold text-foreground/70">补充评估量表 · {extraScales.length}</div>
+          <button onClick={() => setShowLib(!showLib)} className="text-[11px] font-semibold text-primary flex items-center gap-1">
+            <Plus className="w-3 h-3" />{showLib ? "收起量表库" : "从量表库添加"}
+          </button>
+        </div>
+        {extraScales.length > 0 ? (
+          <div className="divide-y divide-border/60">
+            {extraScales.map((s) => renderRow(s, "extra"))}
+          </div>
+        ) : (
+          <div className="px-4 py-4 text-[11px] text-muted-foreground text-center">暂未添加补充量表</div>
+        )}
+
+        {showLib && (
+          <div className="mx-3 mb-3 mt-1 bg-background rounded-xl border border-border/60 overflow-hidden">
+            <div className="px-3 pt-2.5 pb-2 border-b border-border/60">
+              <div className="flex items-center justify-between">
+                <div className="text-[12px] font-semibold flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />治疗师量表库</div>
+                <button onClick={() => setShowLib(false)} className="text-[11px] text-muted-foreground">关闭</button>
+              </div>
+              <div className="mt-2 flex gap-1 bg-muted rounded-full p-1 w-fit">
+                {(["ALL", "PT", "OT", "ST"] as const).map((r) => {
+                  const active = libRole === r;
+                  return (
+                    <button key={r} onClick={() => setLibRole(r)} className={`text-[11px] px-3 py-1 rounded-full font-semibold ${active ? "gradient-doctor text-white" : "text-foreground/70"}`}>
+                      {r === "ALL" ? "全部" : r}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="max-h-[260px] overflow-y-auto divide-y divide-border/60">
+              {libList.map((s) => {
+                const added = !!extraScales.find((x) => x.key === s.key);
+                const role = ROLE_BADGE[s.role];
+                return (
+                  <button key={s.key} onClick={() => !added && addScale(s)} className="w-full px-3 py-2 flex items-start gap-2 text-left active:bg-muted/40">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[12px] font-semibold">{s.name}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}{s.direction ? `-${s.direction}方向` : ""}</span>
+                        {s.recommended && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />推荐</span>)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">{s.brief}</div>
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{ss.date} · 已完成 {done}/{total} 份</div>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-0 pb-0">
-                <div className="px-4 pt-1 pb-3 space-y-3 border-t border-border/60">
-                  <div>
-                    <div className="text-[11px] font-semibold text-foreground/70 mt-2 mb-1.5">医师评估量表 · {ss.docScales.length}</div>
-                    {ss.docScales.length > 0 ? (
-                      <div className="bg-muted/40 rounded-xl divide-y divide-border/60 overflow-hidden">
-                        {ss.docScales.map((s) => (
-                          <ScaleRow key={s.key} s={s} onView={() => setViewing(s)} onRemove={() => removeDoc(ss.id, s.key)} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="bg-muted/40 rounded-xl p-3 text-[11px] text-muted-foreground text-center">暂无医师量表</div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="text-[11px] font-semibold text-foreground/70">补充评估量表 · {ss.extraScales.length}</div>
-                      <button onClick={() => setShowLib(libOpen ? null : ss.id)} className="text-[11px] font-semibold text-primary flex items-center gap-1">
-                        <Plus className="w-3 h-3" />{libOpen ? "收起量表库" : "从量表库添加"}
-                      </button>
-                    </div>
-                    {ss.extraScales.length > 0 ? (
-                      <div className="bg-muted/40 rounded-xl divide-y divide-border/60 overflow-hidden">
-                        {ss.extraScales.map((s) => (
-                          <ScaleRow key={s.key} s={s} onView={() => setViewing(s)} onRemove={() => removeExtra(ss.id, s.key)} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="bg-muted/40 rounded-xl p-3 text-[11px] text-muted-foreground text-center">
-                        暂未添加治疗师量表
-                      </div>
-                    )}
-
-                    {libOpen && (
-                      <div className="mt-2 bg-background rounded-xl border border-border/60 overflow-hidden">
-                        <div className="px-3 pt-2.5 pb-2 border-b border-border/60">
-                          <div className="flex items-center justify-between">
-                            <div className="text-[12px] font-semibold flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" />治疗师量表库</div>
-                            <button onClick={() => setShowLib(null)} className="text-[11px] text-muted-foreground">关闭</button>
-                          </div>
-                          <div className="mt-2 flex gap-1 bg-muted rounded-full p-1 w-fit">
-                            {(["ALL", "PT", "OT", "ST"] as const).map((r) => {
-                              const active = libRole === r;
-                              return (
-                                <button key={r} onClick={() => setLibRole(r)} className={`text-[11px] px-3 py-1 rounded-full font-semibold ${active ? "gradient-doctor text-white" : "text-foreground/70"}`}>
-                                  {r === "ALL" ? "全部" : r}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="max-h-[260px] overflow-y-auto divide-y divide-border/60">
-                          {libList.map((s) => {
-                            const added = !!ss.extraScales.find((x) => x.key === s.key);
-                            const role = ROLE_BADGE[s.role];
-                            return (
-                              <button key={s.key} onClick={() => !added && addScale(ss.id, s)} className="w-full px-3 py-2 flex items-start gap-2 text-left active:bg-muted/40">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="text-[12px] font-semibold">{s.name}</span>
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${role.cls}`}>{role.label}{s.direction ? `-${s.direction}方向` : ""}</span>
-                                    {s.recommended && (<span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5"><Sparkles className="w-2.5 h-2.5" />推荐</span>)}
-                                  </div>
-                                  <div className="text-[10px] text-muted-foreground mt-0.5">{s.brief}</div>
-                                </div>
-                                <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${added ? "bg-success-soft text-success" : "gradient-doctor text-white"}`}>
-                                  {added ? "已添加" : "+ 添加"}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          );
-        })}
-      </Accordion>
+                    <span className={`text-[10px] px-2 py-1 rounded-lg font-semibold ${added ? "bg-success-soft text-success" : "gradient-doctor text-white"}`}>
+                      {added ? "已添加" : "+ 添加"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 
