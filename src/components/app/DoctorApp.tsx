@@ -75,6 +75,8 @@ import {
   Camera,
   Mic,
   Minus,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { BookOpen, ClipboardList } from "lucide-react";
 import { EducationModule, FollowupModule } from "@/components/app/CommunityModules";
@@ -1577,71 +1579,117 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
   const totalCount = allScales.length;
   const latestUpdated = allScales.map((s) => s.lastUpdated).sort().slice(-1)[0] ?? today;
 
+  // 评分提取 & 方向（数值越小越好的量表）
+  const LOWER_BETTER = new Set(["nihss", "mrs", "vas", "vas-full"]);
+  const extractScore = (txt?: string): number | null => {
+    if (!txt) return null;
+    const m = txt.match(/(\d+(?:\.\d+)?)\s*分/) ?? txt.match(/(\d+(?:\.\d+)?)\s*\/\s*\d+/) ?? txt.match(/(\d+(?:\.\d+)?)/);
+    return m ? Number(m[1]) : null;
+  };
+
   const renderRow = (s: EvalScale, kind: "doc" | "extra") => {
     const role = ROLE_BADGE[s.role];
     const open = expandedKey === s.key;
     const hasHist = s.history.length > 0;
+    const curScore = extractScore(s.result);
+    const prevScore = hasHist ? extractScore(s.history[0].result) : null;
+    const delta = curScore != null && prevScore != null ? +(curScore - prevScore).toFixed(1) : null;
+    const lowerBetter = LOWER_BETTER.has(s.key);
+    const improved = delta != null && delta !== 0 && ((delta < 0 && lowerBetter) || (delta > 0 && !lowerBetter));
+    const worsened = delta != null && delta !== 0 && !improved;
+    const deltaCls = improved ? "text-success bg-success/10" : worsened ? "text-destructive bg-destructive/10" : "text-muted-foreground bg-muted";
+
     return (
-      <div key={s.key} className="px-4 py-3">
-        <div className="flex items-start gap-3">
+      <div key={s.key} className={`px-4 py-3 ${open ? "bg-muted/30" : ""}`}>
+        <div className="flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[12px] font-semibold">{s.name}</span>
-              <span className={`text-[9px] px-1.5 py-0.5 rounded ${role.cls} font-semibold`}>
-                {role.label}{s.direction ? `-${s.direction}方向` : ""}
-              </span>
-              {s.recommended && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-ai/10 text-ai font-semibold flex items-center gap-0.5">
-                  <Sparkles className="w-2.5 h-2.5" />AI 推荐
-                </span>
+              <span className="text-[13px] font-semibold truncate">{s.name}</span>
+              <span className={`text-[9px] px-1.5 py-0.5 rounded ${role.cls} font-semibold`}>{role.label}</span>
+              {s.status === "待填写" && (
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${STATUS_STYLE[s.status]}`}>待填写</span>
               )}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{s.brief}</div>
-            {s.result && <div className="text-[11px] text-foreground/80 mt-1 font-medium">{s.result}</div>}
-            <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span>最近评估 {s.lastUpdated}</span>
-              {hasHist && (
-                <button onClick={() => setExpandedKey(open ? null : s.key)} className="text-primary font-semibold flex items-center gap-0.5">
-                  {open ? "收起历史" : `查看上次（${s.history.length}）`}
-                  <ChevronRight className={`w-3 h-3 transition-transform ${open ? "rotate-90" : ""}`} />
-                </button>
-              )}
-            </div>
+            {s.result && (
+              <div className="text-[10.5px] text-muted-foreground mt-0.5 truncate">{s.result}</div>
+            )}
           </div>
-          <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${STATUS_STYLE[s.status]}`}>{s.status}</span>
-            <div className="flex gap-1">
-              <button onClick={() => setViewing(s)} className="text-[10px] px-2 py-1 rounded-lg border border-border text-foreground/70">
-                {s.status === "待填写" ? "填写" : "查看"}
+
+          {/* 评分突出区 */}
+          {curScore != null ? (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="text-right leading-none">
+                <div className="text-[20px] font-bold tabular-nums text-foreground">{curScore}</div>
+                <div className="text-[9px] text-muted-foreground mt-0.5">{s.lastUpdated.slice(5)}</div>
+              </div>
+              {delta != null && delta !== 0 && (
+                <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${deltaCls}`}>
+                  {improved ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  {delta > 0 ? `+${delta}` : delta}
+                </div>
+              )}
+              {delta === 0 && (
+                <div className="flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold text-muted-foreground bg-muted">
+                  <Minus className="w-3 h-3" />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-[10px] text-muted-foreground shrink-0">{s.lastUpdated.slice(5)}</div>
+          )}
+
+          <button
+            onClick={() => setExpandedKey(open ? null : s.key)}
+            className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md hover:bg-muted"
+            aria-label={open ? "收起" : "展开"}
+          >
+            <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
+          </button>
+        </div>
+
+        {open && (
+          <div className="mt-2.5 pl-1 space-y-2">
+            {s.brief && <div className="text-[10.5px] text-muted-foreground">{s.brief}</div>}
+            {s.recommended && (
+              <div className="text-[10px] text-ai font-semibold flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />AI 推荐
+              </div>
+            )}
+            {hasHist && (
+              <div className="ml-1 pl-3 border-l-2 border-primary/30 space-y-1.5">
+                <div className="text-[10px] text-muted-foreground font-semibold">历史评估 · {s.history.length}</div>
+                {s.history.map((h, i) => {
+                  const hs = extractScore(h.result);
+                  return (
+                    <div key={i} className="text-[11px] flex items-baseline gap-2">
+                      <span className="text-[10px] text-muted-foreground tabular-nums">{h.date}</span>
+                      {hs != null && <span className="text-[13px] font-semibold tabular-nums text-foreground/80">{hs}</span>}
+                      {h.result && <span className="text-foreground/60 truncate">{h.result}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className="flex gap-1.5 pt-1">
+              <button onClick={() => setViewing(s)} className="text-[11px] px-2.5 py-1 rounded-lg border border-border text-foreground/70">
+                {s.status === "待填写" ? "继续填写" : "查看详情"}
               </button>
               <button
                 onClick={() => kind === "doc" ? reassessIn(docScales, setDocScales, s.key) : reassessIn(extraScales, setExtraScales, s.key)}
-                className="text-[10px] px-2 py-1 rounded-lg border border-primary/40 text-primary flex items-center gap-0.5"
+                className="text-[11px] px-2.5 py-1 rounded-lg border border-primary/40 text-primary flex items-center gap-1"
               >
                 <RotateCcw className="w-3 h-3" />再次评估
               </button>
               {kind === "extra" && (
-                <button onClick={() => removeExtra(s.key)} className="text-[10px] px-2 py-1 rounded-lg border border-destructive/30 text-destructive">移除</button>
+                <button onClick={() => removeExtra(s.key)} className="text-[11px] px-2.5 py-1 rounded-lg border border-destructive/30 text-destructive ml-auto">移除</button>
               )}
             </div>
-          </div>
-        </div>
-        {open && hasHist && (
-          <div className="mt-2 ml-1 pl-3 border-l-2 border-primary/30 space-y-1.5">
-            {s.history.map((h, i) => (
-              <div key={i} className="text-[11px]">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground">{h.date}</span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${STATUS_STYLE[h.status]}`}>{h.status}</span>
-                </div>
-                {h.result && <div className="text-foreground/75 mt-0.5">{h.result}</div>}
-              </div>
-            ))}
           </div>
         )}
       </div>
     );
   };
+
 
   const scalesBlock = (
     <>
@@ -1649,7 +1697,7 @@ const AssessSheet = ({ patient, onLaunchMeeting }: { patient?: string; onLaunchM
         title={`评估量表 · ${totalCount}`}
         extra={<span className="text-[10px] text-muted-foreground">已完成 {completedCount}/{totalCount} · 最近更新 {latestUpdated}</span>}
       />
-      <div className="text-[10px] text-muted-foreground -mt-1 px-1">默认展示当前最新评估，单个量表支持再次评估并保留历史</div>
+      <div className="text-[10px] text-muted-foreground -mt-1 px-1">突出当前评分与变化，点击展开查看上次评估与详情</div>
 
       <div className="bg-card rounded-2xl shadow-card overflow-hidden">
         <div className="px-4 pt-3 pb-1 text-[11px] font-semibold text-foreground/70">医师评估量表 · {docScales.length}</div>
