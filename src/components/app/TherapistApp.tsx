@@ -811,6 +811,8 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const [note, setNote] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
   const [tab, setTab] = useState<EvalTabKey>("rehab");
+  const [showLib, setShowLib] = useState(false);
+  const [libRole, setLibRole] = useState<"ALL" | TherapistType>("ALL");
 
   const today = (() => { const n = new Date(); const p = (x: number) => String(x).padStart(2, "0"); return `${n.getFullYear()}/${p(n.getMonth() + 1)}/${p(n.getDate())}`; })();
   // 每个量表的「最近评估时间 + 历史快照」（默认给典型量表预置一条上次评估）
@@ -918,12 +920,58 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
         })}
       </div>
 
+      <div className="flex items-center justify-between">
+        <SectionTitle title="量表库" extra={<span className="text-[10px] text-muted-foreground">支持自定义补充评估量表</span>} />
+        <button onClick={() => setShowLib((v) => !v)} className="text-[11px] px-2.5 py-1 rounded-lg border border-secondary/30 text-secondary font-semibold flex items-center gap-1">
+          <Plus className="w-3 h-3" />{showLib ? "收起量表库" : "从量表库添加"}
+        </button>
+      </div>
+      {showLib && (
+        <div className="bg-card rounded-2xl shadow-card p-3 space-y-2">
+          <div className="flex items-center gap-1 bg-muted rounded-full p-1">
+            {(["ALL", "PT", "OT", "ST"] as const).map((r) => {
+              const active = libRole === r;
+              return (
+                <button key={r} onClick={() => setLibRole(r)} className={`flex-1 text-[11px] py-1 rounded-full font-semibold transition-all ${active ? "gradient-therapist text-white" : "text-foreground/70"}`}>
+                  {r === "ALL" ? "全部" : r}
+                </button>
+              );
+            })}
+          </div>
+          <div className="divide-y divide-border/60">
+            {(Object.keys(SCALE_LIB) as TherapistType[])
+              .filter((r) => libRole === "ALL" || r === libRole)
+              .flatMap((r) => SCALE_LIB[r].map((s) => ({ role: r, scale: s })))
+              .filter(({ scale }) => !data.some((d) => d.name === scale.name))
+              .map(({ role, scale }) => (
+                <div key={role + scale.name} className="flex items-center gap-2 py-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[12px] font-semibold truncate">{scale.name}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary-soft text-secondary font-semibold shrink-0">{role}{scale.direction ? `-${scale.direction}` : ""}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{scale.desc}</div>
+                  </div>
+                  <button onClick={() => { setData((prev) => [...prev, scale]); setMeta((m) => ({ ...m, [scale.name]: { lastUpdated: today, history: [] } })); toast.success(`已加入「${scale.name}」`); }} className="text-[11px] px-2.5 py-1 rounded-lg gradient-therapist text-white font-semibold shrink-0">加入</button>
+                </div>
+              ))}
+            {(Object.keys(SCALE_LIB) as TherapistType[])
+              .filter((r) => libRole === "ALL" || r === libRole)
+              .flatMap((r) => SCALE_LIB[r])
+              .filter((s) => !data.some((d) => d.name === s.name)).length === 0 && (
+              <div className="py-4 text-center text-[11px] text-muted-foreground">所有量表已添加</div>
+            )}
+          </div>
+        </div>
+      )}
+
       <SectionTitle title="治疗师补充备注" />
       <div className="bg-card rounded-2xl shadow-card p-3">
         <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="临床触诊 / 患者主诉 / 评估过程中的偏差..." className="w-full bg-muted rounded-xl p-3 text-xs h-24 outline-none" />
       </div>
     </>
   );
+
 
   return (
     <div className="p-4 space-y-3">
