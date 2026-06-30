@@ -811,6 +811,8 @@ const FirstAssessSheet = ({ patient, type, onChangeType }: { patient?: string; t
   const [note, setNote] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
   const [tab, setTab] = useState<EvalTabKey>("rehab");
+  const [showLib, setShowLib] = useState(false);
+  const [libRole, setLibRole] = useState<"ALL" | TherapistType>("ALL");
 
   const today = (() => { const n = new Date(); const p = (x: number) => String(x).padStart(2, "0"); return `${n.getFullYear()}/${p(n.getMonth() + 1)}/${p(n.getDate())}`; })();
   // 每个量表的「最近评估时间 + 历史快照」（默认给典型量表预置一条上次评估）
