@@ -460,7 +460,11 @@ const QuestionnaireRunner = ({ q, onDone }: { q: Questionnaire; onDone: (score: 
           <span className="text-[11px] text-muted-foreground">已完成 {Object.keys(answers).length} / {q.items.length} 题</span>
           {allAnswered && <span className="text-[11px] font-semibold text-role-physio">当前合计：{total} 分</span>}
         </div>
-        <PrimaryBtn disabled={!allAnswered} onClick={() => setSubmitted(true)}>提交评估</PrimaryBtn>
+        {allAnswered ? (
+          <PrimaryBtn onClick={() => setSubmitted(true)}>提交评估</PrimaryBtn>
+        ) : (
+          <button disabled className="w-full py-3 rounded-2xl bg-muted text-muted-foreground text-sm font-semibold">提交评估</button>
+        )}
       </div>
     </div>
   );
