@@ -243,6 +243,11 @@ const PatientHome = ({ go }: { go: (k: string) => void }) => {
         </div>
       </section>
 
+      {/* 院内治疗路径 */}
+      <section className="px-4">
+        <TreatmentTimeline />
+      </section>
+
       {/* 今日康复进度 */}
       <section className="px-4">
         <div className="rounded-3xl bg-card shadow-card p-4">
