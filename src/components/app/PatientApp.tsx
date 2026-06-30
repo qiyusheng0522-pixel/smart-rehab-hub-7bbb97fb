@@ -215,6 +215,60 @@ const HeroCard = ({ name }: { name: string }) => (
   </section>
 );
 
+/* ===================== 院内治疗路径时间轴 ===================== */
+const TIMELINE_STEPS = [
+  { key: "admit", title: "入院登记", desc: "床位 12-08 · 主管医师 李主任", date: "06-25", status: "done" },
+  { key: "first", title: "首次评估", desc: "医师 / 治疗师 / 护士 三端完成", date: "06-26", status: "done" },
+  { key: "plan", title: "康复方案确认", desc: "PT 5次/周 · OT 3次/周 · ST 2次/周", date: "06-26", status: "done" },
+  { key: "exec", title: "康复训练执行中", desc: "已完成 8 / 21 次，VAS ↓3、Barthel ↑5", date: "进行中", status: "current" },
+  { key: "review", title: "阶段评估", desc: "训练满 2 周由治疗师团队复评", date: "07-10", status: "todo" },
+  { key: "discharge", title: "出院评估 / 离院", desc: "出院评估 + 居家方案", date: "预计 07-20", status: "todo" },
+] as const;
+
+const TreatmentTimeline = () => (
+  <div className="rounded-3xl bg-card shadow-card p-4">
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        <Activity className="h-4 w-4 text-role-physio" />
+        <span className="text-sm font-semibold">院内治疗路径</span>
+      </div>
+      <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-50 text-role-physio font-semibold">在院 第 5 天</span>
+    </div>
+    <ol className="relative">
+      {TIMELINE_STEPS.map((s, i) => {
+        const isLast = i === TIMELINE_STEPS.length - 1;
+        const done = s.status === "done";
+        const cur = s.status === "current";
+        return (
+          <li key={s.key} className="relative pl-7 pb-3 last:pb-0">
+            {!isLast && (
+              <span
+                className={`absolute left-[10px] top-5 bottom-0 w-px ${done ? "bg-role-physio/60" : "bg-border"}`}
+              />
+            )}
+            <span
+              className={`absolute left-0 top-0.5 flex h-[22px] w-[22px] items-center justify-center rounded-full ring-2 ${
+                done
+                  ? "bg-role-physio text-white ring-orange-100"
+                  : cur
+                  ? "gradient-physio text-white ring-orange-100 animate-pulse-soft"
+                  : "bg-muted text-muted-foreground ring-background"
+              }`}
+            >
+              {done ? <CheckCircle2 className="h-3 w-3" /> : cur ? <Circle className="h-2 w-2 fill-current" /> : <Circle className="h-2 w-2" />}
+            </span>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className={`text-[13px] font-semibold ${cur ? "text-role-physio" : "text-foreground"}`}>{s.title}</span>
+              <span className="text-[10px] text-muted-foreground shrink-0">{s.date}</span>
+            </div>
+            <div className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">{s.desc}</div>
+          </li>
+        );
+      })}
+    </ol>
+  </div>
+);
+
 /* ===================== 首页 ===================== */
 const PatientHome = ({ go }: { go: (k: string) => void }) => {
   const todayDone = 2;
@@ -241,6 +295,11 @@ const PatientHome = ({ go }: { go: (k: string) => void }) => {
           <Quick onClick={() => go("plan")} icon={Sparkles} label="我的方案" />
           <Quick onClick={() => toast("已为您提交复诊申请")} icon={Calendar} label="复诊预约" />
         </div>
+      </section>
+
+      {/* 院内治疗路径 */}
+      <section className="px-4">
+        <TreatmentTimeline />
       </section>
 
       {/* 今日康复进度 */}
