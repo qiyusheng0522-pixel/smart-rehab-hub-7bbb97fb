@@ -4,10 +4,11 @@ import { DoctorApp } from "@/components/app/DoctorApp";
 import { TherapistApp } from "@/components/app/TherapistApp";
 import { NurseApp } from "@/components/app/NurseApp";
 import { CommunityApp } from "@/components/app/CommunityApp";
-import { Sparkles, Stethoscope, Activity, HeartPulse, Home, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { PatientApp } from "@/components/app/PatientApp";
+import { Sparkles, Stethoscope, Activity, HeartPulse, Home, ArrowLeft, ArrowRight, CheckCircle2, User } from "lucide-react";
 import { WorkflowSection } from "@/components/WorkflowSection";
 
-type Role = "landing" | "doctor" | "therapist" | "nurse" | "community";
+type Role = "landing" | "doctor" | "therapist" | "nurse" | "community" | "patient";
 
 const roleMeta = {
   doctor: {
