@@ -55,6 +55,17 @@ const roleMeta = {
     label: "社区端 · 工作台",
     features: ["三端身份一键切换", "医师评估 / 开方", "治疗师任务执行", "护士给药与宣教"],
   },
+  patient: {
+    title: "用户端",
+    subtitle: "Patient · Rehab Companion",
+    desc: "康复量表自评 + 每日训练打卡 + AI 康复管家",
+    icon: User,
+    gradient: "gradient-physio",
+    softBg: "bg-orange-50",
+    text: "text-role-physio",
+    label: "康复用户 · 移动端",
+    features: ["专病康复量表自评", "每日训练 / 用药打卡", "心情与训练日记", "AI 康复管家随时答疑"],
+  },
 };
 
 const Index = () => {
