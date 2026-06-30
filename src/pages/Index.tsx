@@ -77,6 +77,7 @@ const Index = () => {
       role === "doctor" ? DoctorApp
       : role === "therapist" ? TherapistApp
       : role === "nurse" ? NurseApp
+      : role === "patient" ? PatientApp
       : CommunityApp;
     return (
       <div className="min-h-screen gradient-mesh bg-background">
